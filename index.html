@@ -27,8 +27,8 @@
     .note{color:#444;font-size:.92rem;line-height:1.55;text-align:center;max-width:820px}
     .note small{display:block;color:#666;margin-top:6px}
 
-    .linkbtn{display:inline-flex;align-items:center;gap:8px;border:1px solid #d5d8dc;background:#e9ecef;border-radius:999px;padding:12px 16px;text-decoration:none;color:#111;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,.05)}
-    .linkbtn:hover{transform:translateY(-1px);background:#dee2e6}
+    .linkbtn{display:inline-flex;align-items:center;gap:8px;border:1px solid #bcd3ff;background:#e8f0ff;border-radius:999px;padding:12px 18px;text-decoration:none;color:#0b3d91;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+    .linkbtn:hover{transform:translateY(-1px);background:#d6e4ff;border-color:#9bbcff;color:#09306f}
     .cat-small{width:200px;height:auto;opacity:.98}
 
     /* --- GAME --- */
@@ -51,7 +51,7 @@
     .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;background:#111;color:#fff;padding:10px 14px;border-radius:999px;opacity:0;transition:opacity .2s,transform .2s;pointer-events:none}
     .toast.show{opacity:1;transform:translateX(-50%) translateY(-3px)}
 
-    .combo{position:absolute;left:50%;top:8px;transform:translateX(-50%);background:#111;color:#fff;padding:6px 10px;border-radius:999px;font-weight:700;opacity:0;transition:opacity .25s, transform .35s}
+    .combo{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:#111;color:#fff;padding:10px 14px;border-radius:999px;font-weight:800;font-size:1.1rem;opacity:0;transition:opacity .25s, transform .35s;box-shadow:0 18px 40px rgba(0,0,0,.18)}
     .combo.show{opacity:1;transform:translateX(-50%) translateY(-3px)}
 
     /* Stage select overlay */
@@ -96,7 +96,7 @@
       </div>
 
       <div class="row">
-        <a class="linkbtn" href="https://www.youtube.com/channel/UCxXav6WmZ-EhWB3zbIRxFMg" target="_blank" rel="noopener" title="murmur. on YouTube">murmur. on YouTube ↗</a>
+        <a class="linkbtn" href="https://www.youtube.com/channel/UCxXav6WmZ-EhWB3zbIRxFMg" target="_blank" rel="noopener" title="murmur. on YouTube">murmur. on YouTube</a>
         <img class="cat-small" src="assets/images/welcome_cat.png?v=20250811d" alt="cat" />
       </div>
     </div>
@@ -104,6 +104,9 @@
 
   <!-- GAME -->
   <section id="game" class="wrap card" aria-live="polite">
+    <div class="ytbar row" style="justify-content:center;padding:10px 0 0;">
+      <a class="linkbtn" href="https://www.youtube.com/channel/UCxXav6WmZ-EhWB3zbIRxFMg" target="_blank" rel="noopener" title="murmur. on YouTube">murmur. on YouTube</a>
+    </div>
     <div class="top">
       <div class="left">
         <div class="pill">Score: <span id="score">0</span></div>
@@ -111,7 +114,7 @@
         <div class="pill" id="stageInfo" hidden>Stage: <span id="stage">1</span> · Target: <span id="target">0</span></div>
       </div>
       <div class="right">
-        <a class="linkbtn" href="https://www.youtube.com/channel/UCxXav6WmZ-EhWB3zbIRxFMg" target="_blank" rel="noopener" title="murmur. on YouTube">YouTube ↗</a>
+        
         <div class="seg" id="paceSeg2">
           <button type="button" data-pace="slow" aria-pressed="true">Slow</button>
           <button type="button" data-pace="normal" aria-pressed="false">Normal</button>
@@ -195,7 +198,7 @@
     (function autoStart(){ const p=new URLSearchParams(location.search); if(p.get('play')==='1'){ const m=p.get('mode')||'calm'; setMode(m); startGameAuto(m); } })();
 
     // ------------ Board State ------------
-    const rows=8, cols=8; let grid=[]; let selected=null; let busy=false; let score=0; let comboStep=0;
+    const rows=8, cols=8; let grid=[]; let selected=null; let busy=false; let score=0; let comboStep=0; comboTotal=0; let comboTotal=0;
 
     function createBoardDom(){boardEl.style.gridTemplateColumns=`repeat(${cols}, var(--tile))`; boardEl.innerHTML=''; for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){ const cell=document.createElement('div'); cell.className='cell'; cell.dataset.r=r; cell.dataset.c=c; cell.addEventListener('click',onCellClick); const img=document.createElement('img'); img.alt=''; cell.appendChild(img); boardEl.appendChild(cell);} }
     function getCell(r,c){return boardEl.children[r*cols+c]}
@@ -237,7 +240,9 @@
     function updateHud(){ movesEl.textContent=movesLeft; stageEl.textContent=currentStage; targetEl.textContent=targetScore; scoreEl.textContent=score; }
 
     async function resolveMatches(matchedSet){ comboStep++;
-      if(comboStep>=2){ comboEl.textContent='Combo x'+comboStep; comboEl.classList.add('show'); setTimeout(()=>comboEl.classList.remove('show'), 1000 + (comboStep-2)*240); }
+      const groups=countGroupsFromSet(matchedSet);
+      comboTotal += Math.max(1, groups);
+      if(comboTotal>=2){ comboEl.textContent='Combo ×'+comboTotal; comboEl.classList.add('show'); setTimeout(()=>comboEl.classList.remove('show'), 1100 + (comboTotal-2)*260); }
 
       matchedSet.forEach(k=>{ const [r,c]=k.split(',').map(Number); getCell(r,c).classList.add('matching'); });
       await delay(240);
@@ -354,3 +359,4 @@
   </script>
 </body>
 </html>
+
