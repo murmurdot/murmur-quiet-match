@@ -293,36 +293,33 @@
     function countGroupsFromSet(set){ const keys=[...set]; const coords=keys.map(k=>k.split(',').map(Number)); const n=coords.length; if(n===0) return 0; const adj=Array.from({length:n},()=>[]); for(let i=0;i<n;i++){ const [r1,c1]=coords[i]; for(let j=i+1;j<n;j++){ const [r2,c2]=coords[j]; if(Math.abs(r1-r2)+Math.abs(c1-c2)===1){ adj[i].push(j); adj[j].push(i); } } } const seen=new Array(n).fill(false); let groups=0; for(let i=0;i<n;i++) if(!seen[i]){ groups++; const q=[i]; seen[i]=true; while(q.length){ const v=q.shift(); for(const w of adj[v]) if(!seen[w]){ seen[w]=true; q.push(w); } } } return groups; }
 
     // ------------ Combo display (single-line) ------------
-    let comboHideTimer=null;
-    function addCombo(groups){
-      const g = Math.max(1, Number(groups) || 1);
-      // 累計（スコア用）は維持
-      comboTotal += g;
+let comboHideTimer = null;
+function addCombo(groups){
+  const g = Math.max(1, Number(groups) || 1);
+  // 累計（スコア用）は維持
+  comboTotal += g;
 
-      // 表示条件：
-      //  - 連鎖2段目以降は必ず表示（gが1でも連鎖継続なのでコンボ）
-      //  - 連鎖1段目は同時消しが2以上のときのみ表示（初手1消しは非表示）
-      const show = (comboStep >= 2) || (comboStep === 1 && g >= 2);
+  // 表示条件：
+  //  - 連鎖2段目以降は必ず表示（gが1でも連鎖継続なのでコンボ）
+  //  - 連鎖1段目は同時消しが2以上のときのみ表示（初手1消しは非表示）
+  const show = (comboStep >= 2) || (comboStep === 1 && g >= 2);
 
-      if(show){
-        const tail = (g>=2) ? ('×'+g) : '';
-        // 主数は「連鎖段数」= comboStep（例：初手同時2消し → Combo 1×2）
-        comboEl.textContent = 'Combo ' + comboStep + tail;
-        comboEl.classList.add('show');
-        if(comboHideTimer) clearTimeout(comboHideTimer);
-        const BASE=420, PER=110, MAX=900;
-        let dur=(BASE + Math.max(0, comboStep-1)*PER) * paceFactor();
-        if(dur>MAX) dur=MAX;
-        comboHideTimer=setTimeout(()=> comboEl.classList.remove('show'), dur);
-      } else {
-        comboEl.classList.remove('show');
-        comboEl.textContent='';
-      }
-    } else {
-        comboEl.classList.remove('show');
-        comboEl.textContent='';
-      }
-    }
+  if (show) {
+    const tail = (g >= 2) ? ('×' + g) : '';
+    // 主数は「連鎖段数」= comboStep（例：初手同時2消し → Combo 1×2）
+    comboEl.textContent = 'Combo ' + comboStep + tail;
+    comboEl.classList.add('show');
+
+    if (comboHideTimer) clearTimeout(comboHideTimer);
+    const BASE = 420, PER = 110, MAX = 900;
+    let dur = (BASE + Math.max(0, comboStep - 1) * PER) * paceFactor();
+    if (dur > MAX) dur = MAX;
+    comboHideTimer = setTimeout(() => comboEl.classList.remove('show'), dur);
+  } else {
+    comboEl.classList.remove('show');
+    comboEl.textContent = '';
+  }
+}
 
     // ------------ Challenge ------------
     let currentStage=1; let unlocked=parseInt(localStorage.getItem('mmq_unlocked')||'1',10); if(!(unlocked>=1&&unlocked<=100)) unlocked=1; let savedStage=parseInt(localStorage.getItem('mmq_currentStage')||String(unlocked),10); if(!(savedStage>=1&&savedStage<=unlocked)) savedStage=unlocked;
