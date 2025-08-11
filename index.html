@@ -296,24 +296,29 @@
     let comboHideTimer=null;
     function addCombo(groups){
       const g = Math.max(1, Number(groups) || 1);
-      const mainEl = comboEl; // single-line text on #combo
-
-      // accumulate total groups in this chain
+      // 累計（スコア用）は維持
       comboTotal += g;
 
-      // show only when chain total >=2 or this step has >=2 groups
-      const show = comboTotal >= 2 || g >= 2;
+      // 表示条件：
+      //  - 連鎖2段目以降は必ず表示（gが1でも連鎖継続なのでコンボ）
+      //  - 連鎖1段目は同時消しが2以上のときのみ表示（初手1消しは非表示）
+      const show = (comboStep >= 2) || (comboStep === 1 && g >= 2);
 
-      if(show && mainEl){
+      if(show){
         const tail = (g>=2) ? ('×'+g) : '';
-        mainEl.textContent = 'Combo ' + comboTotal + tail;
+        // 主数は「連鎖段数」= comboStep（例：初手同時2消し → Combo 1×2）
+        comboEl.textContent = 'Combo ' + comboStep + tail;
         comboEl.classList.add('show');
         if(comboHideTimer) clearTimeout(comboHideTimer);
         const BASE=420, PER=110, MAX=900;
-        let dur=(BASE + Math.max(0, comboTotal-2)*PER) * paceFactor();
+        let dur=(BASE + Math.max(0, comboStep-1)*PER) * paceFactor();
         if(dur>MAX) dur=MAX;
         comboHideTimer=setTimeout(()=> comboEl.classList.remove('show'), dur);
       } else {
+        comboEl.classList.remove('show');
+        comboEl.textContent='';
+      }
+    } else {
         comboEl.classList.remove('show');
         comboEl.textContent='';
       }
@@ -410,6 +415,7 @@
   </script>
 </body>
 </html>
+
 
 
 
