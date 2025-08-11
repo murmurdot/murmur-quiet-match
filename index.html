@@ -13,7 +13,7 @@
     .wrap{max-width:1120px;margin:0 auto;padding:12px}
     .card{background:#fff;border:1px solid var(--line);border-radius:24px;box-shadow:var(--shadow)}
 
-    /* --- START (single column, centered) --- */
+    /* START */
     #start{min-height:68vh}
     #start .inner{display:flex;flex-direction:column;gap:16px;align-items:center;justify-content:center;padding:30px}
     .title{font-size:28px;font-weight:700;letter-spacing:.06em;text-align:center}
@@ -27,11 +27,13 @@
     .note{color:#444;font-size:.92rem;line-height:1.55;text-align:center;max-width:820px}
     .note small{display:block;color:#666;margin-top:6px}
 
+    /* YouTube button: always light blue, hover = deeper blue */
     .linkbtn{display:inline-flex;align-items:center;gap:8px;border:1px solid #bcd3ff;background:#e8f0ff;border-radius:999px;padding:12px 18px;text-decoration:none;color:#0b3d91;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.06)}
     .linkbtn:hover{transform:translateY(-1px);background:#d6e4ff;border-color:#9bbcff;color:#09306f}
+
     .cat-small{width:200px;height:auto;opacity:.98}
 
-    /* --- GAME --- */
+    /* GAME */
     #game{display:none}
     .top{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--line)}
     .top .left,.top .right{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
@@ -48,13 +50,14 @@
     .footer{padding:10px 16px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
     .muted{opacity:.65}
 
-    .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;background:#111;color:#fff;padding:10px 14px;border-radius:999px;opacity:0;transition:opacity .2s,transform .2s;pointer-events:none}
+    .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;background:#111;color:#fff;padding:10px 14px;border-radius:999px;opacity:0;transition:opacity .2s,transform .2s;pointer-events:none;z-index:60}
     .toast.show{opacity:1;transform:translateX(-50%) translateY(-3px)}
 
+    /* Combo center */
     .combo{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:#111;color:#fff;padding:10px 14px;border-radius:999px;font-weight:800;font-size:1.1rem;opacity:0;transition:opacity .25s, transform .35s;box-shadow:0 18px 40px rgba(0,0,0,.18)}
-    .combo.show{opacity:1;transform:translateX(-50%) translateY(-3px)}
+    .combo.show{opacity:1;transform:translate(-50%,-50%) scale(1.02)}
 
-    /* Stage select overlay */
+    /* Overlay */
     .overlay{position:fixed;inset:0;background:rgba(17,24,39,.46);display:none;align-items:center;justify-content:center;z-index:50}
     .overlay.show{display:flex}
     .sheet{position:relative;background:#fff;border-radius:20px;box-shadow:0 30px 80px rgba(0,0,0,.2);width:min(92vw,760px);padding:18px;text-align:center}
@@ -104,9 +107,11 @@
 
   <!-- GAME -->
   <section id="game" class="wrap card" aria-live="polite">
+    <!-- YouTube button row (centered, above controls) -->
     <div class="ytbar row" style="justify-content:center;padding:10px 0 0;">
       <a class="linkbtn" href="https://www.youtube.com/channel/UCxXav6WmZ-EhWB3zbIRxFMg" target="_blank" rel="noopener" title="murmur. on YouTube">murmur. on YouTube</a>
     </div>
+
     <div class="top">
       <div class="left">
         <div class="pill">Score: <span id="score">0</span></div>
@@ -114,7 +119,6 @@
         <div class="pill" id="stageInfo" hidden>Stage: <span id="stage">1</span> · Target: <span id="target">0</span></div>
       </div>
       <div class="right">
-        
         <div class="seg" id="paceSeg2">
           <button type="button" data-pace="slow" aria-pressed="true">Slow</button>
           <button type="button" data-pace="normal" aria-pressed="false">Normal</button>
@@ -130,7 +134,7 @@
     </div>
 
     <div id="board-wrap">
-      <div id="combo" class="combo" aria-hidden="true">Combo x2</div>
+      <div id="combo" class="combo" aria-hidden="true">Combo ×2</div>
       <div id="board" role="grid" aria-label="Match board"></div>
     </div>
 
@@ -144,196 +148,128 @@
   <div class="overlay" id="overlay"><div class="sheet" id="sheet"></div></div>
 
   <script>
-    // ------------ Assets & Audio ------------
-    const IMG_VER='?v=20250811f';
-    const TILE_IMAGES=[
-      'assets/images/lemon_soda_tile.png'+IMG_VER,
-      'assets/images/cafelatte_tile.png'+IMG_VER,
-      'assets/images/strawberry_tart_tile.png'+IMG_VER,
-      'assets/images/caramelpudding_tile.png'+IMG_VER,
-      'assets/images/violet_soda_tile.png'+IMG_VER,
-      'assets/images/vanilla_macaron_tile.png'+IMG_VER,
-    ];
-    const SFX={choice:new Audio('assets/audio/choice.mp3'),match:new Audio('assets/audio/match.mp3')};
-    Object.values(SFX).forEach(a=>a.preload='auto');
-    const BGMS=['assets/audio/match_game_bgm_1.mp3','assets/audio/match_game_bgm_2.mp3','assets/audio/match_game_bgm_3.mp3','assets/audio/match_game_bgm_4.mp3','assets/audio/match_game_bgm_5.mp3'];
-    let music=new Audio(); music.loop=false; let currentBgm=-1; let musicEnabled=false, sfxEnabled=true; let userInteracted=false;
-    function pickNextBgm(){let i;do{i=Math.floor(Math.random()*BGMS.length);}while(i===currentBgm&&BGMS.length>1);currentBgm=i;music.src=BGMS[i];}
-    function startMusic(){if(!musicEnabled){musicEnabled=true;pickNextBgm();music.play().catch(()=>{});}updateAudioButtons();syncVol();}
-    function stopMusic(){musicEnabled=false;music.pause();updateAudioButtons();}
-    music.addEventListener('ended',()=>{if(musicEnabled){pickNextBgm();music.play().catch(()=>{});}});
-    function playSfx(name){if(!sfxEnabled) return; try{const a=SFX[name]; a.currentTime=0; a.play();}catch(e){}}
+  'use strict';
+  // ===== Assets & Audio =====
+  const IMG_VER='?v=20250811g';
+  const TILE_IMAGES=[
+    'assets/images/lemon_soda_tile.png'+IMG_VER,
+    'assets/images/cafelatte_tile.png'+IMG_VER,
+    'assets/images/strawberry_tart_tile.png'+IMG_VER,
+    'assets/images/caramelpudding_tile.png'+IMG_VER,
+    'assets/images/violet_soda_tile.png'+IMG_VER,
+    'assets/images/vanilla_macaron_tile.png'+IMG_VER,
+  ];
+  const SFX={choice:new Audio('assets/audio/choice.mp3'),match:new Audio('assets/audio/match.mp3')};
+  Object.values(SFX).forEach(a=>a.preload='auto');
+  const BGMS=['assets/audio/match_game_bgm_1.mp3','assets/audio/match_game_bgm_2.mp3','assets/audio/match_game_bgm_3.mp3','assets/audio/match_game_bgm_4.mp3','assets/audio/match_game_bgm_5.mp3'];
+  let music=new Audio(); music.loop=false; let currentBgm=-1; let musicEnabled=false, sfxEnabled=true; let userInteracted=false;
+  function pickNextBgm(){let i;do{i=Math.floor(Math.random()*BGMS.length);}while(i===currentBgm&&BGMS.length>1);currentBgm=i;music.src=BGMS[i];}
+  function startMusic(){if(!musicEnabled){musicEnabled=true;pickNextBgm();music.play().catch(()=>{});}updateAudioButtons();syncVol();}
+  function stopMusic(){musicEnabled=false;music.pause();updateAudioButtons();}
+  music.addEventListener('ended',()=>{if(musicEnabled){pickNextBgm();music.play().catch(()=>{});}});
+  function playSfx(name){if(!sfxEnabled) return; try{const a=SFX[name]; a.currentTime=0; a.play();}catch(e){}}
 
-    // ------------ DOM ------------
-    const startSec=document.getElementById('start'); const gameSec=document.getElementById('game'); const boardEl=document.getElementById('board'); const toastEl=document.getElementById('toast'); const comboEl=document.getElementById('combo');
-    const scoreEl=document.getElementById('score'); const movesWrap=document.getElementById('movesWrap'); const movesEl=document.getElementById('moves'); const stageInfo=document.getElementById('stageInfo'); const stageEl=document.getElementById('stage'); const targetEl=document.getElementById('target'); const statusEl=document.getElementById('status');
-    const modeSeg=document.getElementById('modeSeg'); const startBtn=document.getElementById('startBtn');
-    const paceSeg2=document.getElementById('paceSeg2'); const musicBtn=document.getElementById('musicBtn'); const sfxBtn=document.getElementById('sfxBtn'); const vol2=document.getElementById('vol2'); const restartBtn=document.getElementById('restartBtn'); const stageSelBtn=document.getElementById('stageSelectBtn'); const backBtn=document.getElementById('backBtn');
+  // ===== DOM =====
+  const startSec=byId('start'), gameSec=byId('game'), boardEl=byId('board'), toastEl=byId('toast'), comboEl=byId('combo');
+  const scoreEl=byId('score'), movesWrap=byId('movesWrap'), movesEl=byId('moves'), stageInfo=byId('stageInfo'), stageEl=byId('stage'), targetEl=byId('target'), statusEl=byId('status');
+  const modeSeg=byId('modeSeg'), startBtn=byId('startBtn');
+  const paceSeg2=byId('paceSeg2'), musicBtn=byId('musicBtn'), sfxBtn=byId('sfxBtn'), vol2=byId('vol2'), restartBtn=byId('restartBtn'), stageSelBtn=byId('stageSelectBtn'), backBtn=byId('backBtn');
+  function byId(id){return document.getElementById(id)}
 
-    // ------------ Mode on Start (only Calm/Challenge) ------------
-    let mode='calm'; // calm | challenge
-    function setMode(m){mode=m;[...modeSeg.querySelectorAll('button')].forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.mode===mode)));}
-    modeSeg.addEventListener('click',e=>{const b=e.target.closest('button'); if(!b) return; setMode(b.dataset.mode)});
+  // ===== Mode on Start =====
+  let mode='calm';
+  function setMode(m){mode=m; if(modeSeg){[...modeSeg.querySelectorAll('button')].forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.mode===mode)));}}
+  if(modeSeg){modeSeg.addEventListener('click',e=>{const b=e.target.closest('button'); if(!b) return; setMode(b.dataset.mode)});} setMode('calm');
 
-    // ------------ In-game Pace & Audio ------------
-    let pace='slow'; // default slower overall
-    function setPaceInGame(p){pace=p;[...paceSeg2.querySelectorAll('button')].forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.pace===pace)));}
-    paceSeg2.addEventListener('click',e=>{const b=e.target.closest('button'); if(!b) return; setPaceInGame(b.dataset.pace)});
-    function updateAudioButtons(){const set=(btn,on,l)=>{btn.setAttribute('aria-pressed',String(on)); btn.textContent=l+(on?': On':': Off');}; set(musicBtn,musicEnabled,'Music'); set(sfxBtn,sfxEnabled,'SFX');}
-    function syncVol(){music.volume=Number(vol2.value||'0.7');}
-    musicBtn.addEventListener('click',()=> musicEnabled? stopMusic(): startMusic());
-    sfxBtn.addEventListener('click',()=>{sfxEnabled=!sfxEnabled; updateAudioButtons(); showToast('SFX '+(sfxEnabled?'On':'Off'));});
-    vol2.addEventListener('input',syncVol);
-    document.addEventListener('pointerdown',()=>{userInteracted=true});
+  // ===== In-game Pace & Audio =====
+  let pace='slow';
+  function setPaceInGame(p){pace=p; if(paceSeg2){[...paceSeg2.querySelectorAll('button')].forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.pace===pace)));}}
+  if(paceSeg2){paceSeg2.addEventListener('click',e=>{const b=e.target.closest('button'); if(!b) return; setPaceInGame(b.dataset.pace)});} setPaceInGame('slow');
+  function updateAudioButtons(){const set=(btn,on,l)=>{if(!btn)return; btn.setAttribute('aria-pressed',String(on)); btn.textContent=l+(on?': On':': Off');}; set(musicBtn,musicEnabled,'Music'); set(sfxBtn,sfxEnabled,'SFX');}
+  function syncVol(){if(music) music.volume=Number(vol2?.value||'0.7');}
+  if(musicBtn){musicBtn.addEventListener('click',()=> musicEnabled? stopMusic(): startMusic());}
+  if(sfxBtn){sfxBtn.addEventListener('click',()=>{sfxEnabled=!sfxEnabled; updateAudioButtons(); showToast('SFX '+(sfxEnabled?'On':'Off'));});}
+  if(vol2){vol2.addEventListener('input',syncVol);} updateAudioButtons(); syncVol();
+  document.addEventListener('pointerdown',()=>{userInteracted=true});
 
-    // ------------ Start button behavior ------------
-    startBtn.addEventListener('click',()=>{
-      // if user came from YouTube, open game in new tab; otherwise start in same tab
-      const ref=document.referrer||''; const isYT=/youtube\.com|youtu\.be/.test(ref) || new URLSearchParams(location.search).get('yt')==='1';
-      if(isYT){ const url=new URL(location.href); url.searchParams.set('play','1'); url.searchParams.set('mode',mode); window.open(url.toString(),'_blank'); }
-      else { startGameAuto(mode); }
-    });
+  // ===== Start button =====
+  if(startBtn){startBtn.addEventListener('click',()=>{const ref=document.referrer||''; const isYT=/youtube\.com|youtu\.be/.test(ref)||new URLSearchParams(location.search).get('yt')==='1'; if(isYT){const url=new URL(location.href); url.searchParams.set('play','1'); url.searchParams.set('mode',mode); window.open(url.toString(),'_blank');} else { startGameAuto(mode); }});}
+  (function autoStart(){try{const p=new URLSearchParams(location.search); if(p.get('play')==='1'){ const m=p.get('mode')||'calm'; setMode(m); startGameAuto(m); }}catch(e){console.warn(e)}})();
 
-    // Auto start for ?play=1
-    (function autoStart(){ const p=new URLSearchParams(location.search); if(p.get('play')==='1'){ const m=p.get('mode')||'calm'; setMode(m); startGameAuto(m); } })();
+  // ===== Board State =====
+  const rows=8, cols=8; let grid=[]; let selected=null; let busy=false; let score=0; let comboStep=0; let comboTotal=0;
+  function createBoardDom(){boardEl.style.gridTemplateColumns=`repeat(${cols}, var(--tile))`; boardEl.innerHTML=''; for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){ const cell=document.createElement('div'); cell.className='cell'; cell.dataset.r=r; cell.dataset.c=c; cell.addEventListener('click',onCellClick); const img=document.createElement('img'); img.alt=''; cell.appendChild(img); boardEl.appendChild(cell);} }
+  function getCell(r,c){return boardEl.children[r*cols+c]}
+  function setCellImage(r,c){const idx=grid[r][c]; const cell=getCell(r,c); const img=cell.querySelector('img'); if(idx>=0){img.src=TILE_IMAGES[idx]; cell.style.visibility='visible'} else {img.removeAttribute('src'); cell.style.visibility='hidden'}}
+  function renderAll(){for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) setCellImage(r,c)}
+  function randInt(n){return Math.floor(Math.random()*n)}
+  function randTileFor(r,c){let choices=[0,1,2,3,4,5]; const L1=(c>=1)?grid[r][c-1]:-99, L2=(c>=2)?grid[r][c-2]:-98; const U1=(r>=1)?grid[r-1][c]:-97, U2=(r>=2)?grid[r-2][c]:-96; choices=choices.filter(x=>!(x===L1&&x===L2)&&!(x===U1&&x===U2)); if(!choices.length) choices=[0,1,2,3,4,5]; return choices[randInt(choices.length)];}
+  function generateInitialGrid(){grid=Array.from({length:rows},()=>Array(cols).fill(0)); for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) grid[r][c]=randTileFor(r,c); let guard=0; while((findMatches().size>0)||!hasAnyMoves()){ for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) grid[r][c]=randTileFor(r,c); if(++guard>160) break; }}
+  function reshuffle(){const flat=grid.flat(); for(let i=flat.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [flat[i],flat[j]]=[flat[j],flat[i]];} for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) grid[r][c]=flat[r*cols+c]; renderAll();}
 
-    // ------------ Board State ------------
-    const rows=8, cols=8; let grid=[]; let selected=null; let busy=false; let score=0; let comboStep=0; comboTotal=0; let comboTotal=0;
+  function onCellClick(e){ if(busy) return; const r=+e.currentTarget.dataset.r, c=+e.currentTarget.dataset.c; if(selected && selected.r===r && selected.c===c){ getCell(r,c).classList.remove('selected'); selected=null; return; } if(!selected){ selected={r,c}; getCell(r,c).classList.add('selected'); playSfx('choice'); return; } const {r:sr,c:sc}=selected; if(Math.abs(sr-r)+Math.abs(sc-c)!==1){ getCell(sr,sc).classList.remove('selected'); selected={r,c}; getCell(r,c).classList.add('selected'); playSfx('choice'); return; } swapAndResolve(sr,sc,r,c); }
+  function swapValues(a,b,c,d){const t=grid[a][b]; grid[a][b]=grid[c][d]; grid[c][d]=t; setCellImage(a,b); setCellImage(c,d)}
+  function findMatches(){const matched=new Set(); const seen=Array.from({length:rows},()=>Array(cols).fill(false)); const inb=(r,c)=>r>=0&&r<rows&&c>=0&&c<cols; const dirs=[[1,0],[-1,0],[0,1],[0,-1]]; for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){ if(seen[r][c]) continue; const val=grid[r][c]; if(val===-1){seen[r][c]=true; continue;} const q=[[r,c]]; seen[r][c]=true; const comp=[[r,c]]; while(q.length){const [rr,cc]=q.shift(); for(const [dr,dc] of dirs){const nr=rr+dr,nc=cc+dc; if(!inb(nr,nc)||seen[nr][nc]) continue; if(grid[nr][nc]===val){seen[nr][nc]=true; q.push([nr,nc]); comp.push([nr,nc]);}}} if(comp.length>=3) comp.forEach(([rr,cc])=>matched.add(rr+','+cc)); } return matched; }
+  function hasAnyMoves(){ for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){ const here=grid[r][c]; const trySwap=(r2,c2)=>{ if(r2<0||r2>=rows||c2<0||c2>=cols) return false; const t=grid[r2][c2]; if(t===here) return false; grid[r][c]=t; grid[r2][c2]=here; const ok=findMatches().size>0; grid[r][c]=here; grid[r2][c2]=t; return ok; }; if(trySwap(r,c+1) || trySwap(r+1,c)) return true; } return false; }
+  function paceFactor(){ return pace==='slow'?1.6 : pace==='normal'?1.3 : 1.05; }
+  function delay(ms){ return new Promise(res=>setTimeout(res, ms*paceFactor())); }
+  async function swapAndResolve(r1,c1,r2,c2){ busy=true; comboStep=0; comboTotal=0; playSfx('choice'); getCell(r1,c1).classList.remove('selected'); selected=null; swapValues(r1,c1,r2,c2); await delay(120); let m=findMatches(); if(m.size===0){ swapValues(r1,c1,r2,c2); busy=false; return; } if(mode==='challenge'){ movesLeft--; updateHud(); } await resolveMatches(m); busy=false; if(!hasAnyMoves()){ reshuffle(); showToast('No moves — reshuffling'); } }
+  function updateHud(){ if(movesEl) movesEl.textContent=movesLeft; if(stageEl) stageEl.textContent=currentStage; if(targetEl) targetEl.textContent=targetScore; if(scoreEl) scoreEl.textContent=score; }
+  async function resolveMatches(matchedSet){ comboStep++; const groups=countGroupsFromSet(matchedSet); comboTotal += Math.max(1, groups); if(comboTotal>=2){ comboEl.textContent='Combo ×'+comboTotal; comboEl.classList.add('show'); setTimeout(()=>comboEl.classList.remove('show'), 1100 + (comboTotal-2)*260); } matchedSet.forEach(k=>{ const [r,c]=k.split(',').map(Number); getCell(r,c).classList.add('matching'); }); await delay(240); matchedSet.forEach(k=>{ const [r,c]=k.split(',').map(Number); grid[r][c]=-1; setCellImage(r,c); }); playSfx('match'); const base=matchedSet.size*10; let add=base; if(mode==='calm'){ const chainBonus = base * Math.max(0, comboStep-1) * 0.06; const simultaneous = Math.max(0, groups-1) * 5; add = Math.round(base + chainBonus + simultaneous); } score += add; updateHud(); for(let c=0;c<cols;c++){ let wr=rows-1; for(let r=rows-1;r>=0;r--){ if(grid[r][c]!==-1){ grid[wr][c]=grid[r][c]; wr--; } } for(let r=wr;r>=0;r--) grid[r][c]=-1; } renderAll(); await delay(220); for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) if(grid[r][c]===-1){ grid[r][c]=randTileFor(r,c); setCellImage(r,c); } await delay(180); const more=findMatches(); if(more.size>0) await resolveMatches(more); else if(mode==='challenge'){ if(score>=targetScore){ onStageClear(); } else if(movesLeft<=0){ onStageFail(); } } }
+  function countGroupsFromSet(set){ const keys=[...set]; const coords=keys.map(k=>k.split(',').map(Number)); const n=coords.length; if(n===0) return 0; const adj=Array.from({length:n},()=>[]); for(let i=0;i<n;i++){ const [r1,c1]=coords[i]; for(let j=i+1;j<n;j++){ const [r2,c2]=coords[j]; if(Math.abs(r1-r2)+Math.abs(c1-c2)===1){ adj[i].push(j); adj[j].push(i); } } } const seen=new Array(n).fill(false); let groups=0; for(let i=0;i<n;i++) if(!seen[i]){ groups++; const q=[i]; seen[i]=true; while(q.length){ const v=q.shift(); for(const w of adj[v]) if(!seen[w]){ seen[w]=true; q.push(w); } } } return groups; }
 
-    function createBoardDom(){boardEl.style.gridTemplateColumns=`repeat(${cols}, var(--tile))`; boardEl.innerHTML=''; for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){ const cell=document.createElement('div'); cell.className='cell'; cell.dataset.r=r; cell.dataset.c=c; cell.addEventListener('click',onCellClick); const img=document.createElement('img'); img.alt=''; cell.appendChild(img); boardEl.appendChild(cell);} }
-    function getCell(r,c){return boardEl.children[r*cols+c]}
-    function setCellImage(r,c){const idx=grid[r][c]; const cell=getCell(r,c); const img=cell.querySelector('img'); if(idx>=0){img.src=TILE_IMAGES[idx]; cell.style.visibility='visible'} else {img.removeAttribute('src'); cell.style.visibility='hidden'}}
-    function renderAll(){for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) setCellImage(r,c)}
-
-    function randInt(n){return Math.floor(Math.random()*n)}
-    function randTileFor(r,c){let choices=[0,1,2,3,4,5]; const L1=(c>=1)?grid[r][c-1]:-99, L2=(c>=2)?grid[r][c-2]:-98; const U1=(r>=1)?grid[r-1][c]:-97, U2=(r>=2)?grid[r-2][c]:-96; choices=choices.filter(x=>!(x===L1&&x===L2)&&!(x===U1&&x===U2)); if(!choices.length) choices=[0,1,2,3,4,5]; return choices[randInt(choices.length)];}
-
-    function generateInitialGrid(){
-      grid=Array.from({length:rows},()=>Array(cols).fill(0));
-      for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) grid[r][c]=randTileFor(r,c);
-      let guard=0;
-      // Ensure: no initial matches and at least one possible move
-      while( (findMatches().size>0) || !hasAnyMoves() ){
-        for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) grid[r][c]=randTileFor(r,c);
-        if(++guard>120) break; // strong guard
-      }
-    }
-    function reshuffle(){const flat=grid.flat(); for(let i=flat.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [flat[i],flat[j]]=[flat[j],flat[i]];} for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) grid[r][c]=flat[r*cols+c]; renderAll();}
-
-    function onCellClick(e){ if(busy) return; const r=+e.currentTarget.dataset.r, c=+e.currentTarget.dataset.c; if(selected && selected.r===r && selected.c===c){ getCell(r,c).classList.remove('selected'); selected=null; return; } if(!selected){ selected={r,c}; getCell(r,c).classList.add('selected'); playSfx('choice'); return; } const {r:sr,c:sc}=selected; if(Math.abs(sr-r)+Math.abs(sc-c)!==1){ getCell(sr,sc).classList.remove('selected'); selected={r,c}; getCell(r,c).classList.add('selected'); playSfx('choice'); return; } swapAndResolve(sr,sc,r,c); }
-
-    function swapValues(a,b,c,d){const t=grid[a][b]; grid[a][b]=grid[c][d]; grid[c][d]=t; setCellImage(a,b); setCellImage(c,d)}
-
-    function findMatches(){const matched=new Set(); const seen=Array.from({length:rows},()=>Array(cols).fill(false)); const inb=(r,c)=>r>=0&&r<rows&&c>=0&&c<cols; const dirs=[[1,0],[-1,0],[0,1],[0,-1]]; for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){ if(seen[r][c]) continue; const val=grid[r][c]; if(val===-1){seen[r][c]=true; continue;} const q=[[r,c]]; seen[r][c]=true; const comp=[[r,c]]; while(q.length){const [rr,cc]=q.shift(); for(const [dr,dc] of dirs){const nr=rr+dr,nc=cc+dc; if(!inb(nr,nc)||seen[nr][nc]) continue; if(grid[nr][nc]===val){seen[nr][nc]=true; q.push([nr,nc]); comp.push([nr,nc]);}}} if(comp.length>=3) comp.forEach(([rr,cc])=>matched.add(rr+','+cc)); } return matched; }
-    function hasAnyMoves(){ for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){ const here=grid[r][c]; const trySwap=(r2,c2)=>{ if(r2<0||r2>=rows||c2<0||c2>=cols) return false; const t=grid[r2][c2]; if(t===here) return false; grid[r][c]=t; grid[r2][c2]=here; const ok=findMatches().size>0; grid[r][c]=here; grid[r2][c2]=t; return ok; }; if(trySwap(r,c+1) || trySwap(r+1,c)) return true; } return false; }
-
-    function paceFactor(){ return pace==='slow'?1.6 : pace==='normal'?1.3 : 1.05; } // 全体的にさらに遅め
-    function delay(ms){ return new Promise(res=>setTimeout(res, ms*paceFactor())); }
-
-    async function swapAndResolve(r1,c1,r2,c2){ busy=true; comboStep=0; playSfx('choice'); getCell(r1,c1).classList.remove('selected'); selected=null; swapValues(r1,c1,r2,c2); await delay(120);
-      let m=findMatches(); if(m.size===0){ swapValues(r1,c1,r2,c2); busy=false; return; }
-      if(mode==='challenge'){ movesLeft--; updateHud(); }
-      await resolveMatches(m);
-      busy=false; if(!hasAnyMoves()){ reshuffle(); showToast('No moves — reshuffling'); }
-    }
-
-    function updateHud(){ movesEl.textContent=movesLeft; stageEl.textContent=currentStage; targetEl.textContent=targetScore; scoreEl.textContent=score; }
-
-    async function resolveMatches(matchedSet){ comboStep++;
-      const groups=countGroupsFromSet(matchedSet);
-      comboTotal += Math.max(1, groups);
-      if(comboTotal>=2){ comboEl.textContent='Combo ×'+comboTotal; comboEl.classList.add('show'); setTimeout(()=>comboEl.classList.remove('show'), 1100 + (comboTotal-2)*260); }
-
-      matchedSet.forEach(k=>{ const [r,c]=k.split(',').map(Number); getCell(r,c).classList.add('matching'); });
-      await delay(240);
-      matchedSet.forEach(k=>{ const [r,c]=k.split(',').map(Number); grid[r][c]=-1; setCellImage(r,c); });
-      playSfx('match');
-
-      // Scoring (Calm mild bonus): base + 6% per chain tier beyond 1 + +5 per extra simultaneous group
-      const groups=countGroupsFromSet(matchedSet);
-      const base=matchedSet.size*10; let add=base; if(mode==='calm'){ const chainBonus = base * Math.max(0, comboStep-1) * 0.06; const simultaneous = Math.max(0, groups-1) * 5; add = Math.round(base + chainBonus + simultaneous); }
-      score += add; updateHud();
-
-      // Gravity
-      for(let c=0;c<cols;c++){ let wr=rows-1; for(let r=rows-1;r>=0;r--){ if(grid[r][c]!==-1){ grid[wr][c]=grid[r][c]; wr--; } } for(let r=wr;r>=0;r--) grid[r][c]=-1; }
-      renderAll(); await delay(220);
-      // Refill
-      for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) if(grid[r][c]===-1){ grid[r][c]=randTileFor(r,c); setCellImage(r,c); }
-      await delay(180);
-      const more=findMatches(); if(more.size>0) await resolveMatches(more); else if(mode==='challenge'){ if(score>=targetScore){ onStageClear(); } else if(movesLeft<=0){ onStageFail(); } }
-    }
-
-    function countGroupsFromSet(set){ const keys=[...set]; const coords=keys.map(k=>k.split(',').map(Number)); const n=coords.length; if(n===0) return 0; const adj=Array.from({length:n},()=>[]); for(let i=0;i<n;i++){ const [r1,c1]=coords[i]; for(let j=i+1;j<n;j++){ const [r2,c2]=coords[j]; if(Math.abs(r1-r2)+Math.abs(c1-c2)===1){ adj[i].push(j); adj[j].push(i); } } } const seen=new Array(n).fill(false); let groups=0; for(let i=0;i<n;i++) if(!seen[i]){ groups++; const q=[i]; seen[i]=true; while(q.length){ const v=q.shift(); for(const w of adj[v]) if(!seen[w]){ seen[w]=true; q.push(w); } } } return groups; }
-
-    // ------------ Challenge (stage-based, move limit) ------------
-    let currentStage=1; let unlocked=parseInt(localStorage.getItem('mmq_unlocked')||'1',10); if(!(unlocked>=1&&unlocked<=100)) unlocked=1; let savedStage=parseInt(localStorage.getItem('mmq_currentStage')||String(unlocked),10); if(!(savedStage>=1&&savedStage<=unlocked)) savedStage=unlocked;
-    let targetScore=0; let movesLeft=0;
-    function stageConfig(n){ const baseTarget=450, grow=50; const baseMoves=20, stepEvery=10, minMoves=15; const moves=Math.max(minMoves, baseMoves - Math.floor((n-1)/stepEvery)); const target=baseTarget + grow*(n-1); return {moves,target}; }
-
-    function openStageSelect(){ const max=100; let gridHtml=''; for(let i=1;i<=max;i++){ const lock=i>unlocked, cleared=i<unlocked; gridHtml += `<div class=\"stage ${lock?'lock':''} ${cleared?'clear':''}\" data-n=\"${i}\">${i}</div>`; } showOverlay(`
-      <button class=\"close\" id=\"closeOv\">×</button>
+  // ===== Challenge (stages) =====
+  let currentStage=1; let unlocked=parseInt(localStorage.getItem('mmq_unlocked')||'1',10); if(!(unlocked>=1&&unlocked<=100)) unlocked=1; let savedStage=parseInt(localStorage.getItem('mmq_currentStage')||String(unlocked),10); if(!(savedStage>=1&&savedStage<=unlocked)) savedStage=unlocked; let targetScore=0; let movesLeft=0;
+  function stageConfig(n){ const baseTarget=450, grow=50; const baseMoves=20, stepEvery=10, minMoves=15; const moves=Math.max(minMoves, baseMoves - Math.floor((n-1)/stepEvery)); const target=baseTarget + grow*(n-1); return {moves,target}; }
+  function openStageSelect(){ const max=100; let gridHtml=''; for(let i=1;i<=max;i++){ const lock=i>unlocked, cleared=i<unlocked; gridHtml += `<div class="stage ${lock?'lock':''} ${cleared?'clear':''}" data-n="${i}">${i}</div>`; } showOverlay(`
+      <button class="close" id="closeOv">×</button>
       <h2>Challenge — Stage Select</h2>
-      <div class=\"muted\" style=\"margin:4px 0 8px\">Choose a stage to play. Cleared stages are marked; locked stages unlock as you progress.</div>
-      <div class=\"stage-grid\">${gridHtml}</div>
-      <div style=\"margin-top:10px\"><button class=\"btn\" id=\"backToStart\">Back</button></div>`);
-      document.getElementById('closeOv').onclick=hideOverlay; document.getElementById('backToStart').onclick=()=>{ hideOverlay(); goToStart(); };
-      document.querySelectorAll('.stage').forEach(el=> el.onclick=()=>{ const n=+el.dataset.n; if(n>unlocked) return; hideOverlay(); startStage(n); }); }
+      <div class="muted" style="margin:4px 0 8px">Choose a stage to play. Cleared stages are marked; locked stages unlock as you progress.</div>
+      <div class="stage-grid">${gridHtml}</div>
+      <div style="margin-top:10px"><button class="btn" id="backToStart">Back</button></div>`);
+    byId('closeOv').onclick=hideOverlay; byId('backToStart').onclick=()=>{ hideOverlay(); goToStart(); }; document.querySelectorAll('.stage').forEach(el=> el.onclick=()=>{ const n=+el.dataset.n; if(n>unlocked) return; hideOverlay(); startStage(n); }); }
+  function startStage(n){ mode='challenge'; setMode('challenge'); currentStage=n; const cfg=stageConfig(n); targetScore=cfg.target; movesLeft=cfg.moves; startGame(); stageSelBtn.hidden=false; stageInfo.hidden=false; movesWrap.hidden=false; updateHud(); localStorage.setItem('mmq_currentStage', String(currentStage)); }
+  function onStageClear(){ if(unlocked<currentStage+1){ unlocked=currentStage+1; localStorage.setItem('mmq_unlocked', String(unlocked)); } showOverlay(`
+      <button class="close" id="closeOv">×</button>
+      <h2>Stage ${currentStage} — Cleared 🎉</h2>
+      <p class="muted">Score ${score} / Target ${targetScore}</p>
+      <div class="row" style="justify-content:center">
+        <button class="btn" id="next">Next</button>
+        <button class="btn" id="select">Stage Select</button>
+        <button class="btn" id="retry">Retry</button>
+      </div>`);
+    byId('closeOv').onclick=hideOverlay; byId('next').onclick=()=>{ hideOverlay(); startStage(Math.min(100,currentStage+1)); }; byId('select').onclick=()=>{ openStageSelect(); }; byId('retry').onclick=()=>{ hideOverlay(); startStage(currentStage); }; }
+  function onStageFail(){ showOverlay(`
+      <button class="close" id="close">×</button>
+      <h2>Stage ${currentStage} — Try again</h2>
+      <p class="muted">Score ${score} / Target ${targetScore}</p>
+      <div class="row" style="justify-content:center">
+        <button class="btn" id="retry">Retry</button>
+        <button class="btn" id="select">Stage Select</button>
+      </div>`);
+    byId('close').onclick=hideOverlay; byId('retry').onclick=()=>{ hideOverlay(); startStage(currentStage); }; byId('select').onclick=()=>{ openStageSelect(); }; }
+  function showResumeDialog(){ const resumeStage = savedStage || unlocked || 1; showOverlay(`
+      <button class="close" id="closeOv">×</button>
+      <h2>Challenge — Continue?</h2>
+      <p class="muted">Resume from your last unfinished stage, or start from Stage 1.</p>
+      <div class="row" style="justify-content:center">
+        <button class="btn" id="resume">Resume (Stage ${resumeStage})</button>
+        <button class="btn" id="fromStart">Start from Stage 1</button>
+      </div>`);
+    byId('closeOv').onclick=hideOverlay; byId('resume').onclick=()=>{ hideOverlay(); startStage(resumeStage); }; byId('fromStart').onclick=()=>{ hideOverlay(); localStorage.setItem('mmq_currentStage','1'); startStage(1); }; }
 
-    function startStage(n){ mode='challenge'; setMode('challenge'); currentStage=n; const cfg=stageConfig(n); targetScore=cfg.target; movesLeft=cfg.moves; startGame(); stageSelBtn.hidden=false; stageInfo.hidden=false; movesWrap.hidden=false; updateHud(); localStorage.setItem('mmq_currentStage', String(currentStage)); }
+  // ===== Overlay & lifecycle =====
+  const overlay=byId('overlay'), sheet=byId('sheet');
+  function showOverlay(html){ sheet.innerHTML=html; overlay.classList.add('show'); }
+  function hideOverlay(){ overlay.classList.remove('show'); sheet.innerHTML=''; }
+  function startGame(){ startSec.style.display='none'; gameSec.style.display='block'; initGame(); updateAudioButtons(); syncVol(); }
+  function goToStart(){ selected=null; busy=false; gameSec.style.display='none'; startSec.style.display='block'; statusEl.textContent=''; }
+  let timerId=null;
+  function initGame(){ score=0; selected=null; busy=false; comboStep=0; comboTotal=0; createBoardDom(); generateInitialGrid(); renderAll(); }
+  function startGameAuto(m){ if(m==='challenge'){ if(unlocked>1){ showResumeDialog(); } else { startStage(1); } } else { mode='calm'; setMode('calm'); startGame(); } }
 
-    function onStageClear(){ if(unlocked<currentStage+1){ unlocked=currentStage+1; localStorage.setItem('mmq_unlocked', String(unlocked)); } showOverlay(`
-        <button class=\"close\" id=\"closeOv\">×</button>
-        <h2>Stage ${currentStage} — Cleared 🎉</h2>
-        <p class=\"muted\">Score ${score} / Target ${targetScore}</p>
-        <div class=\"row\" style=\"justify-content:center\">
-          <button class=\"btn\" id=\"next\">Next</button>
-          <button class=\"btn\" id=\"select\">Stage Select</button>
-          <button class=\"btn\" id=\"retry\">Retry</button>
-        </div>`);
-      document.getElementById('closeOv').onclick=hideOverlay; document.getElementById('next').onclick=()=>{ hideOverlay(); startStage(Math.min(100,currentStage+1)); }; document.getElementById('select').onclick=()=>{ openStageSelect(); }; document.getElementById('retry').onclick=()=>{ hideOverlay(); startStage(currentStage); }; }
-    function onStageFail(){ showOverlay(`
-        <button class=\"close\" id=\"close\">×</button>
-        <h2>Stage ${currentStage} — Try again</h2>
-        <p class=\"muted\">Score ${score} / Target ${targetScore}</p>
-        <div class=\"row\" style=\"justify-content:center\">
-          <button class=\"btn\" id=\"retry\">Retry</button>
-          <button class=\"btn\" id=\"select\">Stage Select</button>
-        </div>`);
-      document.getElementById('close').onclick=hideOverlay; document.getElementById('retry').onclick=()=>{ hideOverlay(); startStage(currentStage); }; document.getElementById('select').onclick=()=>{ openStageSelect(); }; }
-
-    // ------------ Overlay helpers ------------
-    const overlay=document.getElementById('overlay'); const sheet=document.getElementById('sheet');
-    function showOverlay(html){ sheet.innerHTML=html; overlay.classList.add('show'); }
-    function hideOverlay(){ overlay.classList.remove('show'); sheet.innerHTML=''; }
-
-    function showResumeDialog(){
-      const resumeStage = savedStage || unlocked || 1;
-      showOverlay(`
-        <button class="close" id="closeOv">×</button>
-        <h2>Challenge — Continue?</h2>
-        <p class="muted">Resume from your last unfinished stage, or start from Stage 1.</p>
-        <div class="row" style="justify-content:center">
-          <button class="btn" id="resume">Resume (Stage ${resumeStage})</button>
-          <button class="btn" id="fromStart">Start from Stage 1</button>
-        </div>`);
-      document.getElementById('closeOv').onclick=hideOverlay;
-      document.getElementById('resume').onclick=()=>{ hideOverlay(); startStage(resumeStage); };
-      document.getElementById('fromStart').onclick=()=>{ hideOverlay(); localStorage.setItem('mmq_currentStage','1'); startStage(1); };
-    }
-
-    // ------------ Game lifecycle ------------
-    function startGame(){ startSec.style.display='none'; gameSec.style.display='block'; initGame(); updateAudioButtons(); syncVol(); }
-    function goToStart(){ selected=null; busy=false; gameSec.style.display='none'; startSec.style.display='block'; statusEl.textContent=''; }
-
-    let timerId=null; // reserved
-    function initGame(){ score=0; selected=null; busy=false; comboStep=0; createBoardDom(); generateInitialGrid(); renderAll(); }
-
-    // Start routing
-    function startGameAuto(m){ if(m==='challenge'){ if(unlocked>1){ showResumeDialog(); } else { startStage(1); } } else { mode='calm'; setMode('calm'); startGame(); } }
-
-    // In-game buttons
-    backBtn.addEventListener('click',()=>{
-      showOverlay(`
+  // ===== In-game buttons =====
+  if(backBtn){ backBtn.addEventListener('click',()=>{ showOverlay(`
         <button class="close" id="closeOv">×</button>
         <h2>Leave game?</h2>
         <p class="muted">Current in-progress board will reset. Continue?</p>
@@ -341,21 +277,15 @@
           <button class="btn" id="leave">Mode Select</button>
           <button class="btn" id="stay">Cancel</button>
         </div>`);
-      document.getElementById('closeOv').onclick=hideOverlay;
-      document.getElementById('leave').onclick=()=>{ hideOverlay(); goToStart(); };
-      document.getElementById('stay').onclick=()=> hideOverlay();
-    });
-    restartBtn.addEventListener('click',()=> initGame(true));
-    stageSelBtn.addEventListener('click',()=> openStageSelect());
+      byId('closeOv').onclick=hideOverlay; byId('leave').onclick=()=>{ hideOverlay(); goToStart(); }; byId('stay').onclick=()=> hideOverlay(); }); }
+  if(restartBtn){ restartBtn.addEventListener('click',()=> initGame(true)); }
+  if(stageSelBtn){ stageSelBtn.addEventListener('click',()=> openStageSelect()); }
 
-    // ------------ Toast ------------
-    function showToast(text){ toastEl.textContent=text; toastEl.classList.add('show'); clearTimeout(showToast._t); showToast._t=setTimeout(()=>toastEl.classList.remove('show'),1600); }
+  // ===== Toast =====
+  function showToast(text){ toastEl.textContent=text; toastEl.classList.add('show'); clearTimeout(showToast._t); showToast._t=setTimeout(()=>toastEl.classList.remove('show'),1600); }
 
-    // ------------ Preload ------------
-    (function preload(){ TILE_IMAGES.concat(['assets/images/banner.png'+IMG_VER,'assets/images/welcome_cat.png'+IMG_VER]).forEach(src=>{ const im=new Image(); im.src=src; im.onerror=()=>console.warn('Image missing?',src); }); Object.values(SFX).forEach(a=>a.load()); pickNextBgm(); })();
-
-    // Defaults
-    setMode('calm'); setPaceInGame('slow'); updateAudioButtons(); syncVol();
+  // ===== Preload =====
+  (function preload(){ try{ TILE_IMAGES.concat(['assets/images/banner.png'+IMG_VER,'assets/images/welcome_cat.png'+IMG_VER]).forEach(src=>{ const im=new Image(); im.src=src; im.onerror=()=>console.warn('Image missing?',src); }); Object.values(SFX).forEach(a=>a.load()); pickNextBgm(); }catch(e){ console.warn(e); } })();
   </script>
 </body>
 </html>
