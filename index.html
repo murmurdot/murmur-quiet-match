@@ -249,43 +249,44 @@
 
     // ------------ Combo show logic ------------
     let comboHideTimer=null;
-    function addCombo(groups, step){
-  const g = Math.max(1, Number(groups)||1);
-  const s = Math.max(1, Number(step)||1);
+    // 盤面解決ループから呼ぶ：addCombo(groups)
+// groups = そのステップで同時に消えたグループ数（1以上）
+function addCombo(groups){
+  const g = Math.max(1, Number(groups) || 1);
 
-  // 累計は2つ以上消した場合のみ加算
-  if(g >= 2 || comboTotal >= 1){
-    comboTotal += g;
-  }
+  // 累計に常に加算（先頭が1でも合計は進める）
+  comboTotal += g;
 
-  const showMain = comboTotal >= 2;
-  const showSub  = g >= 2;
+  // 表示ルール：
+  // - 「Combo 2」以上で表示開始（= Combo 1 は表示しない）
+  // - 同時消しが2以上なら「Combo 4×2」のように同じ行に後ろ付け
+  const show = comboTotal >= 2 || g >= 2;
 
-  const subEl = document.getElementById('comboSub');
   const mainEl = comboEl.querySelector('.main');
+  const subEl  = document.getElementById('comboSub'); // 使わないので常時非表示に
+  if (subEl) { subEl.textContent = ''; subEl.style.display = 'none'; }
 
-  if(showMain){
-    mainEl.textContent = 'Combo ×' + comboTotal;
-  } else {
-    mainEl.textContent='';
-  }
+  if (show && mainEl) {
+    const tail = (g >= 2) ? ('×' + g) : '';
+    // 例: 初手が同時2消し → Combo 2×2
+    //     次が単独消し   → Combo 3
+    //     次が同時2消し → Combo 5×2
+    mainEl.textContent = 'Combo ' + comboTotal + tail;
 
-  if(subEl){
-    subEl.textContent = 'Step ' + s + ' × ' + g; // 英語表記
-    subEl.style.display = showSub ? 'inline-block' : 'none';
-  }
-
-  if(showMain || showSub){
     comboEl.classList.add('show');
-    if(comboHideTimer) clearTimeout(comboHideTimer);
-    const BASE=500, PER=150, MAX=1100; // 時間短め
-    let dur = (BASE + Math.max(0, comboTotal-2)*PER) * paceFactor();
-    dur = Math.min(dur, MAX);
-    comboHideTimer = setTimeout(()=> comboEl.classList.remove('show'), dur);
+    if (comboHideTimer) clearTimeout(comboHideTimer);
+
+    // 表示時間は短め + 速度連動。長すぎ防止で上限あり
+    const BASE = 420, PER = 110, MAX = 900;
+    let dur = (BASE + Math.max(0, comboTotal - 2) * PER) * paceFactor();
+    if (dur > MAX) dur = MAX;
+    comboHideTimer = setTimeout(() => comboEl.classList.remove('show'), dur);
   } else {
-    comboEl.classList.remove('show');
+    comboEl.classList.remove('show'); // Combo 1 のときは出さない
+    if (mainEl) mainEl.textContent = '';
   }
 }
+
 
     // ------------ Challenge (stage-based, move limit) (stage-based, move limit) ------------
     let currentStage=1; let unlocked=parseInt(localStorage.getItem('mmq_unlocked')||'1',10); if(!(unlocked>=1&&unlocked<=100)) unlocked=1; let savedStage=parseInt(localStorage.getItem('mmq_currentStage')||String(unlocked),10); if(!(savedStage>=1&&savedStage<=unlocked)) savedStage=unlocked;
