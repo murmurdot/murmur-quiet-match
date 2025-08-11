@@ -4,39 +4,36 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>murmur — quiet match</title>
-  <meta name="description" content="A calm, minimal match-3 with café sweets. Calm mode + Stage-based Challenge." />
+  <meta name="description" content="Calm endless mode & stage-based challenge. Minimal café-vibe match-3 with sweets." />
   <style>
-    :root{
-      --bg:#fafafa; --ink:#1a1a1a; --soft:#ececec; --line:#e3e3e3; --muted:#6b7280;
-      --accent:#111; --good:#34d399; --warn:#ef4444;
-      --tile:64px; --r:18px; --shadow:0 10px 30px rgba(0,0,0,.08);
-    }
-    html,body{height:100%}
-    *{box-sizing:border-box}
-    body{margin:0;background:var(--bg);color:var(--ink);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji"}
-
+    :root{--bg:#fafafa;--ink:#1a1a1a;--soft:#ececec;--line:#e3e3e3;--muted:#6b7280;--tile:64px;--shadow:0 10px 30px rgba(0,0,0,.08)}
+    *{box-sizing:border-box}html,body{height:100%}body{margin:0;background:var(--bg);color:var(--ink);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
     header{display:flex;align-items:center;justify-content:center;gap:16px;padding:18px 12px 8px}
     header img{height:64px;width:auto}
-    .brand{font-weight:600;letter-spacing:.06em}
-
     .wrap{max-width:1120px;margin:0 auto;padding:12px}
     .card{background:#fff;border:1px solid var(--line);border-radius:24px;box-shadow:var(--shadow)}
 
     /* --- START --- */
-    #start{display:grid;place-items:center;min-height:68vh;position:relative;overflow:hidden}
-    #start .inner{padding:28px;display:flex;flex-direction:column;align-items:center;gap:16px;text-align:center}
-    #start .title{font-size:28px;font-weight:700;letter-spacing:.06em}
-    #start .subtitle{opacity:.75}
-    #start .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:center}
+    #start{min-height:68vh}
+    #start .inner{display:grid;grid-template-columns:1.2fr .8fr;gap:18px;align-items:center;padding:28px}
+    #start .col{display:flex;flex-direction:column;gap:14px}
+    .title{font-size:28px;font-weight:700;letter-spacing:.06em}
+    .subtitle{opacity:.75}
+    .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
     .seg{display:flex;background:var(--soft);border-radius:999px;padding:4px}
     .seg button{appearance:none;border:none;background:transparent;border-radius:999px;padding:8px 12px;cursor:pointer}
     .seg button[aria-pressed="true"]{background:#111;color:#fff;box-shadow:var(--shadow)}
     .btn{appearance:none;border:1px solid var(--line);background:#fff;border-radius:999px;padding:10px 14px;cursor:pointer;transition:transform .06s}
     .btn:hover{transform:translateY(-1px)}
-    .cat{position:absolute;right:10px;bottom:0;max-width:min(40vw,320px);opacity:.98;pointer-events:none}
-
-    .note{max-width:780px;margin:6px auto 0;color:#444;font-size:.92rem;line-height:1.5}
+    .note{color:#444;font-size:.92rem;line-height:1.55}
     .note small{display:block;color:#666;margin-top:6px}
+    .cat{max-width:min(44vw,360px);height:auto;justify-self:end}
+    .ytlink{margin-top:6px}
+
+    @media (max-width:860px){
+      #start .inner{grid-template-columns:1fr;}
+      .cat{justify-self:center;max-width:min(70vw,340px)}
+    }
 
     /* --- GAME --- */
     #game{display:none}
@@ -44,12 +41,12 @@
     .top .left,.top .right{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
     .pill{border:1px solid var(--line);background:#fff;border-radius:999px;padding:10px 14px;min-width:90px;text-align:center}
 
-    #board-wrap{padding:16px;display:flex;justify-content:center}
+    #board-wrap{padding:16px;display:flex;justify-content:center;position:relative}
     #board{display:grid;gap:10px;padding:12px;background:linear-gradient(180deg,#fff,#f7f7f7);border:1px solid var(--line);border-radius:24px;box-shadow:var(--shadow)}
     .cell{width:var(--tile);height:var(--tile);border-radius:18px;display:grid;place-items:center;background:#fff;border:1px solid var(--line);position:relative;overflow:hidden}
     .cell img{width:90%;height:90%;object-fit:contain;pointer-events:none;user-select:none}
     .cell.selected{outline:3px solid #111}
-    .cell.matching{animation:pop .28s ease}
+    .cell.matching{animation:pop .32s ease}
     @keyframes pop{0%{transform:scale(.95);opacity:.7}100%{transform:scale(1);opacity:1}}
 
     .footer{padding:10px 16px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
@@ -58,7 +55,6 @@
     .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;background:#111;color:#fff;padding:10px 14px;border-radius:999px;opacity:0;transition:opacity .2s,transform .2s;pointer-events:none}
     .toast.show{opacity:1;transform:translateX(-50%) translateY(-3px)}
 
-    /* Combo badge */
     .combo{position:absolute;left:50%;top:8px;transform:translateX(-50%);background:#111;color:#fff;padding:6px 10px;border-radius:999px;font-weight:700;opacity:0;transition:opacity .25s, transform .35s}
     .combo.show{opacity:1;transform:translateX(-50%) translateY(-3px)}
 
@@ -71,9 +67,6 @@
     .stage{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:10px 0;text-align:center;cursor:pointer}
     .stage.lock{opacity:.4;cursor:not-allowed}
     .stage.clear{border-color:#a7f3d0;background:#ecfdf5}
-
-    @media (max-width:980px){:root{--tile:60px}}
-    @media (max-width:720px){:root{--tile:56px}.cat{max-width:min(44vw,280px)}}
   </style>
 </head>
 <body>
@@ -84,38 +77,32 @@
 
   <!-- START -->
   <section id="start" class="wrap card">
-    <img class="cat" src="assets/images/welcome_cat.png?v=20250811a" alt="cat" />
     <div class="inner">
-      <div class="title">quiet match</div>
-      <div class="subtitle">choose your mode, pace and audio — then start.</div>
+      <div class="col">
+        <div class="title">quiet match</div>
+        <div class="subtitle">choose your mode, then start. (opens in a new tab)</div>
 
-      <div class="row" aria-label="Mode">
-        <div class="seg" id="modeSeg">
-          <button type="button" data-mode="calm" aria-pressed="true">Calm</button>
-          <button type="button" data-mode="challenge" aria-pressed="false">Challenge</button>
+        <div class="row" aria-label="Mode">
+          <div class="seg" id="modeSeg">
+            <button type="button" data-mode="calm" aria-pressed="true">Calm</button>
+            <button type="button" data-mode="challenge" aria-pressed="false">Challenge</button>
+          </div>
         </div>
-        <div class="seg" id="paceSeg" style="margin-left:8px">
-          <button type="button" data-pace="slow" aria-pressed="false">Slow</button>
-          <button type="button" data-pace="normal" aria-pressed="true">Normal</button>
-          <button type="button" data-pace="fast" aria-pressed="false">Fast</button>
+
+        <div class="row"><button class="btn" id="startBtn"><strong>Start</strong></button></div>
+
+        <div class="note">
+          <strong>Calm</strong>: Just match 3 or more identical sweets to clear them — relax and enjoy.<br/>
+          <strong>Challenge</strong>: Stage-based with move limit & target score. Clear a stage to unlock the next (100 stages).
+          <small>
+            <strong>Save</strong>: Progress/settings are saved in your browser (local storage). They may reset on different devices/browsers, private/incognito mode, or when clearing site data.<br/>
+            <strong>Recommended</strong>: Latest Chrome / Edge / Firefox / Safari on desktop or tablet.
+          </small>
         </div>
+        <div class="ytlink"><a href="https://www.youtube.com/channel/UCxXav6WmZ-EhWB3zbIRxFMg" target="_blank" rel="noopener" class="btn">murmur. on YouTube ↗</a></div>
       </div>
-
-      <div class="row" aria-label="Audio">
-        <button class="btn" id="musicToggle" aria-pressed="false">Music: Off</button>
-        <button class="btn" id="sfxToggle" aria-pressed="true">SFX: On</button>
-        <label class="row" style="gap:6px;margin-left:6px">Vol <input id="vol" type="range" min="0" max="1" step="0.01" value="0.7" /></label>
-      </div>
-
-      <div class="row"><button class="btn" id="startBtn"><strong>Start</strong></button></div>
-
-      <div class="note">
-        <strong>Calm</strong>: relaxed endless play — just make matches. <em>Same-color clusters of 3+ (lines, L/T/blocks) clear.</em><br/>
-        <strong>Challenge</strong>: stage-based with <em>move limit</em> and <em>target score</em>. Clear a stage to unlock the next; 100 stages total.
-        <small>
-          <strong>Save</strong>: Your progress/settings are saved in the browser (local storage). Using a different device/browser, private/incognito mode, or clearing site data will reset it.<br/>
-          <strong>Recommended</strong>: latest Chrome / Edge / Firefox / Safari on desktop or tablet.
-        </small>
+      <div class="col" style="display:grid;place-items:end">
+        <img class="cat" src="assets/images/welcome_cat.png?v=20250811a" alt="cat" />
       </div>
     </div>
   </section>
@@ -129,16 +116,21 @@
         <div class="pill" id="stageInfo" hidden>Stage: <span id="stage">1</span> · Target: <span id="target">0</span></div>
       </div>
       <div class="right">
-        <button class="btn" id="backBtn">Back</button>
+        <div class="seg" id="paceSeg2">
+          <button type="button" data-pace="slow" aria-pressed="true">Slow</button>
+          <button type="button" data-pace="normal" aria-pressed="false">Normal</button>
+          <button type="button" data-pace="fast" aria-pressed="false">Fast</button>
+        </div>
         <button class="btn" id="musicBtn" aria-pressed="false">Music: Off</button>
         <button class="btn" id="sfxBtn" aria-pressed="true">SFX: On</button>
         <label class="row" style="gap:6px;margin-left:6px">Vol <input id="vol2" type="range" min="0" max="1" step="0.01" value="0.7" /></label>
         <button class="btn" id="restartBtn">Restart</button>
         <button class="btn" id="stageSelectBtn" hidden>Stage Select</button>
+        <button class="btn" id="backBtn">Back</button>
       </div>
     </div>
 
-    <div id="board-wrap" style="position:relative">
+    <div id="board-wrap">
       <div id="combo" class="combo" aria-hidden="true">Combo x2</div>
       <div id="board" role="grid" aria-label="Match board"></div>
     </div>
@@ -151,13 +143,12 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <!-- Stage Select Overlay -->
   <div class="overlay" id="overlay"><div class="sheet" id="sheet"></div></div>
 
   <script>
     // ------------ Assets & Audio ------------
-    const IMG_VER='?v=20250811a';
-    const TILE_IMAGES = [
+    const IMG_VER='?v=20250811c';
+    const TILE_IMAGES=[
       'assets/images/lemon_soda_tile.png'+IMG_VER,
       'assets/images/cafelatte_tile.png'+IMG_VER,
       'assets/images/strawberry_tart_tile.png'+IMG_VER,
@@ -165,233 +156,121 @@
       'assets/images/violet_soda_tile.png'+IMG_VER,
       'assets/images/vanilla_macaron_tile.png'+IMG_VER,
     ];
-
-    const SFX = {
-      choice: new Audio('assets/audio/choice.mp3'),
-      match:  new Audio('assets/audio/match.mp3')
-    };
+    const SFX={choice:new Audio('assets/audio/choice.mp3'),match:new Audio('assets/audio/match.mp3')};
     Object.values(SFX).forEach(a=>a.preload='auto');
-
-    const BGMS = [
-      'assets/audio/match_game_bgm_1.mp3',
-      'assets/audio/match_game_bgm_2.mp3',
-      'assets/audio/match_game_bgm_3.mp3',
-      'assets/audio/match_game_bgm_4.mp3',
-      'assets/audio/match_game_bgm_5.mp3',
-    ];
-    let music = new Audio(); music.loop=false; let currentBgm=-1;
-    let musicEnabled=false, sfxEnabled=true; let userInteracted=false;
-
-    function pickNextBgm(){ let i; do{ i=Math.floor(Math.random()*BGMS.length); }while(i===currentBgm && BGMS.length>1); currentBgm=i; music.src=BGMS[i]; }
-    function startMusic(){ if(!musicEnabled){ musicEnabled=true; pickNextBgm(); music.play().catch(()=>{}); } updateAudioButtons(); syncVol(); }
-    function stopMusic(){ musicEnabled=false; music.pause(); updateAudioButtons(); }
-    music.addEventListener('ended', ()=>{ if(musicEnabled){ pickNextBgm(); music.play().catch(()=>{}); } });
-    function playSfx(name){ if(!sfxEnabled) return; try{ const a=SFX[name]; a.currentTime=0; a.play(); }catch(e){} }
+    const BGMS=[
+      'assets/audio/match_game_bgm_1.mp3','assets/audio/match_game_bgm_2.mp3','assets/audio/match_game_bgm_3.mp3','assets/audio/match_game_bgm_4.mp3','assets/audio/match_game_bgm_5.mp3']
+    let music=new Audio(); music.loop=false; let currentBgm=-1; let musicEnabled=false, sfxEnabled=true; let userInteracted=false;
+    function pickNextBgm(){let i;do{i=Math.floor(Math.random()*BGMS.length);}while(i===currentBgm&&BGMS.length>1);currentBgm=i;music.src=BGMS[i];}
+    function startMusic(){if(!musicEnabled){musicEnabled=true;pickNextBgm();music.play().catch(()=>{});}updateAudioButtons();syncVol();}
+    function stopMusic(){musicEnabled=false;music.pause();updateAudioButtons();}
+    music.addEventListener('ended',()=>{if(musicEnabled){pickNextBgm();music.play().catch(()=>{});}});
+    function playSfx(name){if(!sfxEnabled) return; try{const a=SFX[name]; a.currentTime=0; a.play();}catch(e){}}
 
     // ------------ DOM ------------
-    const startSec = document.getElementById('start');
-    const gameSec  = document.getElementById('game');
-    const boardEl  = document.getElementById('board');
-    const toastEl  = document.getElementById('toast');
-    const comboEl  = document.getElementById('combo');
+    const startSec=document.getElementById('start'); const gameSec=document.getElementById('game'); const boardEl=document.getElementById('board'); const toastEl=document.getElementById('toast'); const comboEl=document.getElementById('combo');
+    const scoreEl=document.getElementById('score'); const movesWrap=document.getElementById('movesWrap'); const movesEl=document.getElementById('moves'); const stageInfo=document.getElementById('stageInfo'); const stageEl=document.getElementById('stage'); const targetEl=document.getElementById('target'); const statusEl=document.getElementById('status');
+    const modeSeg=document.getElementById('modeSeg'); const startBtn=document.getElementById('startBtn');
+    const paceSeg2=document.getElementById('paceSeg2'); const musicBtn=document.getElementById('musicBtn'); const sfxBtn=document.getElementById('sfxBtn'); const vol2=document.getElementById('vol2'); const restartBtn=document.getElementById('restartBtn'); const stageSelBtn=document.getElementById('stageSelectBtn'); const backBtn=document.getElementById('backBtn');
 
-    const scoreEl  = document.getElementById('score');
-    const movesWrap= document.getElementById('movesWrap');
-    const movesEl  = document.getElementById('moves');
-    const stageInfo= document.getElementById('stageInfo');
-    const stageEl  = document.getElementById('stage');
-    const targetEl = document.getElementById('target');
-    const statusEl = document.getElementById('status');
-
-    const modeSeg  = document.getElementById('modeSeg');
-    const paceSeg  = document.getElementById('paceSeg');
-
-    // Start buttons
-    const musicToggle = document.getElementById('musicToggle');
-    const sfxToggle   = document.getElementById('sfxToggle');
-    const vol        = document.getElementById('vol');
-    const startBtn   = document.getElementById('startBtn');
-
-    // In-game buttons
-    const backBtn    = document.getElementById('backBtn');
-    const musicBtn   = document.getElementById('musicBtn');
-    const sfxBtn     = document.getElementById('sfxBtn');
-    const vol2       = document.getElementById('vol2');
-    const restartBtn = document.getElementById('restartBtn');
-    const stageSelBtn= document.getElementById('stageSelectBtn');
-
-    function updateAudioButtons(){
-      const set=(btn,on,label)=>{ btn.setAttribute('aria-pressed',String(on)); btn.textContent=label+ (on?': On':': Off'); };
-      set(musicToggle,musicEnabled,'Music'); set(sfxToggle,sfxEnabled,'SFX');
-      set(musicBtn,musicEnabled,'Music');   set(sfxBtn,sfxEnabled,'SFX');
-    }
-    function syncVol(){ const v=Number(vol.value); vol2.value=String(v); music.volume=v; }
-
-    musicToggle.addEventListener('click', ()=> musicEnabled? stopMusic(): startMusic());
-    sfxToggle  .addEventListener('click', ()=>{ sfxEnabled=!sfxEnabled; updateAudioButtons(); showToast('SFX '+(sfxEnabled?'On':'Off')); });
-    musicBtn   .addEventListener('click', ()=> musicEnabled? stopMusic(): startMusic());
-    sfxBtn     .addEventListener('click', ()=>{ sfxEnabled=!sfxEnabled; updateAudioButtons(); showToast('SFX '+(sfxEnabled?'On':'Off')); });
-    vol.addEventListener('input', syncVol); vol2.addEventListener('input', ()=>{ vol.value=vol2.value; syncVol(); });
-
-    document.addEventListener('pointerdown', ()=>{ userInteracted=true; });
-
-    // ------------ Mode & Pace ------------
+    // ------------ Mode on Start (only Calm/Challenge) ------------
     let mode='calm'; // calm | challenge
-    function setMode(m){ mode=m; [...modeSeg.querySelectorAll('button')].forEach(b=>b.setAttribute('aria-pressed', String(b.dataset.mode===mode))); }
-    modeSeg.addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return; setMode(b.dataset.mode); });
+    function setMode(m){mode=m;[...modeSeg.querySelectorAll('button')].forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.mode===mode)));}
+    modeSeg.addEventListener('click',e=>{const b=e.target.closest('button'); if(!b) return; setMode(b.dataset.mode)});
 
-    let pace='normal'; // slow/normal/fast
-    function setPace(p){ pace=p; [...paceSeg.querySelectorAll('button')].forEach(b=>b.setAttribute('aria-pressed', String(b.dataset.pace===pace))); }
-    paceSeg.addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return; setPace(b.dataset.pace); });
+    // ------------ In-game Pace & Audio (moved here) ------------
+    let pace='slow'; // default slower overall
+    function setPaceInGame(p){pace=p;[...paceSeg2.querySelectorAll('button')].forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.pace===pace)));}
+    paceSeg2.addEventListener('click',e=>{const b=e.target.closest('button'); if(!b) return; setPaceInGame(b.dataset.pace)});
+    function updateAudioButtons(){const set=(btn,on,l)=>{btn.setAttribute('aria-pressed',String(on)); btn.textContent=l+(on?': On':': Off');}; set(musicBtn,musicEnabled,'Music'); set(sfxBtn,sfxEnabled,'SFX');}
+    function syncVol(){music.volume=Number(vol2.value||'0.7');}
+    musicBtn.addEventListener('click',()=> musicEnabled? stopMusic(): startMusic());
+    sfxBtn.addEventListener('click',()=>{sfxEnabled=!sfxEnabled; updateAudioButtons(); showToast('SFX '+(sfxEnabled?'On':'Off'));});
+    vol2.addEventListener('input',syncVol);
+    document.addEventListener('pointerdown',()=>{userInteracted=true});
+
+    // ------------ Open game in NEW TAB from Start ------------
+    startBtn.addEventListener('click',()=>{
+      const url=new URL(location.href); url.searchParams.set('play','1'); url.searchParams.set('mode',mode); window.open(url.toString(),'_blank');
+    });
+
+    // Auto start when opened with ?play=1
+    (function autoStart(){ const p=new URLSearchParams(location.search); if(p.get('play')==='1'){ const m=p.get('mode')||'calm'; setMode(m); startGameAuto(m); } })();
 
     // ------------ Board State ------------
-    const rows=8, cols=8; let grid=[]; let selected=null; let busy=false; let score=0;
+    const rows=8, cols=8; let grid=[]; let selected=null; let busy=false; let score=0; let comboStep=0;
 
-    function createBoardDom(){
-      boardEl.style.gridTemplateColumns=`repeat(${cols}, var(--tile))`;
-      boardEl.innerHTML='';
-      for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){
-        const cell=document.createElement('div'); cell.className='cell'; cell.dataset.r=r; cell.dataset.c=c; cell.addEventListener('click',onCellClick);
-        const img=document.createElement('img'); img.alt=''; cell.appendChild(img); boardEl.appendChild(cell);
-      }
-    }
-    function getCell(r,c){ return boardEl.children[r*cols+c]; }
-    function setCellImage(r,c){ const idx=grid[r][c]; const cell=getCell(r,c); const img=cell.querySelector('img'); if(idx>=0){ img.src=TILE_IMAGES[idx]; cell.style.visibility='visible'; } else { img.removeAttribute('src'); cell.style.visibility='hidden'; } }
-    function renderAll(){ for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) setCellImage(r,c); }
+    function createBoardDom(){boardEl.style.gridTemplateColumns=`repeat(${cols}, var(--tile))`; boardEl.innerHTML=''; for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){ const cell=document.createElement('div'); cell.className='cell'; cell.dataset.r=r; cell.dataset.c=c; cell.addEventListener('click',onCellClick); const img=document.createElement('img'); img.alt=''; cell.appendChild(img); boardEl.appendChild(cell);} }
+    function getCell(r,c){return boardEl.children[r*cols+c]}
+    function setCellImage(r,c){const idx=grid[r][c]; const cell=getCell(r,c); const img=cell.querySelector('img'); if(idx>=0){img.src=TILE_IMAGES[idx]; cell.style.visibility='visible'} else {img.removeAttribute('src'); cell.style.visibility='hidden'}}
+    function renderAll(){for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) setCellImage(r,c)}
 
-    function randInt(n){ return Math.floor(Math.random()*n); }
-    function randTileFor(r,c){ // avoid immediate line-3 on fill
-      let choices=[0,1,2,3,4,5];
-      const L1=(c>=1)?grid[r][c-1]:-99, L2=(c>=2)?grid[r][c-2]:-98;
-      const U1=(r>=1)?grid[r-1][c]:-97, U2=(r>=2)?grid[r-2][c]:-96;
-      choices=choices.filter(x=>!(x===L1&&x===L2)&&!(x===U1&&x===U2)); if(!choices.length) choices=[0,1,2,3,4,5];
-      return choices[randInt(choices.length)];
-    }
+    function randInt(n){return Math.floor(Math.random()*n)}
+    function randTileFor(r,c){let choices=[0,1,2,3,4,5]; const L1=(c>=1)?grid[r][c-1]:-99, L2=(c>=2)?grid[r][c-2]:-98; const U1=(r>=1)?grid[r-1][c]:-97, U2=(r>=2)?grid[r-2][c]:-96; choices=choices.filter(x=>!(x===L1&&x===L2)&&!(x===U1&&x===U2)); if(!choices.length) choices=[0,1,2,3,4,5]; return choices[randInt(choices.length)];}
 
-    function generateInitialGrid(){
-      grid=Array.from({length:rows},()=>Array(cols).fill(0));
-      for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) grid[r][c]=randTileFor(r,c);
-      let guard=0; while(findMatches().size>0 || !hasAnyMoves()){ reshuffle(); if(++guard>30) break; }
-    }
+    function generateInitialGrid(){grid=Array.from({length:rows},()=>Array(cols).fill(0)); for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) grid[r][c]=randTileFor(r,c); let guard=0; while(findMatches().size>0 || !hasAnyMoves()){ reshuffle(); if(++guard>30) break; }}
+    function reshuffle(){const flat=grid.flat(); for(let i=flat.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [flat[i],flat[j]]=[flat[j],flat[i]];} for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) grid[r][c]=flat[r*cols+c]; renderAll();}
 
-    function reshuffle(){
-      const flat=grid.flat(); for(let i=flat.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [flat[i],flat[j]]=[flat[j],flat[i]]; }
-      for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) grid[r][c]=flat[r*cols+c]; renderAll();
-    }
+    function onCellClick(e){ if(busy) return; const r=+e.currentTarget.dataset.r, c=+e.currentTarget.dataset.c; if(selected && selected.r===r && selected.c===c){ getCell(r,c).classList.remove('selected'); selected=null; return; } if(!selected){ selected={r,c}; getCell(r,c).classList.add('selected'); playSfx('choice'); return; } const {r:sr,c:sc}=selected; if(Math.abs(sr-r)+Math.abs(sc-c)!==1){ getCell(sr,sc).classList.remove('selected'); selected={r,c}; getCell(r,c).classList.add('selected'); playSfx('choice'); return; } swapAndResolve(sr,sc,r,c); }
 
-    function onCellClick(e){ if(busy) return; const r=+e.currentTarget.dataset.r, c=+e.currentTarget.dataset.c;
-      if(selected && selected.r===r && selected.c===c){ getCell(r,c).classList.remove('selected'); selected=null; return; }
-      if(!selected){ selected={r,c}; getCell(r,c).classList.add('selected'); playSfx('choice'); return; }
-      const {r:sr,c:sc}=selected; if(Math.abs(sr-r)+Math.abs(sc-c)!==1){ getCell(sr,sc).classList.remove('selected'); selected={r,c}; getCell(r,c).classList.add('selected'); playSfx('choice'); return; }
-      swapAndResolve(sr,sc,r,c);
-    }
+    function swapValues(a,b,c,d){const t=grid[a][b]; grid[a][b]=grid[c][d]; grid[c][d]=t; setCellImage(a,b); setCellImage(c,d)}
 
-    function swapValues(a,b,c,d){ const t=grid[a][b]; grid[a][b]=grid[c][d]; grid[c][d]=t; setCellImage(a,b); setCellImage(c,d); }
+    function findMatches(){const matched=new Set(); const seen=Array.from({length:rows},()=>Array(cols).fill(false)); const inb=(r,c)=>r>=0&&r<rows&&c>=0&&c<cols; const dirs=[[1,0],[-1,0],[0,1],[0,-1]]; for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){ if(seen[r][c]) continue; const val=grid[r][c]; if(val===-1){seen[r][c]=true; continue;} const q=[[r,c]]; seen[r][c]=true; const comp=[[r,c]]; while(q.length){const [rr,cc]=q.shift(); for(const [dr,dc] of dirs){const nr=rr+dr,nc=cc+dc; if(!inb(nr,nc)||seen[nr][nc]) continue; if(grid[nr][nc]===val){seen[nr][nc]=true; q.push([nr,nc]); comp.push([nr,nc]);}}} if(comp.length>=3) comp.forEach(([rr,cc])=>matched.add(rr+','+cc)); } return matched; }
+    function hasAnyMoves(){ for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){ const here=grid[r][c]; const trySwap=(r2,c2)=>{ if(r2<0||r2>=rows||c2<0||c2>=cols) return false; const t=grid[r2][c2]; if(t===here) return false; grid[r][c]=t; grid[r2][c2]=here; const ok=findMatches().size>0; grid[r][c]=here; grid[r2][c2]=t; return ok; }; if(trySwap(r,c+1) || trySwap(r+1,c)) return true; } return false; }
 
-    function findMatches(){ // connected components of size>=3
-      const matched=new Set(); const seen=Array.from({length:rows},()=>Array(cols).fill(false));
-      const inb=(r,c)=>r>=0&&r<rows&&c>=0&&c<cols; const dirs=[[1,0],[-1,0],[0,1],[0,-1]];
-      for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){
-        if(seen[r][c]) continue; const val=grid[r][c]; if(val===-1){ seen[r][c]=true; continue; }
-        const q=[[r,c]]; seen[r][c]=true; const comp=[[r,c]];
-        while(q.length){ const [rr,cc]=q.shift(); for(const [dr,dc] of dirs){ const nr=rr+dr,nc=cc+dc; if(!inb(nr,nc)||seen[nr][nc]) continue; if(grid[nr][nc]===val){ seen[nr][nc]=true; q.push([nr,nc]); comp.push([nr,nc]); } } }
-        if(comp.length>=3) comp.forEach(([rr,cc])=>matched.add(rr+','+cc));
-      }
-      return matched;
-    }
-
-    function hasAnyMoves(){
-      for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){
-        const here=grid[r][c]; const trySwap=(r2,c2)=>{ if(r2<0||r2>=rows||c2<0||c2>=cols) return false; const t=grid[r2][c2]; if(t===here) return false; grid[r][c]=t; grid[r2][c2]=here; const ok=findMatches().size>0; grid[r][c]=here; grid[r2][c2]=t; return ok; };
-        if(trySwap(r,c+1) || trySwap(r+1,c)) return true;
-      }
-      return false;
-    }
-
-    function countGroupsFromSet(set){ const keys=[...set]; const coords=keys.map(k=>k.split(',').map(Number)); const n=coords.length; if(n===0) return 0; const adj=Array.from({length:n},()=>[]);
-      for(let i=0;i<n;i++){ const [r1,c1]=coords[i]; for(let j=i+1;j<n;j++){ const [r2,c2]=coords[j]; if(Math.abs(r1-r2)+Math.abs(c1-c2)===1){ adj[i].push(j); adj[j].push(i);} }}
-      const seen=new Array(n).fill(false); let groups=0; for(let i=0;i<n;i++) if(!seen[i]){ groups++; const q=[i]; seen[i]=true; while(q.length){ const v=q.shift(); for(const w of adj[v]) if(!seen[w]){ seen[w]=true; q.push(w);} } } return groups; }
-
-    function paceFactor(){ return pace==='slow'?1.0: pace==='normal'?0.75:0.5; }
+    function paceFactor(){ return pace==='slow'?1.25 : pace==='normal'?1.0 : 0.85; } // 全体的に少し遅め
     function delay(ms){ return new Promise(res=>setTimeout(res, ms*paceFactor())); }
 
-    async function swapAndResolve(r1,c1,r2,c2){ busy=true; playSfx('choice'); getCell(r1,c1).classList.remove('selected'); selected=null; swapValues(r1,c1,r2,c2); await delay(90);
+    async function swapAndResolve(r1,c1,r2,c2){ busy=true; comboStep=0; playSfx('choice'); getCell(r1,c1).classList.remove('selected'); selected=null; swapValues(r1,c1,r2,c2); await delay(110);
       let m=findMatches(); if(m.size===0){ swapValues(r1,c1,r2,c2); busy=false; return; }
       if(mode==='challenge'){ movesLeft--; updateHud(); }
-      await resolveMatches(m, /*comboStep*/1);
+      await resolveMatches(m);
       busy=false; if(!hasAnyMoves()){ reshuffle(); showToast('No moves — reshuffling'); }
     }
 
     function updateHud(){ movesEl.textContent=movesLeft; stageEl.textContent=currentStage; targetEl.textContent=targetScore; scoreEl.textContent=score; }
 
-    async function resolveMatches(matchedSet, comboStep){
-      const groups=countGroupsFromSet(matchedSet); // simultaneous groups
-      if(groups>=2){ comboEl.textContent='Combo x'+groups; comboEl.classList.add('show'); setTimeout(()=>comboEl.classList.remove('show'), 800); }
+    async function resolveMatches(matchedSet){ comboStep++;
+      // simultaneous groups for info (toast), but comboStep drives xN
+      const groups=countGroupsFromSet(matchedSet);
+      if(comboStep>=2){ comboEl.textContent='Combo x'+comboStep; comboEl.classList.add('show'); setTimeout(()=>comboEl.classList.remove('show'), 900 + (comboStep-2)*200); }
 
       matchedSet.forEach(k=>{ const [r,c]=k.split(',').map(Number); getCell(r,c).classList.add('matching'); });
-      await delay(140);
+      await delay(180);
       matchedSet.forEach(k=>{ const [r,c]=k.split(',').map(Number); grid[r][c]=-1; setCellImage(r,c); });
       playSfx('match');
 
-      // Scoring (Calm mild bonus): base + 6% per combo tier beyond 1 + +5 per extra group
-      const base = matchedSet.size * 10;
-      let add = base;
-      if(mode==='calm'){
-        const chainBonus = base * Math.max(0, comboStep-1) * 0.06; // +6% per cascade tier
-        const simultaneous = Math.max(0, groups-1) * 5;            // +5 per extra group
-        add = Math.round(base + chainBonus + simultaneous);
-      }
+      const base=matchedSet.size*10; let add=base; if(mode==='calm'){ const chainBonus = base * Math.max(0, comboStep-1) * 0.06; const simultaneous = Math.max(0, groups-1) * 5; add = Math.round(base + chainBonus + simultaneous); }
       score += add; updateHud();
 
       // Gravity
-      for(let c=0;c<cols;c++){
-        let wr=rows-1; for(let r=rows-1;r>=0;r--){ if(grid[r][c]!==-1){ grid[wr][c]=grid[r][c]; wr--; } }
-        for(let r=wr;r>=0;r--) grid[r][c]=-1;
-      }
-      renderAll(); await delay(120);
+      for(let c=0;c<cols;c++){ let wr=rows-1; for(let r=rows-1;r>=0;r--){ if(grid[r][c]!==-1){ grid[wr][c]=grid[r][c]; wr--; } } for(let r=wr;r>=0;r--) grid[r][c]=-1; }
+      renderAll(); await delay(160);
       // Refill
       for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) if(grid[r][c]===-1){ grid[r][c]=randTileFor(r,c); setCellImage(r,c); }
-      await delay(90);
-      const more=findMatches(); if(more.size>0) await resolveMatches(more, comboStep+1);
-      else if(mode==='challenge'){ // win/lose check
-        if(score>=targetScore){ onStageClear(); }
-        else if(movesLeft<=0){ onStageFail(); }
-      }
+      await delay(120);
+      const more=findMatches(); if(more.size>0) await resolveMatches(more); else if(mode==='challenge'){ if(score>=targetScore){ onStageClear(); } else if(movesLeft<=0){ onStageFail(); } }
     }
+
+    function countGroupsFromSet(set){ const keys=[...set]; const coords=keys.map(k=>k.split(',').map(Number)); const n=coords.length; if(n===0) return 0; const adj=Array.from({length:n},()=>[]); for(let i=0;i<n;i++){ const [r1,c1]=coords[i]; for(let j=i+1;j<n;j++){ const [r2,c2]=coords[j]; if(Math.abs(r1-r2)+Math.abs(c1-c2)===1){ adj[i].push(j); adj[j].push(i); } } } const seen=new Array(n).fill(false); let groups=0; for(let i=0;i<n;i++) if(!seen[i]){ groups++; const q=[i]; seen[i]=true; while(q.length){ const v=q.shift(); for(const w of adj[v]) if(!seen[w]){ seen[w]=true; q.push(w); } } } return groups; }
 
     // ------------ Challenge (stage-based, move limit) ------------
-    let currentStage=1; let unlocked=parseInt(localStorage.getItem('mmq_unlocked')||'1',10); if(!(unlocked>=1&&unlocked<=100)) unlocked=1;
+    let currentStage=1; let unlocked=parseInt(localStorage.getItem('mmq_unlocked')||'1',10); if(!(unlocked>=1&&unlocked<=100)) unlocked=1; let savedStage=parseInt(localStorage.getItem('mmq_currentStage')||String(unlocked),10); if(!(savedStage>=1&&savedStage<=unlocked)) savedStage=unlocked;
     let targetScore=0; let movesLeft=0;
+    function stageConfig(n){ const baseTarget=450, grow=50; const baseMoves=20, stepEvery=10, minMoves=15; const moves=Math.max(minMoves, baseMoves - Math.floor((n-1)/stepEvery)); const target=baseTarget + grow*(n-1); return {moves,target}; }
 
-    function stageConfig(n){ // gentle progression
-      const baseTarget=450, grow=50; // n=1 -> 450, n=100 -> 5450
-      const baseMoves=20, stepEvery=10, minMoves=15; // 20 then 19 at 11, 18 at 21 ...
-      const moves = Math.max(minMoves, baseMoves - Math.floor((n-1)/stepEvery));
-      const target= baseTarget + grow*(n-1);
-      return {moves,target};
-    }
+    function openStageSelect(){ const max=100; let gridHtml=''; for(let i=1;i<=max;i++){ const lock=i>unlocked, cleared=i<unlocked; gridHtml += `<div class="stage ${lock?'lock':''} ${cleared?'clear':''}" data-n="${i}">${i}</div>`; } showOverlay(`
+      <button class="close" id="closeOv">×</button>
+      <h2>Challenge — Stage Select</h2>
+      <div class="muted" style="margin:4px 0 8px">Choose a stage to play. Cleared stages are marked; locked stages unlock as you progress.</div>
+      <div class="stage-grid">${gridHtml}</div>
+      <div style="margin-top:10px"><button class="btn" id="backToStart">Back</button></div>`);
+      document.getElementById('closeOv').onclick=hideOverlay; document.getElementById('backToStart').onclick=()=>{ hideOverlay(); goToStart(); };
+      document.querySelectorAll('.stage').forEach(el=> el.onclick=()=>{ const n=+el.dataset.n; if(n>unlocked) return; hideOverlay(); startStage(n); }); }
 
-    function openStageSelect(){
-      const max=100; let gridHtml='';
-      for(let i=1;i<=max;i++){
-        const lock=i>unlocked, cleared=i<unlocked; gridHtml += `<div class="stage ${lock?'lock':''} ${cleared?'clear':''}" data-n="${i}">${i}</div>`;
-      }
-      showOverlay(`
-        <button class="close" id="closeOv">×</button>
-        <h2>Challenge — Stage Select</h2>
-        <div class="muted" style="margin:4px 0 8px">Choose a stage to play. Cleared stages are marked; locked stages unlock as you progress.</div>
-        <div class="stage-grid">${gridHtml}</div>
-        <div style="margin-top:10px"><button class="btn" id="backToStart">Back</button></div>
-      `);
-      document.getElementById('closeOv').onclick=hideOverlay;
-      document.getElementById('backToStart').onclick=()=>{ hideOverlay(); goToStart(); };
-      document.querySelectorAll('.stage').forEach(el=> el.onclick=()=>{ const n=+el.dataset.n; if(n>unlocked) return; hideOverlay(); startStage(n); });
-    }
+    function startStage(n){ mode='challenge'; setMode('challenge'); currentStage=n; const cfg=stageConfig(n); targetScore=cfg.target; movesLeft=cfg.moves; startGame(); stageSelBtn.hidden=false; stageInfo.hidden=false; movesWrap.hidden=false; updateHud(); localStorage.setItem('mmq_currentStage', String(currentStage)); }
 
-    function startStage(n){ mode='challenge'; setMode('challenge'); currentStage=n; const cfg=stageConfig(n); targetScore=cfg.target; movesLeft=cfg.moves; startGame(); stageSelBtn.hidden=false; stageInfo.hidden=false; movesWrap.hidden=false; updateHud(); }
-
-    function onStageClear(){ if(unlocked<currentStage+1){ unlocked=currentStage+1; localStorage.setItem('mmq_unlocked', String(unlocked)); }
-      showOverlay(`
+    function onStageClear(){ if(unlocked<currentStage+1){ unlocked=currentStage+1; localStorage.setItem('mmq_unlocked', String(unlocked)); } showOverlay(`
         <button class="close" id="closeOv">×</button>
         <h2>Stage ${currentStage} — Cleared 🎉</h2>
         <p class="muted">Score ${score} / Target ${targetScore}</p>
@@ -399,13 +278,8 @@
           <button class="btn" id="next">Next</button>
           <button class="btn" id="select">Stage Select</button>
           <button class="btn" id="retry">Retry</button>
-        </div>
-      `);
-      document.getElementById('closeOv').onclick=hideOverlay;
-      document.getElementById('next').onclick = ()=>{ hideOverlay(); startStage(Math.min(100,currentStage+1)); };
-      document.getElementById('select').onclick= ()=>{ openStageSelect(); };
-      document.getElementById('retry').onclick = ()=>{ hideOverlay(); startStage(currentStage); };
-    }
+        </div>`);
+      document.getElementById('closeOv').onclick=hideOverlay; document.getElementById('next').onclick=()=>{ hideOverlay(); startStage(Math.min(100,currentStage+1)); }; document.getElementById('select').onclick=()=>{ openStageSelect(); }; document.getElementById('retry').onclick=()=>{ hideOverlay(); startStage(currentStage); }; }
     function onStageFail(){ showOverlay(`
         <button class="close" id="closeOv">×</button>
         <h2>Stage ${currentStage} — Try again</h2>
@@ -413,40 +287,38 @@
         <div class="row" style="justify-content:center">
           <button class="btn" id="retry">Retry</button>
           <button class="btn" id="select">Stage Select</button>
-        </div>
-      `);
-      document.getElementById('closeOv').onclick=hideOverlay;
-      document.getElementById('retry').onclick = ()=>{ hideOverlay(); startStage(currentStage); };
-      document.getElementById('select').onclick= ()=>{ openStageSelect(); };
-    }
+        </div>`);
+      document.getElementById('closeOv').onclick=hideOverlay; document.getElementById('retry').onclick=()=>{ hideOverlay(); startStage(currentStage); }; document.getElementById('select').onclick=()=>{ openStageSelect(); }; }
 
     // ------------ Overlay helpers ------------
-    const overlay=document.getElementById('overlay'); const sheet=document.getElementById('sheet');
-    function showOverlay(html){ sheet.innerHTML=html; overlay.classList.add('show'); }
-    function hideOverlay(){ overlay.classList.remove('show'); sheet.innerHTML=''; }
+    const overlay=document.getElementById('overlay'); const sheet=document.getElementById('sheet'); function showOverlay(html){ sheet.innerHTML=html; overlay.classList.add('show'); } function hideOverlay(){ overlay.classList.remove('show'); sheet.innerHTML=''; }
 
     // ------------ Game lifecycle ------------
-    function startGame(){ startSec.style.display='none'; gameSec.style.display='block'; initGame(); }
-    function goToStart(){ if(timerId){ clearInterval(timerId); timerId=null; } selected=null; busy=false; gameSec.style.display='none'; startSec.style.display='grid'; statusEl.textContent=''; }
+    function startGame(){ startSec.style.display='none'; gameSec.style.display='block'; initGame(); updateAudioButtons(); syncVol(); }
+    function goToStart(){ selected=null; busy=false; gameSec.style.display='none'; startSec.style.display='block'; statusEl.textContent=''; }
 
-    let timerId=null; // not used in move-mode but kept for future
+    let timerId=null; // reserved
+    function initGame(){ score=0; selected=null; busy=false; comboStep=0; createBoardDom(); generateInitialGrid(); renderAll(); }
 
-    function initGame(){ score=0; selected=null; busy=false; createBoardDom(); generateInitialGrid(); renderAll(); updateAudioButtons(); syncVol(); }
+    // Start routing
+    function startGameAuto(m){ if(m==='challenge'){ // すぐ開始（保存があればそこから）
+        const n = savedStage || 1; startStage(n);
+      } else { mode='calm'; setMode('calm'); startGame(); }
+    }
 
-    // ------------ UI events ------------
-    startBtn.addEventListener('click', ()=>{ if(musicEnabled) startMusic(); if(mode==='challenge') openStageSelect(); else startGame(); });
-    backBtn .addEventListener('click', ()=> goToStart());
-    restartBtn.addEventListener('click', ()=> initGame(true));
-    stageSelBtn.addEventListener('click', ()=> openStageSelect());
+    // Buttons (in-game)
+    backBtn.addEventListener('click',()=> goToStart());
+    restartBtn.addEventListener('click',()=> initGame(true));
+    stageSelBtn.addEventListener('click',()=> openStageSelect());
 
     // ------------ Toast ------------
     function showToast(text){ toastEl.textContent=text; toastEl.classList.add('show'); clearTimeout(showToast._t); showToast._t=setTimeout(()=>toastEl.classList.remove('show'),1600); }
 
-    // ------------ Preload (images/audio) ------------
-    (function preload(){ TILE_IMAGES.concat(['assets/images/banner.png'+IMG_VER,'assets/images/welcome_cat.png'+IMG_VER]).forEach(src=>{ const im=new Image(); im.src=src; im.onerror=()=>console.warn('Image missing?',src); }); Object.values(SFX).forEach(a=>a.load()); pickNextBgm(); music.addEventListener('error',()=>console.warn('BGM missing?', music.src)); })();
+    // ------------ Preload ------------
+    (function preload(){ TILE_IMAGES.concat(['assets/images/banner.png'+IMG_VER,'assets/images/welcome_cat.png'+IMG_VER]).forEach(src=>{ const im=new Image(); im.src=src; im.onerror=()=>console.warn('Image missing?',src); }); Object.values(SFX).forEach(a=>a.load()); pickNextBgm(); })();
 
-    // ------------ Init defaults ------------
-    setMode('calm'); setPace('normal'); updateAudioButtons(); syncVol();
+    // Defaults
+    setMode('calm'); setPaceInGame('slow'); updateAudioButtons(); syncVol();
   </script>
 </body>
 </html>
