@@ -11,10 +11,10 @@
       --ink:#1a1a1a;
       --soft:#e9e9e9;
       --line:#d8d8d8;
-      --accent:#7a8a87; /* muted green-grey */
+      --accent:#7a8a87;
       --good:#3aa17e;
       --warn:#bf5a5a;
-      --tile-size:72px; /* responsive below */
+      --tile-size:72px;
       --radius:16px;
       --shadow:0 8px 30px rgba(0,0,0,.08);
     }
@@ -46,6 +46,7 @@
 
     .seg{display:flex;background:var(--soft);border-radius:999px;padding:4px}
     .seg button{border:none;background:transparent;border-radius:999px;padding:8px 12px;cursor:pointer}
+    /* 選択中は黒反転（SFXと統一） */
     .seg button[aria-pressed="true"]{background:#111;color:#fff;box-shadow:var(--shadow)}
 
     /* Start screen */
@@ -170,7 +171,6 @@
       choice: new Audio('assets/audio/choice.mp3'),
       match:  new Audio('assets/audio/match.mp3')
     };
-    // Low-latency-ish
     SFX.choice.preload = 'auto';
     SFX.match.preload  = 'auto';
 
@@ -215,7 +215,7 @@
     }
 
     // ------- State -------
-    const rows = 8, cols = 8; // balanced footprint
+    const rows = 8, cols = 8;
     const boardEl = document.getElementById('board');
     const scoreEl = document.getElementById('score');
     const statusEl = document.getElementById('status');
@@ -266,9 +266,7 @@
     sfxBtn.addEventListener('click', ()=>{ sfxEnabled = !sfxEnabled; updateAudioButtons(); showToast('SFX '+(sfxEnabled?'On':'Off')); });
 
     startBtn.addEventListener('click', ()=>{
-      // First user gesture -> allow audio
-      if (musicEnabled) { startMusic(); }
-      // Transition to game
+      if (musicEnabled) { startMusic(); } // first user gesture for autoplay
       document.getElementById('start').style.display='none';
       document.getElementById('game').style.display='block';
       initGame();
@@ -277,26 +275,7 @@
     restartBtn.addEventListener('click', ()=>{ initGame(true); });
     backBtn.addEventListener('click', ()=>{ goToStart(); });
 
-    // Count connected groups inside a Set of keys like "r,c"
-    function countGroupsFromSet(set){
-      const keys=[...set];
-      const keyToIdx=new Map(keys.map((k,i)=>[k,i]));
-      const coords=keys.map(k=>k.split(',').map(Number));
-      const n=coords.length; if(n===0) return 0;
-      const adj=Array.from({length:n},()=>[]);
-      for(let i=0;i<n;i++){
-        const [r1,c1]=coords[i];
-        for(let j=i+1;j<n;j++){
-          const [r2,c2]=coords[j];
-          if(Math.abs(r1-r2)+Math.abs(c1-c2)===1){ adj[i].push(j); adj[j].push(i); }
-        }
-      }
-      const seen=new Array(n).fill(false); let groups=0;
-      for(let i=0;i<n;i++) if(!seen[i]){ groups++; const q=[i]; seen[i]=true; while(q.length){ const v=q.shift(); for(const w of adj[v]) if(!seen[w]){ seen[w]=true; q.push(w);} } }
-      return groups;
-    }
-
-    // ------- Board helpers -------
+    // ------- Helpers -------
     function coordKey(r,c){ return r+','+c; }
 
     function createBoardDom(){
@@ -330,7 +309,7 @@
     function onCellClick(e){
       if(busy) return;
       const cell = e.currentTarget; const r = +cell.dataset.r, c = +cell.dataset.c;
-      if(selected && selected.r===r && selected.c===c){ // deselect
+      if(selected && selected.r===r && selected.c===c){
         getCell(r,c).classList.remove('selected'); selected=null; return;
       }
       if(!selected){
@@ -338,11 +317,9 @@
       }else{
         const {r:sr,c:sc}=selected;
         if(Math.abs(sr-r)+Math.abs(sc-c)!==1){
-          // new selection
           getCell(sr,sc).classList.remove('selected');
           selected={r,c}; cell.classList.add('selected'); playSfx('choice');
         }else{
-          // attempt swap
           swapAndResolve(sr,sc,r,c);
         }
       }
@@ -353,8 +330,8 @@
       setCellImage(r1,c1); setCellImage(r2,c2);
     }
 
+    // --- 連結成分ベース：3つ以上の塊を全消去（L/T/四角もOK）
     function findMatches(){
-      // connected-components (4方向) で、同じ柄が3つ以上つながる塊を全部消去対象にする
       const matched = new Set();
       const seen = Array.from({length:rows},()=>Array(cols).fill(false));
       const inb=(r,c)=>r>=0&&r<rows&&c>=0&&c<cols;
@@ -363,7 +340,6 @@
           if(seen[r][c]) continue;
           const val = grid[r][c];
           if(val===-1){ seen[r][c]=true; continue; }
-          // BFSで連結成分を集める
           const q=[[r,c]]; seen[r][c]=true; const comp=[[r,c]];
           while(q.length){
             const [rr,cc]=q.shift();
@@ -378,73 +354,18 @@
         }
       }
       return matched;
-    },${c}`);
-      // --- 1) standard rows (>=3)
-      for(let r=0;r<rows;r++){
-        let run=1;
-        for(let c=1;c<cols;c++){
-          if(grid[r][c]!==-1 && grid[r][c]===grid[r][c-1]) run++;
-          else { if(run>=3){ for(let k=0;k<run;k++) add(r,c-1-k); } run=1; }
-        }
-        if(run>=3){ for(let k=0;k<run;k++) add(r,cols-1-k); }
-      }
-      // --- 2) standard cols (>=3)
-      for(let c=0;c<cols;c++){
-        let run=1;
-        for(let r=1;r<rows;r++){
-          if(grid[r][c]!==-1 && grid[r][c]===grid[r-1][c]) run++;
-          else { if(run>=3){ for(let k=0;k<run;k++) add(r-1-k,c); } run=1; }
-        }
-        if(run>=3){ for(let k=0;k<run;k++) add(rows-1-k,c); }
-      }
-      // --- 3) 2x2 windows for L-of-3 and 2x2 squares ("田")
-      for(let r=0;r<rows-1;r++){
-        for(let c=0;c<cols-1;c++){
-          const cells = [ [r,c],[r,c+1],[r+1,c],[r+1,c+1] ];
-          const vals = cells.map(([rr,cc])=>grid[rr][cc]);
-          if(vals.some(v=>v===-1)) continue;
-          // count occurrences
-          const counts = new Map();
-          vals.forEach(v=>counts.set(v,(counts.get(v)||0)+1));
-          for(const [val,count] of counts){
-            if(count===4){ // 2x2 same → clear all 4
-              cells.forEach(([rr,cc])=>add(rr,cc));
-              break;
-            }
-            if(count===3){ // L-of-3 → clear those three
-              cells.forEach(([rr,cc],i)=>{ if(vals[i]===val) add(rr,cc); });
-              break;
-            }
-          }
-        }
-      }
-      return matched;
-    } run=1; }
-        }
-        if(run>=3){ for(let k=0;k<run;k++) matched.add(coordKey(r,cols-1-k)); }
-      }
-      // cols
-      for(let c=0;c<cols;c++){
-        let run=1;
-        for(let r=1;r<rows;r++){
-          if(grid[r][c]!==-1 && grid[r][c]===grid[r-1][c]) run++; else { if(run>=3){ for(let k=0;k<run;k++) matched.add(coordKey(r-1-k,c)); } run=1; }
-        }
-        if(run>=3){ for(let k=0;k<run;k++) matched.add(coordKey(rows-1-k,c)); }
-      }
-      return matched;
     }
 
     function hasAnyMoves(){
-      // Check if any adjacent swap would make a match
       for(let r=0;r<rows;r++){
         for(let c=0;c<cols;c++){
           const here = grid[r][c];
           const trySwap=(r2,c2)=>{
             if(r2<0||r2>=rows||c2<0||c2>=cols) return false;
-            const t=grid[r2][c2]; if(t===here) return false; // skip same to reduce work
+            const t=grid[r2][c2]; if(t===here) return false;
             grid[r][c]=t; grid[r2][c2]=here;
             const ok = findMatches().size>0;
-            grid[r][c]=here; grid[r2][c2]=t; // revert
+            grid[r][c]=here; grid[r2][c2]=t;
             return ok;
           }
           if(trySwap(r, c+1) || trySwap(r+1, c)) return true;
@@ -460,69 +381,54 @@
       swapValues(r1,c1,r2,c2);
       await delay(90);
       let m = findMatches();
-      if(m.size===0){ // swap back
+      if(m.size===0){
         swapValues(r1,c1,r2,c2);
         busy = false; return;
       }
       await resolveMatches(m);
       if(mode==='challenge'){ movesLeft--; updateHud(); }
       busy = false;
-      // If no moves, reshuffle
       if(!hasAnyMoves()){
         reshuffle();
         showToast('No moves — reshuffling');
       }
     }
 
+    // 同時消しの塊数を数える（コンボ表示用）
+    function countGroupsFromSet(set){
+      const keys=[...set];
+      const coords=keys.map(k=>k.split(',').map(Number));
+      const n=coords.length; if(n===0) return 0;
+      const adj=Array.from({length:n},()=>[]);
+      for(let i=0;i<n;i++){
+        const [r1,c1]=coords[i];
+        for(let j=i+1;j<n;j++){
+          const [r2,c2]=coords[j];
+          if(Math.abs(r1-r2)+Math.abs(c1-c2)===1){ adj[i].push(j); adj[j].push(i); }
+        }
+      }
+      const seen=new Array(n).fill(false); let groups=0;
+      for(let i=0;i<n;i++) if(!seen[i]){ groups++; const q=[i]; seen[i]=true; while(q.length){ const v=q.shift(); for(const w of adj[v]) if(!seen[w]){ seen[w]=true; q.push(w);} } }
+      return groups;
+    }
+
     async function resolveMatches(matchedSet){
-      // Combo判定：同時に消える塊の数を数える（隣接でグループ化）
       const groupCount = countGroupsFromSet(matchedSet);
       if(groupCount>=2){ showToast(`Combo x${groupCount}`); }
 
-      // Visual cue
       matchedSet.forEach(key=>{
         const [r,c]=key.split(',').map(Number);
         getCell(r,c).classList.add('matching');
       });
       await delay(120);
-      // Clear
       matchedSet.forEach(key=>{
         const [r,c]=key.split(',').map(Number);
         grid[r][c] = -1; setCellImage(r,c);
       });
       playSfx('match');
-      // Score（塊の総数ベース、ボーナスなし。必要ならここで倍率追加可能）
+
       const gained = 10 * matchedSet.size; score += gained; scoreEl.textContent=score;
-      // Gravity
-      for(let c=0;c<cols;c++){
-        let wr = rows-1;
-        for(let r=rows-1;r>=0;r--){
-          if(grid[r][c]!==-1){ grid[wr][c]=grid[r][c]; wr--; }
-        }
-        for(let r=wr;r>=0;r--){ grid[r][c] = -1; }
-      }
-      renderAll();
-      await delay(80);
-      // Refill
-      for(let r=0;r<rows;r++){
-        for(let c=0;c<cols;c++){
-          if(grid[r][c]===-1){ grid[r][c] = randTileFor(r,c,true); setCellImage(r,c); }
-        }
-      }
-      await delay(80);
-      // Cascade
-      const more = findMatches();
-      if(more.size>0) await resolveMatches(more);
-    });
-      await delay(120);
-      // Clear
-      matchedSet.forEach(key=>{
-        const [r,c]=key.split(',').map(Number);
-        grid[r][c] = -1; setCellImage(r,c);
-      });
-      playSfx('match');
-      // Score
-      const gained = 10 * matchedSet.size; score += gained; scoreEl.textContent=score;
+
       // Gravity
       for(let c=0;c<cols;c++){
         let wr = rows-1;
@@ -549,8 +455,8 @@
 
     function randInt(n){ return Math.floor(Math.random()*n); }
 
-    function randTileFor(r,c,ignorePrev=false){
-      // Pick a tile that does not create immediate 3+ at (r,c)
+    function randTileFor(r,c){
+      // Pick a tile that does not create immediate 3+ at (r,c) in straight lines
       let choices=[0,1,2,3,4,5];
       const left1 = (c>=1)? grid[r][c-1] : -99;
       const left2 = (c>=2)? grid[r][c-2] : -98;
@@ -574,53 +480,32 @@
         reshuffle();
         if(++safecount>30) break;
       }
-    }, ()=>Array(cols).fill(0));
-      for(let r=0;r<rows;r++){
-        for(let c=0;c<cols;c++){
-          grid[r][c] = randTileFor(r,c);
-        }
-      }
-      // Ensure at least one move exists; if not, regenerate
-      let safecount=0;
-      while(!hasAnyMoves()){
-        // Lightweight reshuffle
-        reshuffle();
-        if(++safecount>20) break;
-      }
     }
 
     function reshuffle(){
-      // Keep distribution; shuffle until no starting matches and has moves
       const flat = grid.flat();
       let tries=0;
       do{
-        shuffleArray(flat);
-        // reapply
+        for(let i=flat.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [flat[i],flat[j]]=[flat[j],flat[i]]; }
         for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) grid[r][c]=flat[r*cols+c];
         tries++;
-        if(tries>20){ // fallback: regenerate entirely
-          generateInitialGrid(); return;
-        }
+        if(tries>20){ generateInitialGrid(); return; }
       } while(findMatches().size>0 || !hasAnyMoves());
       renderAll();
     }
-
-    function shuffleArray(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } }
 
     function delay(ms){ return new Promise(res=>setTimeout(res, ms)); }
 
     // ------- Game lifecycle -------
     function initGame(fromRestart=false){
-      // Reset state
       score = 0; scoreEl.textContent='0'; selected=null; busy=false;
       createBoardDom();
       generateInitialGrid();
       renderAll();
       updateAudioButtons();
 
-      // Mode specifics
       if(mode==='challenge'){
-        movesLeft = 0; // unlimited moves; timer-based
+        movesLeft = 0;
         timeLeft = 60;
         updateHud();
         if(timerId) clearInterval(timerId);
@@ -646,8 +531,14 @@
       busy=true;
       showToast(`Time! Score: ${score}`);
       statusEl.textContent = `Challenge finished — Score: ${score}. Tap Restart or Back.`;
-    }`);
-      statusEl.textContent = `Challenge finished — Score: ${score}. Tap Restart to try again.`;
+    }
+
+    function goToStart(){
+      if(timerId){ clearInterval(timerId); timerId=null; }
+      selected=null; busy=false;
+      document.getElementById('game').style.display='none';
+      document.getElementById('start').style.display='grid';
+      document.getElementById('status').textContent='';
     }
 
     function showToast(text){
@@ -655,38 +546,19 @@
       clearTimeout(showToast._t); showToast._t = setTimeout(()=>toastEl.classList.remove('show'), 1600);
     }
 
-    function goToStart(){
-      // stop timers & clear board
-      if(timerId){ clearInterval(timerId); timerId=null; }
-      selected=null; busy=false;
-      // Hide game, show start
-      document.getElementById('game').style.display='none';
-      document.getElementById('start').style.display='grid';
-      // Reset HUD text
-      document.getElementById('status').textContent='';
-    }
-
-    // ------- Preload assets and basic error logging -------
+    // ------- Preload & init -------
     (function preload(){
-      // images
-      TILE_IMAGES.concat(['assets/images/banner.png','assets/images/welcome_cat.png']).forEach(src=>{
+      TILE_IMAGES.concat(['assets/images/banner.png'+IMG_VER,'assets/images/welcome_cat.png'+IMG_VER]).forEach(src=>{
         const im = new Image(); im.src = src; im.onerror = ()=>console.warn('Image missing?', src);
       });
-      // audio: we set src via constructors already; ping once to warm cache
       Object.values(SFX).forEach(a=>{ a.load(); a.onerror = ()=>console.warn('SFX missing?', a.src); });
-      // music sequence
-      pickNextBgm(); // set first src (won't play until user enables)
+      pickNextBgm();
       music.onerror = ()=>console.warn('BGM missing?', music.src);
     })();
 
-    // Initialize toggles to reflect initial state
     setMode('calm');
     updateAudioButtons();
   </script>
-</body>
-</html>
-
-</script>
 </body>
 </html>
 
