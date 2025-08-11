@@ -14,7 +14,26 @@
     header img{height:64px;width:auto}
     .wrap{max-width:1120px;margin:0 auto;padding:12px}
     .card{background:#fff;border:1px solid var(--line);border-radius:24px;box-shadow:var(--shadow)}
-
+.brand-fallback{
+  font-weight:700;
+  letter-spacing:.02em;
+  opacity:.9;
+  text-align:center;
+  padding:8px 12px;
+  border:1px dashed var(--line);
+  border-radius:12px;
+  background:#fff;
+}
+    /* 追加：Start専用の外観（形はlinkbtn／枠はグレー／白地） */
+.linkbtn.btn-start{
+  border:1px solid var(--line);
+  background:#fff;
+  color:#111;
+}
+.linkbtn.btn-start:hover{
+  background:#f9f9f9;
+  border-color:#ddd;
+}
     /* --- START --- */
     #start{min-height:68vh}
     #start .inner{display:flex;flex-direction:column;gap:16px;align-items:center;justify-content:center;padding:30px}
@@ -26,14 +45,26 @@
     .seg button[aria-pressed="true"]{background:#111;color:#fff;box-shadow:var(--shadow)}
     .btn{appearance:none;border:1px solid var(--line);background:#fff;border-radius:999px;padding:10px 14px;cursor:pointer;transition:transform .06s}
     .btn:hover{transform:translateY(-1px)}
-    .note{color:#444;font-size:.92rem;line-height:1.55;text-align:center;max-width:860px}
+    /* 置き換え：.note の整形（中央→左寄せ） */
+.note{
+  color:#444;font-size:.92rem;line-height:1.65;text-align:left;max-width:860px;margin:0 auto;
+}
     .note small{display:block;color:#666;margin-top:6px}
 
-    /* YouTube button: always light blue, hover = deeper blue */
-    .linkbtn{display:inline-flex;align-items:center;gap:8px;border:1px solid #bcd3ff;background:#e8f0ff;border-radius:999px;padding:12px 18px;text-decoration:none;color:#0b3d91;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.06);transition:background .2s, border-color .2s, color .2s, transform .06s}
-    .linkbtn:hover{transform:translateY(-1px);background:#d6e4ff;border-color:#9bbcff;color:#09306f}
-
-    .cat-small{width:260px;height:auto;opacity:.98}
+    /* 置き換え：.linkbtn の背景・境界色をほんのり強める */
+.linkbtn{
+  display:inline-flex;align-items:center;gap:8px;
+  border:1px solid #bcd3ff;           /* 細い水色の線 */
+  background:#edf3ff;                  /* ほんのり塗りつぶし */
+  border-radius:999px;padding:12px 18px;text-decoration:none;
+  color:#0b3d91;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.06);
+  transition:background .2s, border-color .2s, color .2s, transform .06s
+}
+.linkbtn:hover{
+  transform:translateY(-1px);
+  background:#dfeaff;                  /* 少し濃く */
+  border-color:#a9c5ff;
+  color:#09306f;
 
     /* --- GAME --- */
     #game{display:none}
@@ -71,10 +102,10 @@
   </style>
 </head>
 <body>
-  <header class="wrap">
-    <img src="assets/images/banner.png?v=20250811j" alt="murmur banner" />
-    <div class="brand">murmur — quiet match</div>
-  </header>
+  <header class="wrap" style="justify-content:center">
+  <img id="bannerImg" src="assets/images/banner.png?v=20250811j" alt="murmur banner" />
+  <div id="brandFallback" class="brand-fallback" hidden>murmur. relaxing games — quiet match</div>
+</header>
 
   <!-- START -->
   <section id="start" class="wrap card">
@@ -89,17 +120,21 @@
         </div>
       </div>
 
-      <div class="row"><button class="btn" id="startBtn"><strong>Start</strong></button></div>
+      <!-- 置き換え：Startボタンの行 -->
+<div class="row"><button class="linkbtn btn-start" id="startBtn"><strong>Start</strong></button></div>
 
-      <div class="note">
-        <strong>Calm</strong>: Match <em>3 or more</em> identical sweets to clear — relaxed endless play.<br/>
-        <strong>Challenge</strong>: Stage-based with move limit & target score. Clear a stage to unlock the next (100 stages).
-        <small>
-          <strong>Save</strong>: Progress/settings are saved in your browser (local storage). They may reset on different devices/browsers, private/incognito mode, or when clearing site data.<br/>
-          <strong>Recommended</strong>: Latest Chrome / Edge / Firefox / Safari on desktop or tablet.
-        </small>
-      </div>
 
+      <!-- 置き換え：<div class="note"> ... </div> の中身 -->
+<div class="note">
+  <strong>Calm</strong>: Match <em>3 or more</em> identical sweets to clear — relaxed endless play.<br/>
+  <strong>Challenge</strong>: Stage-based with move limit & target score.<br/>
+  Clear a stage to unlock the next (100 stages).
+  <small>
+    <strong>Save</strong>: Progress/settings are saved in your browser (local storage).<br/>
+    They may reset on different devices/browsers, private/incognito mode, or when clearing site data.<br/>
+    <strong>Recommended</strong>: Latest Chrome / Edge / Firefox / Safari on desktop or tablet.
+  </small>
+</div>
       <div class="row">
         <a class="linkbtn" href="https://www.youtube.com/channel/UCxXav6WmZ-EhWB3zbIRxFMg" target="_blank" rel="noopener" title="murmur. on YouTube">murmur. on YouTube</a>
         <img class="cat-small" src="assets/images/welcome_cat.png?v=20250811j" alt="cat" />
@@ -399,7 +434,7 @@ function addCombo(groups){
       document.getElementById('leave').onclick=()=>{ hideOverlay(); goToStart(); };
       document.getElementById('stay').onclick=()=> hideOverlay();
     });
-    restartBtn.addEventListener('click',()=> initGame(true));
+    restartBtn.addEventListener('click',()=> initGame());
     stageSelBtn.addEventListener('click',()=> openStageSelect());
 
     // ------------ Toast ------------
