@@ -14,26 +14,16 @@
     header img{height:64px;width:auto}
     .wrap{max-width:1120px;margin:0 auto;padding:12px}
     .card{background:#fff;border:1px solid var(--line);border-radius:24px;box-shadow:var(--shadow)}
-.brand-fallback{
-  font-weight:700;
-  letter-spacing:.02em;
-  opacity:.9;
-  text-align:center;
-  padding:8px 12px;
-  border:1px dashed var(--line);
-  border-radius:12px;
-  background:#fff;
-}
-    /* 追加：Start専用の外観（形はlinkbtn／枠はグレー／白地） */
-.linkbtn.btn-start{
-  border:1px solid var(--line);
-  background:#fff;
-  color:#111;
-}
-.linkbtn.btn-start:hover{
-  background:#f9f9f9;
-  border-color:#ddd;
-}
+
+    /* フォールバック文字 */
+    .brand-fallback{
+      font-weight:700; letter-spacing:.02em; opacity:.9; text-align:center;
+      padding:8px 12px; border:1px dashed var(--line); border-radius:12px; background:#fff;
+    }
+
+    /* トップの猫アイコン */
+    .cat-small{width:260px;height:auto;opacity:.98}
+
     /* --- START --- */
     #start{min-height:68vh}
     #start .inner{display:flex;flex-direction:column;gap:16px;align-items:center;justify-content:center;padding:30px}
@@ -45,26 +35,37 @@
     .seg button[aria-pressed="true"]{background:#111;color:#fff;box-shadow:var(--shadow)}
     .btn{appearance:none;border:1px solid var(--line);background:#fff;border-radius:999px;padding:10px 14px;cursor:pointer;transition:transform .06s}
     .btn:hover{transform:translateY(-1px)}
-    /* 置き換え：.note の整形（中央→左寄せ） */
-.note{
-  color:#444;font-size:.92rem;line-height:1.65;text-align:left;max-width:860px;margin:0 auto;
-}
-    .note small{display:block;color:#666;margin-top:6px}
 
-    /* 置き換え：.linkbtn の背景・境界色をほんのり強める */
-.linkbtn{
-  display:inline-flex;align-items:center;gap:8px;
-  border:1px solid #bcd3ff;           /* 細い水色の線 */
-  background:#edf3ff;                  /* ほんのり塗りつぶし */
-  border-radius:999px;padding:12px 18px;text-decoration:none;
-  color:#0b3d91;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.06);
-  transition:background .2s, border-color .2s, color .2s, transform .06s
-}
-.linkbtn:hover{
-  transform:translateY(-1px);
-  background:#dfeaff;                  /* 少し濃く */
-  border-color:#a9c5ff;
-  color:#09306f;
+    /* 説明文：本文は左寄せ、推奨環境（small部）は中央寄せ */
+    .note{color:#444;font-size:.92rem;line-height:1.65;text-align:left;max-width:860px;margin:0 auto}
+    .note small{display:block;color:#666;margin-top:6px;text-align:center}
+
+    /* YouTubeリンクボタン：淡い水色の塗りつぶし（<a>でも<button>でもOK） */
+    .linkbtn{
+      display:inline-flex;align-items:center;gap:8px;
+      border:1px solid #bcd3ff;
+      background:#edf3ff;
+      border-radius:999px;padding:12px 18px;text-decoration:none;
+      color:#0b3d91;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.06);
+      transition:background .2s, border-color .2s, color .2s, transform .06s;
+    }
+    .linkbtn:hover{
+      transform:translateY(-1px);
+      background:#dfeaff;
+      border-color:#a9c5ff;
+      color:#09306f;
+    } /* ← ここ忘れない */
+
+    /* Startボタン：同形で白地＋グレー枠を常時表示 */
+    .linkbtn.btn-start{
+      border:1px solid var(--line);
+      background:#fff;
+      color:#111;
+    }
+    .linkbtn.btn-start:hover{
+      background:#f9f9f9;
+      border-color:#ddd;
+    }
 
     /* --- GAME --- */
     #game{display:none}
@@ -102,10 +103,11 @@
   </style>
 </head>
 <body>
+  <!-- ヘッダー：バナーのみ（画像欠け時はテキスト表示） -->
   <header class="wrap" style="justify-content:center">
-  <img id="bannerImg" src="assets/images/banner.png?v=20250811j" alt="murmur banner" />
-  <div id="brandFallback" class="brand-fallback" hidden>murmur. relaxing games — quiet match</div>
-</header>
+    <img id="bannerImg" src="assets/images/banner.png?v=20250811j" alt="murmur banner" />
+    <div id="brandFallback" class="brand-fallback" hidden>murmur. relaxing games — quiet match</div>
+  </header>
 
   <!-- START -->
   <section id="start" class="wrap card">
@@ -120,21 +122,21 @@
         </div>
       </div>
 
-      <!-- 置き換え：Startボタンの行 -->
-<div class="row"><button class="linkbtn btn-start" id="startBtn"><strong>Start</strong></button></div>
+      <div class="row">
+        <button class="linkbtn btn-start" id="startBtn"><strong>Start</strong></button>
+      </div>
 
+      <div class="note">
+        <strong>Calm</strong>: Match <em>3 or more</em> identical sweets to clear — relaxed endless play.<br/>
+        <strong>Challenge</strong>: Stage-based with move limit & target score.<br/>
+        Clear a stage to unlock the next (100 stages).
+        <small>
+          <strong>Save</strong>: Progress/settings are saved in your browser (local storage).<br/>
+          They may reset on different devices/browsers, private/incognito mode, or when clearing site data.<br/>
+          <strong>Recommended</strong>: Latest Chrome / Edge / Firefox / Safari on desktop or tablet.
+        </small>
+      </div>
 
-      <!-- 置き換え：<div class="note"> ... </div> の中身 -->
-<div class="note">
-  <strong>Calm</strong>: Match <em>3 or more</em> identical sweets to clear — relaxed endless play.<br/>
-  <strong>Challenge</strong>: Stage-based with move limit & target score.<br/>
-  Clear a stage to unlock the next (100 stages).
-  <small>
-    <strong>Save</strong>: Progress/settings are saved in your browser (local storage).<br/>
-    They may reset on different devices/browsers, private/incognito mode, or when clearing site data.<br/>
-    <strong>Recommended</strong>: Latest Chrome / Edge / Firefox / Safari on desktop or tablet.
-  </small>
-</div>
       <div class="row">
         <a class="linkbtn" href="https://www.youtube.com/channel/UCxXav6WmZ-EhWB3zbIRxFMg" target="_blank" rel="noopener" title="murmur. on YouTube">murmur. on YouTube</a>
         <img class="cat-small" src="assets/images/welcome_cat.png?v=20250811j" alt="cat" />
@@ -316,7 +318,6 @@
       const more=findMatches();
       if(more.size>0){ await resolveMatches(more); }
       else {
-        // chain ended — reset the chain counter (display will auto-hide)
         comboStep=0; comboTotal=0;
         if(mode==='challenge'){
           if(score>=targetScore){ onStageClear(); }
@@ -325,73 +326,112 @@
       }
     }
 
-    function countGroupsFromSet(set){ const keys=[...set]; const coords=keys.map(k=>k.split(',').map(Number)); const n=coords.length; if(n===0) return 0; const adj=Array.from({length:n},()=>[]); for(let i=0;i<n;i++){ const [r1,c1]=coords[i]; for(let j=i+1;j<n;j++){ const [r2,c2]=coords[j]; if(Math.abs(r1-r2)+Math.abs(c1-c2)===1){ adj[i].push(j); adj[j].push(i); } } } const seen=new Array(n).fill(false); let groups=0; for(let i=0;i<n;i++) if(!seen[i]){ groups++; const q=[i]; seen[i]=true; while(q.length){ const v=q.shift(); for(const w of adj[v]) if(!seen[w]){ seen[w]=true; q.push(w); } } } return groups; }
+    function countGroupsFromSet(set){
+      const keys=[...set];
+      const coords=keys.map(k=>k.split(',').map(Number));
+      const n=coords.length; if(n===0) return 0;
+      const adj=Array.from({length:n},()=>[]);
+      for(let i=0;i<n;i++){
+        const [r1,c1]=coords[i];
+        for(let j=i+1;j<n;j++){
+          const [r2,c2]=coords[j];
+          if(Math.abs(r1-r2)+Math.abs(c1-c2)===1){ adj[i].push(j); adj[j].push(i); }
+        }
+      }
+      const seen=new Array(n).fill(false); let groups=0;
+      for(let i=0;i<n;i++) if(!seen[i]){
+        groups++; const q=[i]; seen[i]=true;
+        while(q.length){ const v=q.shift(); for(const w of adj[v]) if(!seen[w]){ seen[w]=true; q.push(w); } }
+      }
+      return groups;
+    }
 
     // ------------ Combo display (single-line) ------------
-let comboHideTimer = null;
-function addCombo(groups){
-  const g = Math.max(1, Number(groups) || 1);
-  // 累計（スコア用）は維持
-  comboTotal += g;
+    let comboHideTimer=null;
+    function addCombo(groups){
+      const g=Math.max(1, Number(groups)||1);
+      comboTotal+=g;
 
-  // 表示条件：
-  //  - 連鎖2段目以降は必ず表示（gが1でも連鎖継続なのでコンボ）
-  //  - 連鎖1段目は同時消しが2以上のときのみ表示（初手1消しは非表示）
-  const show = (comboStep >= 2) || (comboStep === 1 && g >= 2);
+      // 表示条件：初手は同時2消し以上、2段目以降は常に表示
+      const show=(comboStep>=2)||(comboStep===1&&g>=2);
 
-  if (show) {
-    const tail = (g >= 2) ? ('×' + g) : '';
-    // 主数は「連鎖段数」= comboStep（例：初手同時2消し → Combo 1×2）
-    comboEl.textContent = 'Combo ' + comboStep + tail;
-    comboEl.classList.add('show');
+      if(show){
+        const tail=(g>=2)?('×'+g):'';
+        comboEl.textContent='Combo '+comboStep+tail;
+        comboEl.classList.add('show');
 
-    if (comboHideTimer) clearTimeout(comboHideTimer);
-    const BASE = 420, PER = 110, MAX = 900;
-    let dur = (BASE + Math.max(0, comboStep - 1) * PER) * paceFactor();
-    if (dur > MAX) dur = MAX;
-    comboHideTimer = setTimeout(() => comboEl.classList.remove('show'), dur);
-  } else {
-    comboEl.classList.remove('show');
-    comboEl.textContent = '';
-  }
-}
+        if(comboHideTimer) clearTimeout(comboHideTimer);
+        const BASE=420, PER=110, MAX=900;
+        let dur=(BASE+Math.max(0,comboStep-1)*PER)*paceFactor();
+        if(dur>MAX) dur=MAX;
+        comboHideTimer=setTimeout(()=>comboEl.classList.remove('show'),dur);
+      }else{
+        comboEl.classList.remove('show');
+        comboEl.textContent='';
+      }
+    }
 
     // ------------ Challenge ------------
     let currentStage=1; let unlocked=parseInt(localStorage.getItem('mmq_unlocked')||'1',10); if(!(unlocked>=1&&unlocked<=100)) unlocked=1; let savedStage=parseInt(localStorage.getItem('mmq_currentStage')||String(unlocked),10); if(!(savedStage>=1&&savedStage<=unlocked)) savedStage=unlocked;
     let targetScore=0; let movesLeft=0;
     function stageConfig(n){ const baseTarget=450, grow=50; const baseMoves=20, stepEvery=10, minMoves=15; const moves=Math.max(minMoves, baseMoves - Math.floor((n-1)/stepEvery)); const target=baseTarget + grow*(n-1); return {moves,target}; }
 
-    function openStageSelect(){ const max=100; let gridHtml=''; for(let i=1;i<=max;i++){ const lock=i>unlocked, cleared=i<unlocked; gridHtml += `<div class=\"stage ${lock?'lock':''} ${cleared?'clear':''}\" data-n=\"${i}\">${i}</div>`; } showOverlay(`
-      <button class=\"close\" id=\"closeOv\">×</button>
-      <h2>Challenge — Stage Select</h2>
-      <div class=\"muted\" style=\"margin:4px 0 8px\">Choose a stage to play. Cleared stages are marked; locked stages unlock as you progress.</div>
-      <div class=\"stage-grid\">${gridHtml}</div>
-      <div style=\"margin-top:10px\"><button class=\"btn\" id=\"backToStart\">Back</button></div>`);
-      document.getElementById('closeOv').onclick=hideOverlay; document.getElementById('backToStart').onclick=()=>{ hideOverlay(); goToStart(); };
-      document.querySelectorAll('.stage').forEach(el=> el.onclick=()=>{ const n=+el.dataset.n; if(n>unlocked) return; hideOverlay(); startStage(n); }); }
+    function openStageSelect(){
+      const max=100; let gridHtml='';
+      for(let i=1;i<=max;i++){
+        const lock=i>unlocked, cleared=i<unlocked;
+        gridHtml+=`<div class="stage ${lock?'lock':''} ${cleared?'clear':''}" data-n="${i}">${i}</div>`;
+      }
+      showOverlay(`
+        <button class="close" id="closeOv">×</button>
+        <h2>Challenge — Stage Select</h2>
+        <div class="muted" style="margin:4px 0 8px">Choose a stage to play. Cleared stages are marked; locked stages unlock as you progress.</div>
+        <div class="stage-grid">${gridHtml}</div>
+        <div style="margin-top:10px"><button class="btn" id="backToStart">Back</button></div>`);
+      document.getElementById('closeOv').onclick=hideOverlay;
+      document.getElementById('backToStart').onclick=()=>{ hideOverlay(); goToStart(); };
+      document.querySelectorAll('.stage').forEach(el=>{
+        el.onclick=()=>{ const n=+el.dataset.n; if(n>unlocked) return; hideOverlay(); startStage(n); };
+      });
+    }
 
-    function startStage(n){ mode='challenge'; setMode('challenge'); currentStage=n; const cfg=stageConfig(n); targetScore=cfg.target; movesLeft=cfg.moves; startGame(); stageSelBtn.hidden=false; stageInfo.hidden=false; movesWrap.hidden=false; updateHud(); localStorage.setItem('mmq_currentStage', String(currentStage)); }
+    function startStage(n){
+      mode='challenge'; setMode('challenge'); currentStage=n;
+      const cfg=stageConfig(n); targetScore=cfg.target; movesLeft=cfg.moves;
+      startGame(); stageSelBtn.hidden=false; stageInfo.hidden=false; movesWrap.hidden=false;
+      updateHud(); localStorage.setItem('mmq_currentStage', String(currentStage));
+    }
 
-    function onStageClear(){ if(unlocked<currentStage+1){ unlocked=currentStage+1; localStorage.setItem('mmq_unlocked', String(unlocked)); } showOverlay(`
-        <button class=\"close\" id=\"closeOv\">×</button>
+    function onStageClear(){
+      if(unlocked<currentStage+1){ unlocked=currentStage+1; localStorage.setItem('mmq_unlocked', String(unlocked)); }
+      showOverlay(`
+        <button class="close" id="closeOv">×</button>
         <h2>Stage ${currentStage} — Cleared 🎉</h2>
-        <p class=\"muted\">Score ${score} / Target ${targetScore}</p>
-        <div class=\"row\" style=\"justify-content:center\">
-          <button class=\"btn\" id=\"next\">Next</button>
-          <button class=\"btn\" id=\"select\">Stage Select</button>
-          <button class=\"btn\" id=\"retry\">Retry</button>
+        <p class="muted">Score ${score} / Target ${targetScore}</p>
+        <div class="row" style="justify-content:center">
+          <button class="btn" id="next">Next</button>
+          <button class="btn" id="select">Stage Select</button>
+          <button class="btn" id="retry">Retry</button>
         </div>`);
-      document.getElementById('closeOv').onclick=hideOverlay; document.getElementById('next').onclick=()=>{ hideOverlay(); startStage(Math.min(100,currentStage+1)); }; document.getElementById('select').onclick=()=>{ openStageSelect(); }; document.getElementById('retry').onclick=()=>{ hideOverlay(); startStage(currentStage); }; }
+      document.getElementById('closeOv').onclick=hideOverlay;
+      document.getElementById('next').onclick=()=>{ hideOverlay(); startStage(Math.min(100,currentStage+1)); };
+      document.getElementById('select').onclick=()=>{ openStageSelect(); };
+      document.getElementById('retry').onclick=()=>{ hideOverlay(); startStage(currentStage); };
+    }
 
-    function onStageFail(){ showOverlay(`
-        <button class=\"close\" id=\"close\">×</button>
+    function onStageFail(){
+      showOverlay(`
+        <button class="close" id="close">×</button>
         <h2>Stage ${currentStage} — Try again</h2>
-        <p class=\"muted\">Score ${score} / Target ${targetScore}</p>
-        <div class=\"row\" style=\"justify-content:center\">
-          <button class=\"btn\" id=\"retry\">Retry</button>
-          <button class=\"btn\" id=\"select\">Stage Select</button>
+        <p class="muted">Score ${score} / Target ${targetScore}</p>
+        <div class="row" style="justify-content:center">
+          <button class="btn" id="retry">Retry</button>
+          <button class="btn" id="select">Stage Select</button>
         </div>`);
-      document.getElementById('close').onclick=hideOverlay; document.getElementById('retry').onclick=()=>{ hideOverlay(); startStage(currentStage); }; document.getElementById('select').onclick=()=>{ openStageSelect(); }; }
+      document.getElementById('close').onclick=hideOverlay;
+      document.getElementById('retry').onclick=()=>{ hideOverlay(); startStage(currentStage); };
+      document.getElementById('select').onclick=()=>{ openStageSelect(); };
+    }
 
     // ------------ Overlay helpers ------------
     const overlay=document.getElementById('overlay'); const sheet=document.getElementById('sheet');
@@ -443,10 +483,19 @@ function addCombo(groups){
     // ------------ Preload ------------
     (function preload(){ TILE_IMAGES.concat(['assets/images/banner.png'+IMG_VER,'assets/images/welcome_cat.png'+IMG_VER]).forEach(src=>{ const im=new Image(); im.src=src; }); Object.values(SFX).forEach(a=>a.load()); pickNextBgm(); })();
 
+    // 画像フォールバック
+    const _bn = document.getElementById('bannerImg');
+    _bn?.addEventListener('error', ()=>{ 
+      _bn.style.display='none';
+      const fb=document.getElementById('brandFallback');
+      if(fb) fb.hidden=false;
+    });
+
   })();
   </script>
 </body>
 </html>
+
 
 
 
