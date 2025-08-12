@@ -20,12 +20,10 @@
     .wrap{max-width:1120px;margin:0 auto;padding:12px}
     .card{background:#fff;border:1px solid var(--line);border-radius:24px;box-shadow:var(--shadow)}
 
-    /* header */
     header{display:flex;align-items:center;justify-content:center;gap:16px;padding:18px 12px 8px}
     header img{height:64px;width:auto;cursor:pointer}
     .brand-fallback{font-weight:700;letter-spacing:.02em;opacity:.9;text-align:center;padding:8px 12px;border:1px dashed var(--line);border-radius:12px;background:#fff}
 
-    /* start */
     #start{min-height:68vh}
     #start .inner{display:flex;flex-direction:column;gap:16px;align-items:center;justify-content:center;padding:30px}
     .title{font-size:28px;font-weight:700;letter-spacing:.06em;text-align:center}
@@ -39,7 +37,6 @@
     .note{color:#444;font-size:.92rem;line-height:1.65;text-align:left;max-width:860px;margin:0 auto}
     .note small{display:block;color:#666;margin-top:6px;text-align:center}
 
-    /* link-like buttons */
     a.linkbtn, button.linkbtn{
       appearance:none; -webkit-appearance:none;
       display:inline-flex; flex-direction:column; align-items:center; gap:2px;
@@ -49,20 +46,14 @@
     }
     .linkbtn .line1{display:block;font-weight:800}
     .linkbtn .line2{display:block;font-weight:600;opacity:.9;font-size:.85em;line-height:1.2;margin-top:1px}
-
-    /* youtube */
     a.linkbtn, button.linkbtn{ background:var(--yt-bg); border:1px solid var(--yt-border); color:var(--yt-text); }
     a.linkbtn:hover, button.linkbtn:hover{ transform:translateY(-1px); background:var(--yt-bg-hov); border-color:var(--yt-border-hov); color:var(--yt-text-hov); }
     a.linkbtn:link, a.linkbtn:visited{ color:var(--yt-text); }
-
-    /* start button */
     button.linkbtn.btn-start{ background:var(--start-bg); border:1px solid var(--start-border); color:#111; box-shadow:0 2px 6px rgba(0,0,0,.05); }
     button.linkbtn.btn-start:hover{ background:var(--start-bg-hov); border-color:var(--start-border-hov); }
 
-    /* cat */
     .cat-small{width:var(--cat-w);height:auto;opacity:.98}
 
-    /* game */
     #game{display:none}
     .top{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--line)}
     .top .left,.top .right{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
@@ -79,10 +70,8 @@
     .footer{padding:10px 16px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
     .muted{opacity:.65}
 
-    /* combo label — UIごと封印 */
     #combo{position:absolute;left:50%;top:45%;transform:translate(-50%,-50%);opacity:0;pointer-events:none}
 
-    /* overlay modal */
     .overlay{position:fixed;inset:0;background:rgba(17,24,39,.46);display:none;align-items:center;justify-content:center;z-index:50}
     .overlay.show{display:flex}
     .sheet{position:relative;background:#fff;border-radius:20px;box-shadow:0 30px 80px rgba(0,0,0,.2);width:min(92vw,760px);padding:18px;text-align:center}
@@ -92,7 +81,6 @@
     .stage.lock{opacity:.4;cursor:not-allowed}
     .stage.clear{border-color:#a7f3d0;background:#ecfdf5}
 
-    /* ad spot inside game */
     #adSpot{font-size:.8rem;opacity:.7;margin-left:auto}
     #adSpot[hidden]{display:none !important;}
   </style>
@@ -103,7 +91,6 @@
     <div id="brandFallback" class="brand-fallback" hidden>murmur. relaxing games — quiet match</div>
   </header>
 
-  <!-- START -->
   <section id="start" class="wrap card">
     <div class="inner">
       <div class="title">quiet match</div>
@@ -141,7 +128,6 @@
     </div>
   </section>
 
-  <!-- GAME -->
   <section id="game" class="wrap card" aria-live="polite">
     <div class="ytbar row" style="justify-content:center;padding:10px 0 0;">
       <a class="linkbtn" href="https://www.youtube.com/channel/UCxXav6WmZ-EhWB3zbIRxFMg" target="_blank" rel="noopener" title="murmur. on YouTube">
@@ -188,7 +174,6 @@
 
   <script>
   (function(){ 'use strict';
-    // ------------ Assets & Audio ------------
     const IMG_VER='?v=20250811j';
     const TILE_IMAGES=[
       'assets/images/lemon_soda_tile.png'+IMG_VER,
@@ -203,51 +188,46 @@
     const BGMS=['assets/audio/match_game_bgm_1.mp3','assets/audio/match_game_bgm_2.mp3','assets/audio/match_game_bgm_3.mp3','assets/audio/match_game_bgm_4.mp3','assets/audio/match_game_bgm_5.mp3'];
     let music=new Audio(); music.loop=false; let currentBgm=-1; let musicEnabled=false, sfxEnabled=true;
 
-    // ------------ DOM ------------
-    const startSec = document.getElementById('start');
-    const gameSec  = document.getElementById('game');
-    const boardWrap = document.getElementById('board-wrap');
-    const boardEl  = document.getElementById('board');
-    const toastEl  = document.getElementById('toast');
-    const comboEl  = document.getElementById('combo');
-    const scoreEl  = document.getElementById('score');
-    const movesWrap= document.getElementById('movesWrap');
-    const movesEl  = document.getElementById('moves');
-    const stageInfo= document.getElementById('stageInfo');
-    const stageEl  = document.getElementById('stage');
-    const targetEl = document.getElementById('target');
-    const statusEl = document.getElementById('status');
-    const modeSeg  = document.getElementById('modeSeg');
-    const startBtn = document.getElementById('startBtn');
-    const paceSeg2 = document.getElementById('paceSeg2');
-    const musicBtn = document.getElementById('musicBtn');
-    const sfxBtn   = document.getElementById('sfxBtn');
-    const vol2     = document.getElementById('vol2');
-    const restartBtn = document.getElementById('restartBtn');
-    const stageSelBtn= document.getElementById('stageSelectBtn');
-    const backBtn  = document.getElementById('backBtn');
-    const adSpot   = document.getElementById('adSpot');
+    const startSec=document.getElementById('start');
+    const gameSec =document.getElementById('game');
+    const boardWrap=document.getElementById('board-wrap');
+    const boardEl =document.getElementById('board');
+    const toastEl =document.getElementById('toast');
+    const comboEl =document.getElementById('combo');
+    const scoreEl =document.getElementById('score');
+    const movesWrap=document.getElementById('movesWrap');
+    const movesEl =document.getElementById('moves');
+    const stageInfo=document.getElementById('stageInfo');
+    const stageEl =document.getElementById('stage');
+    const targetEl=document.getElementById('target');
+    const statusEl=document.getElementById('status');
+    const modeSeg =document.getElementById('modeSeg');
+    const startBtn=document.getElementById('startBtn');
+    const paceSeg2=document.getElementById('paceSeg2');
+    const musicBtn=document.getElementById('musicBtn');
+    const sfxBtn  =document.getElementById('sfxBtn');
+    const vol2    =document.getElementById('vol2');
+    const restartBtn=document.getElementById('restartBtn');
+    const stageSelBtn=document.getElementById('stageSelectBtn');
+    const backBtn=document.getElementById('backBtn');
+    const adSpot=document.getElementById('adSpot');
 
-    // session run id (キャンセル用)
     let runId = 0;
     const currentRun = () => runId;
     const bumpRun = () => { runId++; busy=false; selected=null; clearComboTimer(); };
+    const cancelled = (my) => my !== runId || gameSec.style.display !== 'block';
 
-    function cancelled(my){ return my !== runId || gameSec.style.display !== 'block'; }
-
-    // header fallback + Home nav
     const _bn=document.getElementById('bannerImg');
     _bn?.addEventListener('error',()=>{ _bn.style.display='none'; const fb=document.getElementById('brandFallback'); if(fb) fb.hidden=false; });
     _bn?.addEventListener('click',()=> goToStart());
 
-    // ------------ Audio ------------
     let userInteracted=false;
     function pickNextBgm(){let i; do{i=Math.floor(Math.random()*BGMS.length);}while(i===currentBgm&&BGMS.length>1); currentBgm=i; music.src=BGMS[i];}
     function startMusic(){ if(!musicEnabled){ musicEnabled=true; pickNextBgm(); music.play().catch(()=>{});} updateAudioButtons(); syncVol(); }
     function stopMusic(){ musicEnabled=false; music.pause(); updateAudioButtons(); }
     function stopAllAudio(){ stopMusic(); try{ Object.values(SFX).forEach(a=>{ a.pause(); a.currentTime=0; }); }catch(e){} }
     music.addEventListener('ended',()=>{ if(musicEnabled){ pickNextBgm(); music.play().catch(()=>{});} });
-    function playSfx(name, my){ if(cancelled(my) || !sfxEnabled) return; try{ const a=SFX[name]; a.currentTime=0; a.play().catch(()=>{});}catch(e){} }
+    function playSfx(name,my){ if(cancelled(my) || !sfxEnabled) return; try{ const a=SFX[name]; a.currentTime=0; a.play().catch(()=>{});}catch(e){} }
     function updateAudioButtons(){ const s=(btn,on,l)=>{ if(!btn) return; btn.setAttribute('aria-pressed',String(on)); btn.textContent=l+(on?': On':': Off');}; s(musicBtn,musicEnabled,'Music'); s(sfxBtn,sfxEnabled,'SFX'); }
     function syncVol(){ if(music) music.volume=Number(vol2?.value||'0.7'); }
     musicBtn?.addEventListener('click',()=> musicEnabled? stopMusic(): startMusic());
@@ -256,7 +236,6 @@
     document.addEventListener('pointerdown',()=>{ userInteracted=true });
     document.addEventListener('visibilitychange',()=>{ if(document.hidden){ stopMusic(); } });
 
-    // ------------ Mode/Pace ------------
     let mode='calm', pace='slow';
     function setMode(m){ mode=m; if(modeSeg){ [...modeSeg.querySelectorAll('button')].forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.mode===mode))); } updateModeUi(); }
     function updateModeUi(){
@@ -271,7 +250,6 @@
     function paceFactor(){ return pace==='slow'?1.8 : pace==='normal'?1.3 : 1.05; }
     function getSelectedMode(){ const pressed = modeSeg?.querySelector('button[aria-pressed="true"]'); return pressed?.dataset.mode || 'calm'; }
 
-    // ---- Start flow ----
     startBtn?.addEventListener('click',()=>{
       const chosen = getSelectedMode();
       const ref=document.referrer||'';
@@ -293,14 +271,16 @@
       try{ sessionStorage.setItem('mmq_mode','calm'); }catch(e){}
       startGame();
     }
+
+    // ★ 修正点：先にゲーム画面へ切替→その上で Resume ダイアログ
     function startChallengeFlow(){
       hideOverlay();
       setMode('challenge');
       try{ sessionStorage.setItem('mmq_mode','challenge'); }catch(e){}
+      startGame(); // ゲーム表示にしてから
       if(unlocked>1){ showResumeDialog(); } else { startStage(1); }
     }
 
-    // ------------ Board State ------------
     const rows=8, cols=8; let grid=[], selected=null, busy=false, score=0, comboStep=0, comboTotal=0;
 
     function createBoardDom(){
@@ -354,9 +334,7 @@
       if(Math.abs(sr-r)+Math.abs(sc-c)!==1){ getCell(sr,sc).classList.remove('selected'); selected={r,c}; getCell(r,c).classList.add('selected'); playSfx('choice', currentRun()); return; }
       swapAndResolve(sr,sc,r,c);
     }
-
     function swapValues(a,b,c,d){const t=grid[a][b]; grid[a][b]=grid[c][d]; grid[c][d]=t; setCellImage(a,b); setCellImage(c,d)}
-
     function findMatches(){
       const matched=new Set();
       const seen=Array.from({length:rows},()=>Array(cols).fill(false));
@@ -376,7 +354,6 @@
       }
       return matched;
     }
-
     function hasAnyMoves(){
       for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){
         const here=grid[r][c];
@@ -388,7 +365,7 @@
     }
 
     async function swapAndResolve(r1,c1,r2,c2){
-      const my = currentRun();
+      const my=currentRun();
       if(cancelled(my)) return;
       busy=true; comboStep=0; comboTotal=0;
       playSfx('choice', my);
@@ -408,12 +385,11 @@
     function updateHud(){ movesEl.textContent=movesLeft; stageEl.textContent=currentStage; targetEl.textContent=targetScore; scoreEl.textContent=score; }
 
     function clearComboTimer(){ try{ if(addCombo._t){ clearTimeout(addCombo._t); addCombo._t=null; } }catch(e){} }
-
     async function resolveMatches(matchedSet, my){
       if(cancelled(my)) return;
       comboStep++;
       const groups=countGroupsFromSet(matchedSet);
-      addCombo(groups); // UI封印中だが内部カウンタは維持
+      addCombo(groups);
 
       matchedSet.forEach(k=>{ const [r,c]=k.split(',').map(Number); getCell(r,c).classList.add('matching'); });
       await delay(260); if(cancelled(my)) return;
@@ -428,7 +404,6 @@
       }
       score += add; updateHud();
 
-      // gravity
       for(let c=0;c<cols;c++){
         let wr=rows-1;
         for(let r=rows-1;r>=0;r--){ if(grid[r][c]!==-1){ grid[wr][c]=grid[r][c]; wr--; } }
@@ -436,7 +411,6 @@
       }
       renderAll(); await delay(240); if(cancelled(my)) return;
 
-      // refill
       for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) if(grid[r][c]===-1){ grid[r][c]=randTileFor(r,c); setCellImage(r,c); }
       await delay(200); if(cancelled(my)) return;
 
@@ -471,10 +445,8 @@
       return groups;
     }
 
-    // combo UI を無効化
-    function addCombo(){ /* no-op (kept for scoring only) */ }
+    function addCombo(){ /* UIは出さない（スコア用の内部カウントのみ） */ }
 
-    // ------------ Challenge ------------
     let currentStage=1;
     let unlocked=parseInt(localStorage.getItem('mmq_unlocked')||'1',10); if(!(unlocked>=1&&unlocked<=100)) unlocked=1;
     let savedStage=parseInt(localStorage.getItem('mmq_currentStage')||String(unlocked),10); if(!(savedStage>=1&&savedStage<=unlocked)) savedStage=unlocked;
@@ -509,7 +481,7 @@
     }
 
     function onStageClear(){
-      if(gameSec.style.display!=='block') return; // Homeでは出さない保険
+      if(gameSec.style.display!=='block') return;
       if(unlocked<currentStage+1){ unlocked=currentStage+1; localStorage.setItem('mmq_unlocked', String(unlocked)); }
       showOverlay(`
         <button class="close" id="closeOv">×</button>
@@ -527,7 +499,7 @@
     }
 
     function onStageFail(){
-      if(gameSec.style.display!=='block') return; // Homeでは出さない保険
+      if(gameSec.style.display!=='block') return;
       showOverlay(`
         <button class="close" id="close">×</button>
         <h2>Stage ${currentStage} — Try again</h2>
@@ -541,10 +513,9 @@
       document.getElementById('select').onclick=()=>{ openStageSelect(); };
     }
 
-    // ------------ Overlay ------------
     const overlay=document.getElementById('overlay'); const sheet=document.getElementById('sheet');
     function showOverlay(html){
-      if(gameSec.style.display!=='block') return; // Home中は出さない
+      if(gameSec.style.display!=='block') return;
       sheet.innerHTML=html; overlay.classList.add('show');
     }
     function hideOverlay(){ overlay.classList.remove('show'); sheet.innerHTML=''; }
@@ -564,17 +535,16 @@
       document.getElementById('fromStart').onclick=()=>{ hideOverlay(); localStorage.setItem('mmq_currentStage','1'); startStage(1); };
     }
 
-    // ------------ Lifecycle & view state ------------
     function startGame(){
       saveView('game', mode);
       startSec.style.display='none';
       gameSec.style.display='block';
-      bumpRun(); // ここで旧処理を全キャンセル
+      bumpRun();
       initGame(); updateAudioButtons(); syncVol(); fitBoard();
     }
     function goToStart(){
       saveView('home');
-      bumpRun(); // 旧処理キャンセル（SFX/演出の後出しを止める）
+      bumpRun();
       selected=null; busy=false;
       gameSec.style.display='none'; startSec.style.display='block';
       statusEl.textContent='';
@@ -619,7 +589,6 @@
       }catch(e){}
     }
 
-    // ------------ Fit board ------------
     function fitBoard(){
       try{
         if (gameSec.style.display !== 'block') return;
@@ -629,7 +598,7 @@
 
         const inner = Math.max(0, wrapW - 28);
         let gap = inner < 520 ? 6 : 10;
-        const pad = 24; // board padding L+R
+        const pad = 24;
         let tile = Math.floor((inner - pad - (cols-1)*gap) / cols);
 
         const isDesktop = window.matchMedia('(min-width: 900px)').matches;
@@ -643,7 +612,6 @@
       }catch(e){}
     }
 
-    // ------------ Boot ------------
     (function preload(){ TILE_IMAGES.concat(['assets/images/banner.png'+IMG_VER,'assets/images/welcome_cat.png'+IMG_VER]).forEach(src=>{ const im=new Image(); im.src=src; }); Object.values(SFX).forEach(a=>a.load()); pickNextBgm(); })();
 
     window.addEventListener('resize', fitBoard, {passive:true});
@@ -651,10 +619,8 @@
     window.addEventListener('pageshow', () => { if (gameSec.style.display === 'block' && boardEl.children.length === 0) { initGame(); } setTimeout(fitBoard, 60); }, {passive:true});
     new ResizeObserver(() => fitBoard()).observe(boardWrap);
 
-    // ---- (optional) affiliate spot: put HTML then unhide ----
     // adSpot.innerHTML = '<a href="#" rel="sponsored">tiny affiliate</a>';
     // adSpot.hidden = false;
-
   })();
   </script>
 </body>
