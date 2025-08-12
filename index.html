@@ -9,11 +9,9 @@
     :root{
       --bg:#fafafa; --ink:#1a1a1a; --soft:#ececec; --line:#e7e7e7; --muted:#6b7280;
       --tile:64px; --shadow:0 10px 30px rgba(0,0,0,.08);
-      /* buttons */
       --yt-bg:#e1ebff; --yt-border:#9fb8ff; --yt-text:#0b3d91;
       --yt-bg-hov:#d1e0ff; --yt-border-hov:#86a8ff; --yt-text-hov:#09306f;
       --start-bg:#fff; --start-bg-hov:#f7f7f7; --start-border:#d1d5db; --start-border-hov:#cbd5e1;
-      /* layout */
       --cat-w:260px; --grid-gap:10px;
     }
     *{box-sizing:border-box}
@@ -32,6 +30,7 @@
     #start .inner{display:flex;flex-direction:column;gap:16px;align-items:center;justify-content:center;padding:30px}
     .title{font-size:28px;font-weight:700;letter-spacing:.06em;text-align:center}
     .subtitle{opacity:.75;text-align:center}
+    .free{font-size:.85rem;color:#4b5563;margin-left:.25em}
     .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:center}
     .seg{display:flex;background:var(--soft);border-radius:999px;padding:4px}
     .seg button{appearance:none;border:none;background:transparent;border-radius:999px;padding:8px 14px;cursor:pointer}
@@ -40,7 +39,6 @@
     .btn:hover{transform:translateY(-1px)}
     .note{color:#444;font-size:.92rem;line-height:1.65;text-align:left;max-width:860px;margin:0 auto}
     .note small{display:block;color:#666;margin-top:6px;text-align:center}
-    .free{font-size:.85rem;color:#4b5563;margin-top:2px;text-align:center}
 
     /* Link-like buttons */
     a.linkbtn, button.linkbtn{
@@ -113,7 +111,7 @@
   <section id="start" class="wrap card">
     <div class="inner">
       <div class="title">quiet match</div>
-      <div class="subtitle">choose your mode, then start. <span class="free">free to play</span></div>
+      <div class="subtitle">choose your mode, then start.<span class="free">free to play</span></div>
 
       <div class="row" aria-label="Mode">
         <div class="seg" id="modeSeg">
@@ -235,13 +233,15 @@
     const overlay=document.getElementById('overlay'); const sheet=document.getElementById('sheet');
     const _bn=document.getElementById('bannerImg');
 
-    /* ---- Persisted UI state (view/mode) ---- */
-    function saveView(v){ try{ localStorage.setItem('mmq_view', v); }catch(e){} }
-    function saveMode(m){ try{ localStorage.setItem('mmq_mode', m); }catch(e){} }
-    function loadView(){ try{ return localStorage.getItem('mmq_view')||'home'; }catch(e){ return 'home'; } }
-    function loadMode(){ try{ return localStorage.getItem('mmq_mode')||'calm'; }catch(e){ return 'calm'; } }
+    /* ---- Session-persisted UI state (per tab) ---- */
+    const SS_VIEW='mmq_view_sess';   // 'home' | 'game'
+    const SS_MODE='mmq_mode_sess';   // 'calm' | 'challenge'
+    function saveView(v){ try{ sessionStorage.setItem(SS_VIEW, v);}catch(e){} }
+    function saveMode(m){ try{ sessionStorage.setItem(SS_MODE, m);}catch(e){} }
+    function loadView(){ try{ return sessionStorage.getItem(SS_VIEW)||'home'; }catch(e){ return 'home'; } }
+    function loadMode(){ try{ return sessionStorage.getItem(SS_MODE)||'calm'; }catch(e){ return 'calm'; } }
 
-    /* Header fallback + Home nav */
+    /* Header: fallback + Home nav */
     _bn?.addEventListener('error',()=>{ _bn.style.display='none'; const fb=document.getElementById('brandFallback'); if(fb) fb.hidden=false; });
     _bn?.addEventListener('click',()=> goToStart());
 
@@ -256,8 +256,6 @@
     musicBtn?.addEventListener('click',()=> musicEnabled? stopMusic(): startMusic());
     sfxBtn?.addEventListener('click',()=>{ sfxEnabled=!sfxEnabled; updateAudioButtons(); });
     vol2?.addEventListener('input',syncVol);
-
-    /* Pause BGM when tab hidden; do not auto-resume */
     document.addEventListener('visibilitychange',()=>{ if(document.hidden){ stopMusic(); } });
 
     /* ------------ Start / Mode / Pace ------------ */
@@ -328,6 +326,10 @@
       renderAll();
     }
 
+    /* ---- CANCEL-TOKEN to stop async chains when leaving game ---- */
+    let sessionId=0;
+    const isActive = (sid)=> sid===sessionId && gameSec.style.display==='block';
+
     function onCellClick(e){
       if(busy) return;
       const r=+e.currentTarget.dataset.r, c=+e.currentTarget.dataset.c;
@@ -368,27 +370,32 @@
     }
 
     async function swapAndResolve(r1,c1,r2,c2){
+      const sid=sessionId;
       busy=true; comboStep=0; comboTotal=0;
       playSfx('choice'); getCell(r1,c1).classList.remove('selected'); selected=null;
       swapValues(r1,c1,r2,c2); await delay(120);
+      if(!isActive(sid)){ busy=false; return; }
       let m=findMatches(); if(m.size===0){ swapValues(r1,c1,r2,c2); busy=false; return; }
       if(mode==='challenge'){ movesLeft--; updateHud(); }
-      await resolveMatches(m); busy=false;
+      await resolveMatches(m, sid); busy=false;
+      if(!isActive(sid)) return;
       if(!hasAnyMoves()){ reshuffle(); }
     }
 
     function delay(ms){ return new Promise(res=>setTimeout(res, ms*paceFactor())); }
     function updateHud(){ movesEl.textContent=movesLeft; stageEl.textContent=currentStage; targetEl.textContent=targetScore; scoreEl.textContent=score; }
 
-    async function resolveMatches(matchedSet){
+    async function resolveMatches(matchedSet, sid){
+      if(!isActive(sid)) return;
       comboStep++;
       const groups=countGroupsFromSet(matchedSet);
       addCombo(groups);
 
       matchedSet.forEach(k=>{ const [r,c]=k.split(',').map(Number); getCell(r,c).classList.add('matching'); });
       await delay(260);
+      if(!isActive(sid)) return;
       matchedSet.forEach(k=>{ const [r,c]=k.split(',').map(Number); grid[r][c]=-1; setCellImage(r,c); });
-      playSfx('match');
+      if(isActive(sid)) playSfx('match');
 
       const base=matchedSet.size*10; let add=base;
       if(mode==='calm'){
@@ -405,13 +412,15 @@
         for(let r=wr;r>=0;r--) grid[r][c]=-1;
       }
       renderAll(); await delay(240);
+      if(!isActive(sid)) return;
 
       // refill
       for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) if(grid[r][c]===-1){ grid[r][c]=randTileFor(r,c); setCellImage(r,c); }
       await delay(200);
+      if(!isActive(sid)) return;
 
       const more=findMatches();
-      if(more.size>0){ await resolveMatches(more); }
+      if(more.size>0){ await resolveMatches(more, sid); }
       else {
         comboStep=0; comboTotal=0;
         if(mode==='challenge'){
@@ -528,29 +537,19 @@
     function showOverlay(html){ sheet.innerHTML=html; overlay.classList.add('show'); }
     function hideOverlay(){ overlay.classList.remove('show'); sheet.innerHTML=''; }
 
-    function showResumeDialog(){
-      const resumeStage = savedStage || unlocked || 1;
-      showOverlay(`
-        <button class="close" id="closeOv">×</button>
-        <h2>Challenge — Continue?</h2>
-        <p class="muted">Resume from your last unfinished stage, or start from Stage 1.</p>
-        <div class="row" style="justify-content:center">
-          <button class="btn" id="resume">Resume (Stage ${resumeStage})</button>
-          <button class="btn" id="fromStart">Start from Stage 1</button>
-        </div>`);
-      document.getElementById('closeOv').onclick=hideOverlay;
-      document.getElementById('resume').onclick=()=>{ hideOverlay(); startStage(resumeStage); };
-      document.getElementById('fromStart').onclick=()=>{ hideOverlay(); localStorage.setItem('mmq_currentStage','1'); startStage(1); };
-    }
-
     /* ------------ Lifecycle ------------ */
     function startGame(){
       startSec.style.display='none'; gameSec.style.display='block'; saveView('game');
+      sessionId++; // cancel pending chains from previous game
       initGame(); updateAudioButtons(); syncVol(); fitBoard();
     }
     function goToStart(){
       selected=null; busy=false; gameSec.style.display='none'; startSec.style.display='block'; statusEl.textContent=''; saveView('home');
-      stopMusic(); Object.values(SFX).forEach(a=>{ try{a.pause(); a.currentTime=0;}catch(e){} });
+      stopMusic();
+      // force-stop any sfx and pending chains
+      sessionId++;
+      Object.values(SFX).forEach(a=>{ try{a.pause(); a.currentTime=0;}catch(e){} });
+      comboEl.classList.remove('show'); comboEl.textContent='';
     }
 
     function initGame(){ score=0; selected=null; busy=false; comboStep=0; comboTotal=0; createBoardDom(); generateInitialGrid(); renderAll(); fitBoard(); }
@@ -558,8 +557,8 @@
     function startGameAuto(m){
       setMode(m);
       if(m==='challenge'){
-        // そのまま再開ダイアログでも、直開始でもOK。ここは前挙動に合わせてダイアログ。
-        if(unlocked>1){ showResumeDialog(); } else { startStage(1); }
+        const resume = parseInt(localStorage.getItem('mmq_currentStage')||'1',10);
+        startStage(resume>=1?resume:1); // 直開始（リロードでそのままChallengeへ）
       } else {
         startGame();
       }
@@ -605,17 +604,10 @@
       }catch(e){}
     }
 
-    /* ------------ Ensure board after reload (fix) ------------ */
-    function ensureBoardReady(){
-      if (gameSec.style.display === 'block' && boardEl.children.length !== (rows*cols)) {
-        initGame();
-        return true;
-      }
-      return false;
-    }
-
     /* ------------ Boot: restore last view/mode or ?play ------------ */
+    let booted=false;
     function boot(){
+      if(booted) return; booted=true;
       try{
         const p=new URLSearchParams(location.search);
         if(p.get('play')==='1'){
@@ -623,12 +615,13 @@
           startGameAuto(m);
           return;
         }
-        const savedView = loadView();  // 'home' | 'game'
-        const savedMode = loadMode();  // 'calm' | 'challenge'
+        const savedView = loadView();      // 'home' | 'game'
+        const savedMode = loadMode();      // 'calm' | 'challenge'
         if(savedView === 'game'){
-          startGameAuto(savedMode);
+          startGameAuto(savedMode);        // 直でそのモードへ
         }else{
-          goToStart();
+          goToStart();                     // Homeのまま
+          setMode(savedMode);              // HomeでもモードUIは復元
         }
       }catch(e){
         goToStart();
@@ -638,11 +631,10 @@
     /* ------------ Preload & Events ------------ */
     (function preload(){ TILE_IMAGES.concat(['assets/images/banner.png'+IMG_VER,'assets/images/welcome_cat.png'+IMG_VER]).forEach(src=>{ const im=new Image(); im.src=src; }); Object.values(SFX).forEach(a=>a.load()); })();
 
+    document.addEventListener('DOMContentLoaded', boot);
     window.addEventListener('resize', fitBoard, {passive:true});
-    window.addEventListener('orientationchange', ()=> setTimeout(()=>{ ensureBoardReady(); fitBoard(); }, 60), {passive:true});
-    window.addEventListener('load', ()=>{ boot(); ensureBoardReady(); fitBoard(); }, {passive:true});
-    window.addEventListener('pageshow', ()=>{ ensureBoardReady(); setTimeout(fitBoard, 60); }, {passive:true});
-    new ResizeObserver(()=>{ fitBoard(); }).observe(boardWrap);
+    window.addEventListener('orientationchange', ()=> setTimeout(fitBoard, 60), {passive:true});
+    window.addEventListener('pageshow', (e)=>{ if(e.persisted){ fitBoard(); } }, {passive:true});
 
   })();
   </script>
