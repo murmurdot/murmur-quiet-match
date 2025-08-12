@@ -10,12 +10,12 @@
   <meta property="og:type" content="website">
   <meta property="og:title" content="murmur — quiet match">
   <meta property="og:description" content="Calm endless mode & stage-based challenge. Minimal café-vibe match-3. Free to play.">
-  <meta property="og:image" content="assets/images/og.png?v=20250812f">
+  <meta property="og:image" content="assets/images/og.png?v=20250812g">
   <meta property="og:url" content="https://murmurdot.github.io/murmur-quiet-match/">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="murmur — quiet match">
   <meta name="twitter:description" content="Calm endless mode & stage-based challenge. Minimal café-vibe match-3. Free to play.">
-  <meta name="twitter:image" content="assets/images/og.png?v=20250812f">
+  <meta name="twitter:image" content="assets/images/og.png?v=20250812g">
 
   <style>
     :root{
@@ -50,7 +50,7 @@
     .btn{appearance:none;border:1px solid var(--line);background:#fff;border-radius:999px;padding:10px 14px;cursor:pointer;transition:transform .06s}
     .btn:hover{transform:translateY(-1px)}
 
-    /* Note: main left, small center */
+    /* Note */
     .note{color:#444;font-size:.92rem;line-height:1.65;text-align:left;max-width:860px;margin:0 auto}
     .note small{display:block;color:#666;margin-top:6px;text-align:center}
 
@@ -117,9 +117,9 @@
   </style>
 </head>
 <body>
-  <!-- Header: banner only (fallback text if img fails) -->
+  <!-- Header -->
   <header class="wrap" style="justify-content:center">
-    <img id="bannerImg" src="assets/images/banner.png?v=20250812f" alt="murmur banner" />
+    <img id="bannerImg" src="assets/images/banner.png?v=20250812g" alt="murmur banner" />
     <div id="brandFallback" class="brand-fallback" hidden>murmur. relaxing games — quiet match</div>
   </header>
 
@@ -157,7 +157,7 @@
           <span class="line1">murmur. on YouTube</span>
           <span class="line2">listen to more music</span>
         </a>
-        <img class="cat-small" src="assets/images/welcome_cat.png?v=20250812f" alt="cat" />
+        <img class="cat-small" src="assets/images/welcome_cat.png?v=20250812g" alt="cat" />
       </div>
     </div>
   </section>
@@ -201,7 +201,7 @@
       <div class="muted">murmur · calm sweets match</div>
       <div class="muted" id="status"></div>
 
-      <!-- Affiliate spot (game only). Put your URL & text later; stays hidden if href is empty or "#". -->
+      <!-- Affiliate spot (game only). Put URL & text later; hidden if href is empty or "#". -->
       <div id="adSpot" class="adspot" hidden>
         <a id="adLink" href="#" target="_blank" rel="noopener">small affiliate link</a>
       </div>
@@ -214,7 +214,7 @@
   <script>
   (function(){ 'use strict';
     // ------------ Version for cache bust ------------
-    const IMG_VER='?v=20250812f';
+    const IMG_VER='?v=20250812g';
 
     // ------------ Assets & Audio ------------
     const TILE_IMAGES=[
@@ -283,7 +283,7 @@
     vol2?.addEventListener('input',syncVol);
     document.addEventListener('pointerdown',()=>{ userInteracted=true });
 
-    // Stop BGM in background, don't auto-resume
+    // Stop BGM in background (no auto-resume)
     document.addEventListener('visibilitychange',()=>{ if(document.hidden){ stopMusic(); } });
 
     // ------------ State (sessionStorage) ------------
@@ -318,7 +318,7 @@
 
     // ------------ Board State ------------
     const rows=8, cols=8; let grid=[], selected=null, busy=false, score=0, comboStep=0, comboTotal=0;
-    let gameToken=0; // cancel async on new game
+    let gameToken=0; // cancels async when incremented
 
     function createBoardDom(){
       boardEl.style.gridTemplateColumns=`repeat(${cols}, var(--tile))`;
@@ -402,11 +402,11 @@
     }
 
     async function swapAndResolve(r1,c1,r2,c2){
-      const token=gameToken; // capture
+      const token=gameToken;
       busy=true; comboStep=0; comboTotal=0;
       playSfx('choice'); getCell(r1,c1).classList.remove('selected'); selected=null;
       swapValues(r1,c1,r2,c2); await delay(120);
-      if(token!==gameToken) return; // aborted
+      if(token!==gameToken) return;
       let m=findMatches(); if(m.size===0){ swapValues(r1,c1,r2,c2); busy=false; return; }
       if(mode==='challenge'){ movesLeft--; updateHud(); }
       await resolveMatches(m, token); busy=false;
@@ -593,9 +593,16 @@
       updateAdVisibility(); // show if URL set
     }
     function goToStart(){
-      selected=null; busy=false; gameSec.style.display='none'; startSec.style.display='block';
-      statusEl.textContent=''; stopMusic();
+      // cancel any in-flight game logic & audio
+      gameToken++;                       // ⬅ これで非同期を無効化
+      selected=null; busy=false; stopMusic();
+      hideOverlay();
+      comboEl?.classList.remove('show'); comboEl.textContent='';
+      // UI
+      gameSec.style.display='none'; startSec.style.display='block';
+      statusEl.textContent='';
       setView('home'); clearModeStore();
+      setModeUI('calm');                // ⬅ ここで内部modeもUIもcalmへ
       adSpot?.setAttribute('hidden','');
     }
 
@@ -680,7 +687,3 @@
   </script>
 </body>
 </html>
-
-
-
-
