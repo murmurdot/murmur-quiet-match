@@ -4,16 +4,15 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>murmur — quiet match</title>
-  <meta name="description" content="Calm endless mode & stage-based challenge. Minimal café-vibe match-3 with pieces." />
+  <meta name="description" content="Calm endless mode & stage-based challenge. Minimal café-vibe match-3 with sweets." />
   <style>
     :root{
-      --bg:#fafafa; --ink:#1a1a1a; --soft:#ececec; --line:#e7e7e7; --muted:#6b7280;
-      --tile:64px; --gap:10px; --shadow:0 10px 30px rgba(0,0,0,.08);
-      --yt-bg:#e8f0ff; --yt-bg-hov:#d6e4ff;
-      --yt-border:#bcd3ff; --yt-border-hov:#9bbcff;
-      --yt-text:#0b3d91; --yt-text-hov:#09306f;
-      --start-bg:#fff; --start-bg-hov:#f7f7f7;
-      --start-border:#d1d5db; --start-border-hov:#cbd5e1;
+      --bg:#fafafa; --ink:#1a1a1a; --soft:#ececec; --line:#e7e7e7; --muted:#6b7280; --tile:64px; --shadow:0 10px 30px rgba(0,0,0,.08);
+      /* ボタン配色（ここを変えれば全体反映） */
+      --yt-bg:#e1ebff;     --yt-border:#9fb8ff; --yt-text:#0b3d91;
+      --yt-bg-hov:#d1e0ff; --yt-border-hov:#86a8ff; --yt-text-hov:#09306f;
+      --start-bg:#fff; --start-bg-hov:#f7f7f7; --start-border:#d1d5db; --start-border-hov:#cbd5e1;
+      --cat-w:260px; /* トップの猫の幅 */
     }
     *{box-sizing:border-box}
     html,body{height:100%}
@@ -21,9 +20,9 @@
     .wrap{max-width:1120px;margin:0 auto;padding:12px}
     .card{background:#fff;border:1px solid var(--line);border-radius:24px;box-shadow:var(--shadow)}
 
-    /* ヘッダー（バナーのみ & フォールバック） */
+    /* ヘッダー：バナーのみ（画像欠け時はテキスト） */
     header{display:flex;align-items:center;justify-content:center;gap:16px;padding:18px 12px 8px}
-    header img{height:64px;width:auto}
+    header img{height:64px;width:auto;cursor:pointer}
     .brand-fallback{font-weight:700;letter-spacing:.02em;opacity:.9;text-align:center;padding:8px 12px;border:1px dashed var(--line);border-radius:12px;background:#fff}
 
     /* --- START --- */
@@ -38,34 +37,29 @@
     .btn{appearance:none;border:1px solid var(--line);background:#fff;border-radius:999px;padding:10px 14px;cursor:pointer;transition:transform .06s}
     .btn:hover{transform:translateY(-1px)}
 
-    /* 説明文：本文は左寄せ、smallは中央寄せ */
+    /* 説明文：本文は左寄せ、small（推奨環境）は中央寄せ */
     .note{color:#444;font-size:.92rem;line-height:1.65;text-align:left;max-width:860px;margin:0 auto}
     .note small{display:block;color:#666;margin-top:6px;text-align:center}
 
-    /* Link風ボタン（共通の形） */
-    a.linkbtn,button.linkbtn{
-      appearance:none;-webkit-appearance:none;
-      display:inline-flex;align-items:center;gap:8px;
-      padding:12px 18px;border-radius:999px;text-decoration:none;
-      font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.06);
-      transition:background .2s,border-color .2s,color .2s,transform .06s;
-      border:1px solid transparent;
+    /* Link風ボタン（YouTube/Startの土台） */
+    a.linkbtn, button.linkbtn{
+      appearance:none; -webkit-appearance:none;
+      display:inline-flex; align-items:center; gap:8px;
+      padding:12px 18px; border-radius:999px; text-decoration:none;
+      font-weight:700; box-shadow:0 2px 8px rgba(0,0,0,.06);
+      transition:background .2s, border-color .2s, color .2s, transform .06s;
     }
-    /* YouTubeボタン：常時うっすら水色 */
-    a.linkbtn,button.linkbtn{ background:var(--yt-bg);border-color:var(--yt-border);color:var(--yt-text); }
-    a.linkbtn:hover,button.linkbtn:hover{
-      transform:translateY(-1px); background:var(--yt-bg-hov); border-color:var(--yt-border-hov); color:var(--yt-text-hov);
-    }
-    a.linkbtn:link,a.linkbtn:visited{color:var(--yt-text)} /* visited色ぶれ防止 */
+    /* YouTubeボタン（常時うっすら水色） */
+    a.linkbtn, button.linkbtn{ background:var(--yt-bg); border:1px solid var(--yt-border); color:var(--yt-text); }
+    a.linkbtn:hover, button.linkbtn:hover{ transform:translateY(-1px); background:var(--yt-bg-hov); border-color:var(--yt-border-hov); color:var(--yt-text-hov); }
+    a.linkbtn:link, a.linkbtn:visited{ color:var(--yt-text); }
 
-    /* Startボタン：白＋グレー枠 */
-    button.linkbtn.btn-start{
-      background:var(--start-bg);border-color:var(--start-border);color:#111;box-shadow:0 2px 6px rgba(0,0,0,.05);
-    }
-    button.linkbtn.btn-start:hover{ background:var(--start-bg-hov);border-color:var(--start-border-hov); }
+    /* Startボタン（白＋グレー枠で常時ボタン感） */
+    button.linkbtn.btn-start{ background:var(--start-bg); border:1px solid var(--start-border); color:#111; box-shadow:0 2px 6px rgba(0,0,0,.05); }
+    button.linkbtn.btn-start:hover{ background:var(--start-bg-hov); border-color:var(--start-border-hov); }
 
-    /* 猫 */
-    .cat-small{width:220px;height:auto;opacity:.98}
+    /* トップの猫アイコン */
+    .cat-small{width:var(--cat-w);height:auto;opacity:.98}
 
     /* --- GAME --- */
     #game{display:none}
@@ -74,7 +68,7 @@
     .pill{border:1px solid var(--line);background:#fff;border-radius:999px;padding:10px 14px;min-width:90px;text-align:center}
 
     #board-wrap{padding:16px;display:flex;justify-content:center;position:relative}
-    #board{display:grid;gap:var(--gap);padding:12px;background:linear-gradient(180deg,#fff,#f7f7f7);border:1px solid var(--line);border-radius:24px;box-shadow:var(--shadow)}
+    #board{display:grid;gap:10px;padding:12px;background:linear-gradient(180deg,#fff,#f7f7f7);border:1px solid var(--line);border-radius:24px;box-shadow:var(--shadow)}
     .cell{width:var(--tile);height:var(--tile);border-radius:18px;display:grid;place-items:center;background:#fff;border:1px solid var(--line);position:relative;overflow:hidden}
     .cell img{width:90%;height:90%;object-fit:contain;pointer-events:none;user-select:none}
     .cell.selected{outline:3px solid #111}
@@ -84,17 +78,16 @@
     .footer{padding:10px 16px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
     .muted{opacity:.65}
 
-    /* Toast（SFX On/Off など） */
     .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;background:#111;color:#fff;padding:10px 14px;border-radius:999px;opacity:0;transition:opacity .2s,transform .2s;pointer-events:none;z-index:60}
     .toast.show{opacity:1;transform:translateX(-50%) translateY(-3px)}
 
-    /* Overlay（モーダル） */
+    /* Combo 表示は使わないのでスタイル無し（DOMも置かない） */
+
+    /* Overlay */
     .overlay{position:fixed;inset:0;background:rgba(17,24,39,.46);display:none;align-items:center;justify-content:center;z-index:50}
     .overlay.show{display:flex}
     .sheet{position:relative;background:#fff;border-radius:20px;box-shadow:0 30px 80px rgba(0,0,0,.2);width:min(92vw,760px);padding:18px;text-align:center}
     .close{position:absolute;right:10px;top:10px;width:28px;height:28px;border-radius:999px;background:#ffffffcc;border:1px solid #e5e7eb;display:grid;place-items:center;cursor:pointer}
-
-    /* ステージ選択 */
     .stage-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(56px,1fr));gap:8px;max-height:min(60vh,520px);overflow:auto;padding:8px}
     .stage{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:10px 0;text-align:center;cursor:pointer}
     .stage.lock{opacity:.4;cursor:not-allowed}
@@ -126,7 +119,7 @@
       </div>
 
       <div class="note">
-        <strong>Calm</strong>: Match <em>3 or more</em> identical pieces to clear — relaxed endless play.<br/>
+        <strong>Calm</strong>: Match <em>3 or more</em> identical <strong>pieces</strong> to clear — relaxed endless play.<br/>
         <strong>Challenge</strong>: Stage-based with move limit & target score.<br/>
         Clear a stage to unlock the next (100 stages).
         <small>
@@ -165,8 +158,8 @@
         <button class="btn" id="sfxBtn" aria-pressed="true">SFX: On</button>
         <label class="row" style="gap:6px;margin-left:6px">Music Vol <input id="vol2" type="range" min="0" max="1" step="0.01" value="0.7" /></label>
         <button class="btn" id="restartBtn">Restart</button>
-        <button class="btn" id="stageSelectBtn" hidden>Stage Select</button>
-        <button class="btn" id="backBtn">Mode Select</button>
+        <button class="btn" id="stageSelectBtn" hidden title="Open stage list">Stages</button>
+        <button class="btn" id="backBtn" title="Go to the main menu">Main Menu</button>
       </div>
     </div>
 
@@ -175,7 +168,7 @@
     </div>
 
     <div class="footer">
-      <div class="muted">murmur · quiet match</div>
+      <div class="muted">murmur · calm sweets match</div>
       <div class="muted" id="status"></div>
     </div>
   </section>
@@ -198,45 +191,22 @@
     const SFX={choice:new Audio('assets/audio/choice.mp3'),match:new Audio('assets/audio/match.mp3')};
     Object.values(SFX).forEach(a=>a.preload='auto');
     const BGMS=['assets/audio/match_game_bgm_1.mp3','assets/audio/match_game_bgm_2.mp3','assets/audio/match_game_bgm_3.mp3','assets/audio/match_game_bgm_4.mp3','assets/audio/match_game_bgm_5.mp3'];
-    const music=new Audio(); music.loop=false; let currentBgm=-1; let musicEnabled=false, sfxEnabled=true;
+    const music=new Audio(); music.loop=false; let currentBgm=-1; let musicEnabled=false, sfxEnabled=true; let userInteracted=false;
 
-    // ------------ DOM ------------
-    const startSec=document.getElementById('start');
-    const gameSec=document.getElementById('game');
-    const boardEl=document.getElementById('board');
-    const toastEl=document.getElementById('toast');
-    const scoreEl=document.getElementById('score');
-    const movesWrap=document.getElementById('movesWrap');
-    const movesEl=document.getElementById('moves');
-    const stageInfo=document.getElementById('stageInfo');
-    const stageEl=document.getElementById('stage');
-    const targetEl=document.getElementById('target');
-    const statusEl=document.getElementById('status');
-    const modeSeg=document.getElementById('modeSeg');
-    const startBtn=document.getElementById('startBtn');
-    const paceSeg2=document.getElementById('paceSeg2');
-    const musicBtn=document.getElementById('musicBtn');
-    const sfxBtn=document.getElementById('sfxBtn');
-    const vol2=document.getElementById('vol2');
-    const restartBtn=document.getElementById('restartBtn');
-    const stageSelBtn=document.getElementById('stageSelectBtn');
-    const backBtn=document.getElementById('backBtn');
-    const overlay=document.getElementById('overlay');
-    const sheet=document.getElementById('sheet');
-
-    // ------------ Audio ------------
-    function pickNextBgm(){ let i; do{ i=Math.floor(Math.random()*BGMS.length); }while(i===currentBgm && BGMS.length>1); currentBgm=i; music.src=BGMS[i]; }
+    function pickNextBgm(){let i; do{i=Math.floor(Math.random()*BGMS.length);}while(i===currentBgm&&BGMS.length>1); currentBgm=i; music.src=BGMS[i];}
     function startMusic(){ if(!musicEnabled){ musicEnabled=true; pickNextBgm(); music.play().catch(()=>{});} updateAudioButtons(); syncVol(); }
     function stopMusic(){ musicEnabled=false; music.pause(); updateAudioButtons(); }
-    music.addEventListener('ended',()=>{ if(musicEnabled){ pickNextBgm(); music.play().catch(()=>{});} });
+    music.addEventListener('ended',()=>{ if(musicEnabled){ pickNextBgm(); music.play().catch(()=>{}); }});
     function playSfx(name){ if(!sfxEnabled) return; try{ const a=SFX[name]; a.currentTime=0; a.play(); }catch(e){} }
-    function updateAudioButtons(){ const set=(btn,on,l)=>{ if(!btn) return; btn.setAttribute('aria-pressed',String(on)); btn.textContent=l+(on?': On':': Off'); }; set(musicBtn,musicEnabled,'Music'); set(sfxBtn,sfxEnabled,'SFX'); }
-    function syncVol(){ if(music) music.volume=Number(vol2?.value||'0.7'); }
-    musicBtn?.addEventListener('click',()=> musicEnabled? stopMusic(): startMusic());
-    sfxBtn?.addEventListener('click',()=>{ sfxEnabled=!sfxEnabled; updateAudioButtons(); showToast('SFX '+(sfxEnabled?'On':'Off')); });
-    vol2?.addEventListener('input',syncVol);
 
-    // ------------ Mode / Pace / Start ------------
+    // ------------ DOM ------------
+    const startSec=document.getElementById('start'); const gameSec=document.getElementById('game'); const boardEl=document.getElementById('board'); const toastEl=document.getElementById('toast');
+    const scoreEl=document.getElementById('score'); const movesWrap=document.getElementById('movesWrap'); const movesEl=document.getElementById('moves');
+    const stageInfo=document.getElementById('stageInfo'); const stageEl=document.getElementById('stage'); const targetEl=document.getElementById('target'); const statusEl=document.getElementById('status');
+    const modeSeg=document.getElementById('modeSeg'); const startBtn=document.getElementById('startBtn');
+    const paceSeg2=document.getElementById('paceSeg2'); const musicBtn=document.getElementById('musicBtn'); const sfxBtn=document.getElementById('sfxBtn'); const vol2=document.getElementById('vol2'); const restartBtn=document.getElementById('restartBtn'); const stageSelBtn=document.getElementById('stageSelectBtn'); const backBtn=document.getElementById('backBtn');
+
+    // ------------ Mode / Pace ------------
     let mode='calm', pace='slow';
     function setMode(m){ mode=m; if(modeSeg){ [...modeSeg.querySelectorAll('button')].forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.mode===mode))); } }
     modeSeg?.addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; setMode(b.dataset.mode) });
@@ -244,41 +214,23 @@
     paceSeg2?.addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; setPaceInGame(b.dataset.pace) });
     function paceFactor(){ return pace==='slow'?1.8 : pace==='normal'?1.3 : 1.05; }
 
+    // ------------ Start button ------------
     startBtn?.addEventListener('click',()=>{
       const ref=document.referrer||''; const isYT=/youtube\.com|youtu\.be/.test(ref) || new URLSearchParams(location.search).get('yt')==='1';
       if(isYT){ const url=new URL(location.href); url.searchParams.set('play','1'); url.searchParams.set('mode',mode); window.open(url.toString(),'_blank'); }
       else { startGameAuto(mode); }
     });
-    (function autoStart(){ try{ const p=new URLSearchParams(location.search); if(p.get('play')==='1'){ const m=p.get('mode')||'calm'; setMode(m); startGameAuto(m); } }catch(e){} })();
+    (function autoStart(){ try{ const p=new URLSearchParams(location.search); if(p.get('play')==='1'){ const m=p.get('mode')||'calm'; setMode(m); startGameAuto(m); } }catch(e){ console.warn(e); } })();
 
-    // ------------ Board ------------
-    const rows=8, cols=8; let grid=[], selected=null, busy=false, score=0, comboStep=0;
+    // ------------ Board State ------------
+    const rows=8, cols=8; let grid=[]; let selected=null; let busy=false; let score=0; let comboStep=0;
 
-    function createBoardDom(){
-      boardEl.style.gridTemplateColumns=`repeat(${cols}, var(--tile))`;
-      boardEl.innerHTML='';
-      for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){
-        const cell=document.createElement('div');
-        cell.className='cell'; cell.dataset.r=r; cell.dataset.c=c; cell.addEventListener('click',onCellClick);
-        const img=document.createElement('img'); img.alt=''; cell.appendChild(img);
-        boardEl.appendChild(cell);
-      }
-    }
+    function createBoardDom(){ boardEl.style.gridTemplateColumns=`repeat(${cols}, var(--tile))`; boardEl.innerHTML=''; for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){ const cell=document.createElement('div'); cell.className='cell'; cell.dataset.r=r; cell.dataset.c=c; cell.addEventListener('click',onCellClick); const img=document.createElement('img'); img.alt=''; cell.appendChild(img); boardEl.appendChild(cell);} }
     function getCell(r,c){return boardEl.children[r*cols+c]}
-    function setCellImage(r,c){
-      const idx=grid[r][c]; const cell=getCell(r,c); const img=cell.querySelector('img');
-      if(idx>=0){img.src=TILE_IMAGES[idx]; cell.style.visibility='visible'} else {img.removeAttribute('src'); cell.style.visibility='hidden'}
-    }
+    function setCellImage(r,c){const idx=grid[r][c]; const cell=getCell(r,c); const img=cell.querySelector('img'); if(idx>=0){img.src=TILE_IMAGES[idx]; cell.style.visibility='visible'} else {img.removeAttribute('src'); cell.style.visibility='hidden'}}
     function renderAll(){for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) setCellImage(r,c)}
     function randInt(n){return Math.floor(Math.random()*n)}
-    function randTileFor(r,c){
-      let choices=[0,1,2,3,4,5];
-      const L1=(c>=1)?grid[r][c-1]:-99, L2=(c>=2)?grid[r][c-2]:-98;
-      const U1=(r>=1)?grid[r-1][c]:-97, U2=(r>=2)?grid[r-2][c]:-96;
-      choices=choices.filter(x=>!(x===L1&&x===L2)&&!(x===U1&&x===U2));
-      if(!choices.length) choices=[0,1,2,3,4,5];
-      return choices[randInt(choices.length)];
-    }
+    function randTileFor(r,c){let choices=[0,1,2,3,4,5]; const L1=(c>=1)?grid[r][c-1]:-99, L2=(c>=2)?grid[r][c-2]:-98; const U1=(r>=1)?grid[r-1][c]:-97, U2=(r>=2)?grid[r-2][c]:-96; choices=choices.filter(x=>!(x===L1&&x===L2)&&!(x===U1&&x===U2)); if(!choices.length) choices=[0,1,2,3,4,5]; return choices[randInt(choices.length)];}
 
     function generateInitialGrid(){
       grid=Array.from({length:rows},()=>Array(cols).fill(0));
@@ -289,105 +241,41 @@
         if(++guard>160) break;
       }
     }
-    function reshuffle(){
-      const flat=grid.flat();
-      for(let i=flat.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [flat[i],flat[j]]=[flat[j],flat[i]];}
-      for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) grid[r][c]=flat[r*cols+c];
-      renderAll();
-    }
+    function reshuffle(){const flat=grid.flat(); for(let i=flat.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [flat[i],flat[j]]=[flat[j],flat[i]];} for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) grid[r][c]=flat[r*cols+c]; renderAll();}
 
-    function onCellClick(e){
-      if(busy) return;
-      const r=+e.currentTarget.dataset.r, c=+e.currentTarget.dataset.c;
+    function onCellClick(e){ if(busy) return; const r=+e.currentTarget.dataset.r, c=+e.currentTarget.dataset.c;
       if(selected && selected.r===r && selected.c===c){ getCell(r,c).classList.remove('selected'); selected=null; return; }
       if(!selected){ selected={r,c}; getCell(r,c).classList.add('selected'); playSfx('choice'); return; }
       const {r:sr,c:sc}=selected;
       if(Math.abs(sr-r)+Math.abs(sc-c)!==1){ getCell(sr,sc).classList.remove('selected'); selected={r,c}; getCell(r,c).classList.add('selected'); playSfx('choice'); return; }
       swapAndResolve(sr,sc,r,c);
     }
-
     function swapValues(a,b,c,d){const t=grid[a][b]; grid[a][b]=grid[c][d]; grid[c][d]=t; setCellImage(a,b); setCellImage(c,d)}
-    function findMatches(){
-      const matched=new Set(); const seen=Array.from({length:rows},()=>Array(cols).fill(false));
-      const inb=(r,c)=>r>=0&&r<rows&&c>=0&&c<cols; const dirs=[[1,0],[-1,0],[0,1],[0,-1]];
-      for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){
-        if(seen[r][c]) continue; const val=grid[r][c]; if(val===-1){seen[r][c]=true; continue;}
+    function findMatches(){const matched=new Set(); const seen=Array.from({length:rows},()=>Array(cols).fill(false)); const inb=(r,c)=>r>=0&&r<rows&&c>=0&&c<cols; const dirs=[[1,0],[-1,0],[0,1],[0,-1]];
+      for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){ if(seen[r][c]) continue; const val=grid[r][c]; if(val===-1){seen[r][c]=true; continue;}
         const q=[[r,c]]; seen[r][c]=true; const comp=[[r,c]];
-        while(q.length){
-          const [rr,cc]=q.shift();
-          for(const [dr,dc] of dirs){
-            const nr=rr+dr,nc=cc+dc; if(!inb(nr,nc)||seen[nr][nc]) continue;
-            if(grid[nr][nc]===val){seen[nr][nc]=true; q.push([nr,nc]); comp.push([nr,nc]);}
-          }
-        }
+        while(q.length){const [rr,cc]=q.shift(); for(const [dr,dc] of dirs){const nr=rr+dr,nc=cc+dc; if(!inb(nr,nc)||seen[nr][nc]) continue; if(grid[nr][nc]===val){seen[nr][nc]=true; q.push([nr,nc]); comp.push([nr,nc]);}}}
         if(comp.length>=3) comp.forEach(([rr,cc])=>matched.add(rr+','+cc));
-      }
-      return matched;
+      } return matched;
     }
-    function hasAnyMoves(){
-      for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){
-        const here=grid[r][c];
-        const trySwap=(r2,c2)=>{
-          if(r2<0||r2>=rows||c2<0||c2>=cols) return false;
-          const t=grid[r2][c2]; if(t===here) return false;
-          grid[r][c]=t; grid[r2][c2]=here;
-          const ok=findMatches().size>0;
-          grid[r][c]=here; grid[r2][c2]=t;
-          return ok;
-        };
-        if(trySwap(r,c+1) || trySwap(r+1,c)) return true;
-      }
-      return false;
-    }
-
-    // === 自動フィット：デスクトップは64px固定、狭い画面のみ縮小 ===
-    function fitBoard(){
-      const wrap=document.getElementById('board-wrap'); if(!wrap||!boardEl) return;
-      const cols=8, rows=8;
-      // デフォルト盤面が収まるのに必要な目安（64pxタイル, gap10, pad12, border1）
-      const needW = 8*64 + 7*10 + 2*12 + 2*1; // 608px
-      const needH = 8*64 + 7*10 + 2*12 + 2*1; // 608px
-
-      const canW = wrap.clientWidth;
-      const rect = wrap.getBoundingClientRect();
-      const reserved = 150; // ヘッダー/フッターぶん
-      const canH = window.innerHeight - rect.top - reserved;
-
-      const desktopOK = (canW >= needW && canH >= needH);
-      if (desktopOK) {
-        // デスクトップ：CSSの既定値に戻す（64px, gap10）
-        boardEl.style.removeProperty('--tile');
-        boardEl.style.removeProperty('--gap');
-        boardEl.style.gridTemplateColumns = `repeat(${cols}, var(--tile))`;
-        return;
-      }
-
-      // モバイル/狭い画面：収まるように縮小
-      const boardPad=12, boardBorder=1;
-      let gap=Math.min(10, Math.max(4, Math.floor(canW/cols*0.06)));
-      const tileFromW=Math.floor((canW - 2*boardPad - 2*boardBorder - gap*(cols-1))/cols);
-      const tileFromH=Math.floor((canH - 2*boardPad - 2*boardBorder - gap*(rows-1))/rows);
-      let tile=Math.min(64, tileFromW, tileFromH);
-      if(tile<44){
-        gap=Math.max(4, gap-2);
-        const tW=Math.floor((canW - 2*boardPad - 2*boardBorder - gap*(cols-1))/cols);
-        const tH=Math.floor((canH - 2*boardPad - 2*boardBorder - gap*(rows-1))/rows);
-        tile=Math.min(tile, tW, tH);
-      }
-      tile=Math.max(40, tile);
-
-      boardEl.style.setProperty('--tile', tile+'px');
-      boardEl.style.setProperty('--gap',  gap+'px');
-      boardEl.style.gridTemplateColumns=`repeat(${cols}, var(--tile))`;
-    }
+    function hasAnyMoves(){ for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){
+      const here=grid[r][c];
+      const trySwap=(r2,c2)=>{ if(r2<0||r2>=rows||c2<0||c2>=cols) return false; const t=grid[r2][c2]; if(t===here) return false;
+        grid[r][c]=t; grid[r2][c2]=here; const ok=findMatches().size>0; grid[r][c]=here; grid[r2][c2]=t; return ok; };
+      if(trySwap(r,c+1) || trySwap(r+1,c)) return true;
+    } return false; }
 
     async function swapAndResolve(r1,c1,r2,c2){
       busy=true; comboStep=0;
-      playSfx('choice'); getCell(r1,c1).classList.remove('selected'); selected=null;
-      swapValues(r1,c1,r2,c2); await delay(120);
-      let m=findMatches(); if(m.size===0){ swapValues(r1,c1,r2,c2); busy=false; return; }
+      playSfx('choice');
+      getCell(r1,c1).classList.remove('selected'); selected=null;
+      swapValues(r1,c1,r2,c2);
+      await delay(120);
+      let m=findMatches();
+      if(m.size===0){ swapValues(r1,c1,r2,c2); busy=false; return; }
       if(mode==='challenge'){ movesLeft--; updateHud(); }
-      await resolveMatches(m); busy=false;
+      await resolveMatches(m);
+      busy=false;
       if(!hasAnyMoves()){ reshuffle(); showToast('No moves — reshuffling'); }
     }
 
@@ -395,19 +283,17 @@
     function updateHud(){ movesEl.textContent=movesLeft; stageEl.textContent=currentStage; targetEl.textContent=targetScore; scoreEl.textContent=score; }
 
     async function resolveMatches(matchedSet){
-      comboStep++;
+      comboStep++; // 表示はしないが内部の段数は維持（スコア計算の手触り用に残す場合はここを使える）
+
       matchedSet.forEach(k=>{ const [r,c]=k.split(',').map(Number); getCell(r,c).classList.add('matching'); });
       await delay(260);
       matchedSet.forEach(k=>{ const [r,c]=k.split(',').map(Number); grid[r][c]=-1; setCellImage(r,c); });
       playSfx('match');
 
-      const groups=countGroupsFromSet(matchedSet);
-      const base=matchedSet.size*10;
-      let add=base;
+      const base=matchedSet.size*10; let add=base;
       if(mode==='calm'){
         const chainBonus = base * Math.max(0, comboStep-1) * 0.06;
-        const simultaneous = Math.max(0, groups-1) * 5;
-        add = Math.round(base + chainBonus + simultaneous);
+        add = Math.round(base + chainBonus);
       }
       score += add; updateHud();
 
@@ -417,8 +303,8 @@
         for(let r=rows-1;r>=0;r--){ if(grid[r][c]!==-1){ grid[wr][c]=grid[r][c]; wr--; } }
         for(let r=wr;r>=0;r--) grid[r][c]=-1;
       }
-      renderAll(); await delay(240);
-
+      renderAll();
+      await delay(240);
       // refill
       for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) if(grid[r][c]===-1){ grid[r][c]=randTileFor(r,c); setCellImage(r,c); }
       await delay(200);
@@ -434,77 +320,52 @@
       }
     }
 
-    function countGroupsFromSet(set){
-      const keys=[...set]; const coords=keys.map(k=>k.split(',').map(Number)); const n=coords.length; if(n===0) return 0;
-      const adj=Array.from({length:n},()=>[]);
-      for(let i=0;i<n;i++){ const [r1,c1]=coords[i];
-        for(let j=i+1;j<n;j++){ const [r2,c2]=coords[j]; if(Math.abs(r1-r2)+Math.abs(c1-c2)===1){ adj[i].push(j); adj[j].push(i); } }
-      }
-      const seen=new Array(n).fill(false); let groups=0;
-      for(let i=0;i<n;i++) if(!seen[i]){ groups++; const q=[i]; seen[i]=true; while(q.length){ const v=q.shift(); for(const w of adj[v]) if(!seen[w]){ seen[w]=true; q.push(w); } } }
-      return groups;
-    }
-
     // ------------ Challenge ------------
-    let currentStage=1; let unlocked=parseInt(localStorage.getItem('mmq_unlocked')||'1',10); if(!(unlocked>=1&&unlocked<=100)) unlocked=1;
-    let savedStage=parseInt(localStorage.getItem('mmq_currentStage')||String(unlocked),10); if(!(savedStage>=1&&savedStage<=unlocked)) savedStage=unlocked;
-    let targetScore=0, movesLeft=0;
+    let currentStage=1; let unlocked=parseInt(localStorage.getItem('mmq_unlocked')||'1',10); if(!(unlocked>=1&&unlocked<=100)) unlocked=1; let savedStage=parseInt(localStorage.getItem('mmq_currentStage')||String(unlocked),10); if(!(savedStage>=1&&savedStage<=unlocked)) savedStage=unlocked;
+    let targetScore=0; let movesLeft=0;
     function stageConfig(n){ const baseTarget=450, grow=50; const baseMoves=20, stepEvery=10, minMoves=15; const moves=Math.max(minMoves, baseMoves - Math.floor((n-1)/stepEvery)); const target=baseTarget + grow*(n-1); return {moves,target}; }
 
     function openStageSelect(){
       const max=100; let gridHtml='';
       for(let i=1;i<=max;i++){
         const lock=i>unlocked, cleared=i<unlocked;
-        gridHtml+=`<div class="stage ${lock?'lock':''} ${cleared?'clear':''}" data-n="${i}">${i}</div>`;
+        gridHtml += `<div class="stage ${lock?'lock':''} ${cleared?'clear':''}" data-n="${i}">${i}</div>`;
       }
       showOverlay(`
         <button class="close" id="closeOv">×</button>
-        <h2>Challenge — Stage Select</h2>
+        <h2>Challenge — Stages</h2>
         <div class="muted" style="margin:4px 0 8px">Choose a stage to play. Cleared stages are marked; locked stages unlock as you progress.</div>
-        <div class="stage-grid">${gridHtml}</div>`);
+        <div class="stage-grid">${gridHtml}</div>
+      `);
       document.getElementById('closeOv').onclick=hideOverlay;
       document.querySelectorAll('.stage').forEach(el=> el.onclick=()=>{ const n=+el.dataset.n; if(n>unlocked) return; hideOverlay(); startStage(n); });
     }
 
-    function startStage(n){
-      mode='challenge'; setMode('challenge'); currentStage=n;
-      const cfg=stageConfig(n); targetScore=cfg.target; movesLeft=cfg.moves;
-      startGame(); stageSelBtn.hidden=false; stageInfo.hidden=false; movesWrap.hidden=false;
-      updateHud(); localStorage.setItem('mmq_currentStage', String(currentStage));
-    }
+    function startStage(n){ mode='challenge'; setMode('challenge'); currentStage=n; const cfg=stageConfig(n); targetScore=cfg.target; movesLeft=cfg.moves; startGame(); stageSelBtn.hidden=false; stageInfo.hidden=false; movesWrap.hidden=false; updateHud(); localStorage.setItem('mmq_currentStage', String(currentStage)); }
 
-    function onStageClear(){
-      if(unlocked<currentStage+1){ unlocked=currentStage+1; localStorage.setItem('mmq_unlocked', String(unlocked)); }
-      showOverlay(`
+    function onStageClear(){ if(unlocked<currentStage+1){ unlocked=currentStage+1; localStorage.setItem('mmq_unlocked', String(unlocked)); } showOverlay(`
         <button class="close" id="closeOv">×</button>
         <h2>Stage ${currentStage} — Cleared 🎉</h2>
         <p class="muted">Score ${score} / Target ${targetScore}</p>
         <div class="row" style="justify-content:center">
           <button class="btn" id="next">Next</button>
-          <button class="btn" id="select">Stage Select</button>
+          <button class="btn" id="select">Stages</button>
           <button class="btn" id="retry">Retry</button>
         </div>`);
-      document.getElementById('closeOv').onclick=hideOverlay;
-      document.getElementById('next').onclick=()=>{ hideOverlay(); startStage(Math.min(100,currentStage+1)); };
-      document.getElementById('select').onclick=()=>{ openStageSelect(); };
-      document.getElementById('retry').onclick=()=>{ hideOverlay(); startStage(currentStage); };
-    }
+      document.getElementById('closeOv').onclick=hideOverlay; document.getElementById('next').onclick=()=>{ hideOverlay(); startStage(Math.min(100,currentStage+1)); }; document.getElementById('select').onclick=()=>{ openStageSelect(); }; document.getElementById('retry').onclick=()=>{ hideOverlay(); startStage(currentStage); }; }
 
-    function onStageFail(){
-      showOverlay(`
+    function onStageFail(){ showOverlay(`
         <button class="close" id="close">×</button>
         <h2>Stage ${currentStage} — Try again</h2>
         <p class="muted">Score ${score} / Target ${targetScore}</p>
         <div class="row" style="justify-content:center">
           <button class="btn" id="retry">Retry</button>
-          <button class="btn" id="select">Stage Select</button>
+          <button class="btn" id="select">Stages</button>
         </div>`);
-      document.getElementById('close').onclick=hideOverlay;
-      document.getElementById('retry').onclick=()=>{ hideOverlay(); startStage(currentStage); };
-      document.getElementById('select').onclick=()=>{ openStageSelect(); };
-    }
+      document.getElementById('close').onclick=hideOverlay; document.getElementById('retry').onclick=()=>{ hideOverlay(); startStage(currentStage); }; document.getElementById('select').onclick=()=>{ openStageSelect(); }; }
 
     // ------------ Overlay helpers ------------
+    const overlay=document.getElementById('overlay'); const sheet=document.getElementById('sheet');
     function showOverlay(html){ sheet.innerHTML=html; overlay.classList.add('show'); }
     function hideOverlay(){ overlay.classList.remove('show'); sheet.innerHTML=''; }
 
@@ -524,40 +385,77 @@
     }
 
     // ------------ Lifecycle ------------
-    function startGame(){ startSec.style.display='none'; gameSec.style.display='block'; initGame(); updateAudioButtons(); syncVol(); fitBoard(); }
+    function startGame(){ startSec.style.display='none'; gameSec.style.display='block'; initGame(); updateAudioButtons(); syncVol(); setTileSize(); }
     function goToStart(){ selected=null; busy=false; gameSec.style.display='none'; startSec.style.display='block'; statusEl.textContent=''; }
-    function initGame(){ score=0; selected=null; busy=false; comboStep=0; createBoardDom(); fitBoard(); generateInitialGrid(); renderAll(); }
+    window.goToStart = goToStart; // バナークリックからも呼べるように
+
+    function initGame(){ score=0; selected=null; busy=false; comboStep=0; createBoardDom(); generateInitialGrid(); renderAll(); }
+
     function startGameAuto(m){ if(m==='challenge'){ if(unlocked>1){ showResumeDialog(); } else { startStage(1); } } else { mode='calm'; setMode('calm'); startGame(); } }
 
+    // 戻る（Main Menu）ボタン
     backBtn.addEventListener('click',()=>{
       showOverlay(`
         <button class="close" id="closeOv">×</button>
         <h2>Leave game?</h2>
         <p class="muted">Current in-progress board will reset. Continue?</p>
         <div class="row" style="justify-content:center">
-          <button class="btn" id="leave">Mode Select</button>
+          <button class="btn" id="leave">Main Menu</button>
           <button class="btn" id="stay">Cancel</button>
         </div>`);
       document.getElementById('closeOv').onclick=hideOverlay;
       document.getElementById('leave').onclick=()=>{ hideOverlay(); goToStart(); };
       document.getElementById('stay').onclick=()=> hideOverlay();
     });
-
     restartBtn.addEventListener('click',()=> initGame());
     stageSelBtn.addEventListener('click',()=> openStageSelect());
 
     // ------------ Toast ------------
     function showToast(text){ toastEl.textContent=text; toastEl.classList.add('show'); clearTimeout(showToast._t); showToast._t=setTimeout(()=>toastEl.classList.remove('show'),1600); }
 
-    // リサイズ/向き変更で都度フィット
-    window.addEventListener('resize', fitBoard);
-    window.addEventListener('orientationchange', fitBoard);
-    new ResizeObserver(fitBoard).observe(document.getElementById('board-wrap'));
+    // ------------ Responsive tile (mobile only) ------------
+    function setTileSize(){
+      // PCは従来通り固定
+      if (window.innerWidth >= 900) {
+        document.documentElement.style.setProperty('--tile','64px');
+        return;
+      }
+      // スマホはコンテナ幅に合わせて算出
+      const wrap = document.getElementById('board-wrap');
+      if(!wrap) return;
+      const container = wrap.clientWidth;         // 余白含まず
+      const innerPad = 24;                        // #board の padding 12*2 の概算
+      const gapTotal = 10*(cols-1);               // grid gap 10px
+      let tile = Math.floor((container - innerPad - gapTotal)/cols);
+      tile = Math.max(46, Math.min(64, tile));    // 下限46, 上限64
+      document.documentElement.style.setProperty('--tile', tile+'px');
+    }
+    window.addEventListener('resize', setTileSize);
+    window.addEventListener('orientationchange', setTileSize);
 
     // ------------ Preload & header fallback ------------
     (function preload(){ TILE_IMAGES.concat(['assets/images/banner.png'+IMG_VER,'assets/images/welcome_cat.png'+IMG_VER]).forEach(src=>{ const im=new Image(); im.src=src; }); Object.values(SFX).forEach(a=>a.load()); pickNextBgm(); })();
-    const _bn=document.getElementById('bannerImg');
-    _bn?.addEventListener('error',()=>{ _bn.style.display='none'; const fb=document.getElementById('brandFallback'); if(fb) fb.hidden=false; });
+
+    // 画像フォールバック & バナークリックでメインへ
+    const _bn = document.getElementById('bannerImg');
+    _bn?.addEventListener('error', ()=>{ _bn.style.display='none'; const fb=document.getElementById('brandFallback'); if(fb) fb.hidden=false; });
+    _bn?.addEventListener('click', () => { try{ hideOverlay(); }catch{} goToStart(); window.scrollTo({ top: 0, behavior: 'smooth' }); });
+
+    // ------------ Audio UI ------------
+    function updateAudioButtons(){ const set=(btn,on,l)=>{ if(!btn) return; btn.setAttribute('aria-pressed',String(on)); btn.textContent=l+(on?': On':': Off'); }; set(musicBtn,musicEnabled,'Music'); set(sfxBtn,sfxEnabled,'SFX'); }
+    function syncVol(){ if(music) music.volume=Number(vol2?.value||'0.7'); }
+    musicBtn?.addEventListener('click',()=> musicEnabled? stopMusic(): startMusic());
+    sfxBtn?.addEventListener('click',()=>{ sfxEnabled=!sfxEnabled; updateAudioButtons(); showToast('SFX '+(sfxEnabled?'On':'Off')); });
+    vol2?.addEventListener('input',syncVol);
+    document.addEventListener('pointerdown',()=>{ userInteracted=true });
+
+    // ------------ Auto pause/resume on background ------------
+    let autoPausedByHide=false;
+    function handleHide(){ try{ if(musicEnabled && !music.paused){ music.pause(); autoPausedByHide=true; } }catch{} }
+    function handleShow(){ try{ if(autoPausedByHide && musicEnabled){ autoPausedByHide=false; music.play().catch(()=>{}); } }catch{} }
+    document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='hidden') handleHide(); else handleShow(); });
+    window.addEventListener('pagehide', handleHide);
+    window.addEventListener('pageshow', handleShow);
   })();
   </script>
 </body>
