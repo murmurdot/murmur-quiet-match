@@ -51,7 +51,7 @@
       transition:background .2s,border-color .2s,color .2s,transform .06s;
       border:1px solid transparent;
     }
-    /* YouTubeボタン：常時うっすら水色（黄色は使ってない） */
+    /* YouTubeボタン：常時うっすら水色 */
     a.linkbtn,button.linkbtn{ background:var(--yt-bg);border-color:var(--yt-border);color:var(--yt-text); }
     a.linkbtn:hover,button.linkbtn:hover{
       transform:translateY(-1px); background:var(--yt-bg-hov); border-color:var(--yt-border-hov); color:var(--yt-text-hov);
@@ -163,7 +163,7 @@
         </div>
         <button class="btn" id="musicBtn" aria-pressed="false">Music: Off</button>
         <button class="btn" id="sfxBtn" aria-pressed="true">SFX: On</button>
-        <label class="row" style="gap:6px;margin-left:6px">Vol <input id="vol2" type="range" min="0" max="1" step="0.01" value="0.7" /></label>
+        <label class="row" style="gap:6px;margin-left:6px">Music Vol <input id="vol2" type="range" min="0" max="1" step="0.01" value="0.7" /></label>
         <button class="btn" id="restartBtn">Restart</button>
         <button class="btn" id="stageSelectBtn" hidden>Stage Select</button>
         <button class="btn" id="backBtn">Mode Select</button>
@@ -340,30 +340,41 @@
       return false;
     }
 
-    // === ここがスマホ自動フィットのキモ ===
+    // === 自動フィット：デスクトップは64px固定、狭い画面のみ縮小 ===
     function fitBoard(){
       const wrap=document.getElementById('board-wrap'); if(!wrap||!boardEl) return;
       const cols=8, rows=8;
+      // デフォルト盤面が収まるのに必要な目安（64pxタイル, gap10, pad12, border1）
+      const needW = 8*64 + 7*10 + 2*12 + 2*1; // 608px
+      const needH = 8*64 + 7*10 + 2*12 + 2*1; // 608px
+
+      const canW = wrap.clientWidth;
+      const rect = wrap.getBoundingClientRect();
+      const reserved = 150; // ヘッダー/フッターぶん
+      const canH = window.innerHeight - rect.top - reserved;
+
+      const desktopOK = (canW >= needW && canH >= needH);
+      if (desktopOK) {
+        // デスクトップ：CSSの既定値に戻す（64px, gap10）
+        boardEl.style.removeProperty('--tile');
+        boardEl.style.removeProperty('--gap');
+        boardEl.style.gridTemplateColumns = `repeat(${cols}, var(--tile))`;
+        return;
+      }
+
+      // モバイル/狭い画面：収まるように縮小
       const boardPad=12, boardBorder=1;
-      const wrapW=Math.max(240, wrap.clientWidth - 2); // available width
-      // 高さ側も余白を見て計算（フッターや余白ぶん少し引く）
-      const wrapRect=wrap.getBoundingClientRect();
-      const reserved=150; // ヘッダー/フッターぶん
-      const availH=Math.max(300, window.innerHeight - wrapRect.top - reserved);
-
-      let gap=Math.min(10, Math.max(4, Math.floor(wrapW/cols*0.06)));
-      const tileFromW=Math.floor((wrapW - 2*boardPad - 2*boardBorder - gap*(cols-1))/cols);
-      const tileFromH=Math.floor((availH - 2*boardPad - 2*boardBorder - gap*(rows-1))/rows);
+      let gap=Math.min(10, Math.max(4, Math.floor(canW/cols*0.06)));
+      const tileFromW=Math.floor((canW - 2*boardPad - 2*boardBorder - gap*(cols-1))/cols);
+      const tileFromH=Math.floor((canH - 2*boardPad - 2*boardBorder - gap*(rows-1))/rows);
       let tile=Math.min(64, tileFromW, tileFromH);
-
-      // さらに厳しい時はギャップを少し詰めて再計算
       if(tile<44){
         gap=Math.max(4, gap-2);
-        const tW=Math.floor((wrapW - 2*boardPad - 2*boardBorder - gap*(cols-1))/cols);
-        const tH=Math.floor((availH - 2*boardPad - 2*boardBorder - gap*(rows-1))/rows);
+        const tW=Math.floor((canW - 2*boardPad - 2*boardBorder - gap*(cols-1))/cols);
+        const tH=Math.floor((canH - 2*boardPad - 2*boardBorder - gap*(rows-1))/rows);
         tile=Math.min(tile, tW, tH);
       }
-      tile=Math.max(40, tile); // 最小サイズ
+      tile=Math.max(40, tile);
 
       boardEl.style.setProperty('--tile', tile+'px');
       boardEl.style.setProperty('--gap',  gap+'px');
@@ -450,10 +461,8 @@
         <button class="close" id="closeOv">×</button>
         <h2>Challenge — Stage Select</h2>
         <div class="muted" style="margin:4px 0 8px">Choose a stage to play. Cleared stages are marked; locked stages unlock as you progress.</div>
-        <div class="stage-grid">${gridHtml}</div>
-        <div style="margin-top:10px"><button class="btn" id="backToStart">Back</button></div>`);
+        <div class="stage-grid">${gridHtml}</div>`);
       document.getElementById('closeOv').onclick=hideOverlay;
-      document.getElementById('backToStart').onclick=()=>{ hideOverlay(); goToStart(); };
       document.querySelectorAll('.stage').forEach(el=> el.onclick=()=>{ const n=+el.dataset.n; if(n>unlocked) return; hideOverlay(); startStage(n); });
     }
 
@@ -543,7 +552,6 @@
     // リサイズ/向き変更で都度フィット
     window.addEventListener('resize', fitBoard);
     window.addEventListener('orientationchange', fitBoard);
-    // ラップが変化した時も拾う（安全策）
     new ResizeObserver(fitBoard).observe(document.getElementById('board-wrap'));
 
     // ------------ Preload & header fallback ------------
