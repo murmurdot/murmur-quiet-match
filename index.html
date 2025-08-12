@@ -54,25 +54,35 @@
       background:#dfeaff;
       border-color:#a9c5ff;
       color:#09306f;
+
+a.linkbtn:link, a.linkbtn:visited{ color:#0b3d91 !important; }
     } /* ← ここ忘れない */
 
-    /* Startボタン：同形で白地＋グレー枠を常時表示 */
+/* --- 強制適用パッチ：初期色を必ず描画させる（Safari/モバイル対策） --- */
 a.linkbtn, button.linkbtn{
-  appearance:none; -webkit-appearance:none;  /* Safari対策 */
-  border:1px solid #bcd3ff;
-  background:#edf3ff;
-  color:#0b3d91;
+  appearance:none; -webkit-appearance:none;
+  background:#edf3ff !important;        /* YouTube用の淡い水色 */
+  border:1px solid #bcd3ff !important;
+  color:#0b3d91 !important;
 }
-/* Startは白＋グレー枠（常時表示） */
+/* hover でも必ず上書きされるように（!important付き） */
+.linkbtn:hover{
+  transform:translateY(-1px);
+  background:#dfeaff !important;
+  border-color:#a9c5ff !important;
+  color:#09306f !important;
+}
+
+/* Start は白＋グレー枠（常時表示） */
 button.linkbtn.btn-start{
-  border:1px solid var(--line);
-  background:#fff;
-  color:#111;
+  background:#fff !important;
+  border:1px solid var(--line) !important;
+  color:#111 !important;
 }
 button.linkbtn.btn-start:hover{
-  background:#f9f9f9;
-  border-color:#ddd;
-    }
+  background:#f9f9f9 !important;
+  border-color:#ddd !important;
+}
 
     /* --- GAME --- */
     #game{display:none}
