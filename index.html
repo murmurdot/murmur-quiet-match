@@ -58,32 +58,32 @@
 a.linkbtn:link, a.linkbtn:visited{ color:#0b3d91 !important; }
     } /* ← ここ忘れない */
 
-/* --- 強制適用パッチ：初期色を必ず描画させる（Safari/モバイル対策） --- */
+/* YouTubeボタン：見えやすい淡い水色（常時塗り） */
 a.linkbtn, button.linkbtn{
   appearance:none; -webkit-appearance:none;
-  background:#ffdd00 !important;   /* ← ここを黄色に */
-  border:1px solid #ff9900 !important; /* ← ここをオレンジに */
-  color:#111 !important;
+  background:#e1ebff !important;     /* 既存より一段濃い淡水色 */
+  border:1px solid #9fb8ff !important;
+  color:#0b3d91 !important;
 }
-/* hover でも必ず上書きされるように（!important付き） */
+/* ホバーは少しだけ濃く */
 .linkbtn:hover{
   transform:translateY(-1px);
-  background:#dfeaff !important;
-  border-color:#a9c5ff !important;
+  background:#d1e0ff !important;
+  border-color:#86a8ff !important;
   color:#09306f !important;
 }
 
-/* Start は白＋グレー枠（常時表示） */
+/* Startボタン：白＋グレー枠（常時表示） */
 button.linkbtn.btn-start{
-  background:#fff !important;
-  border:1px solid var(--line) !important;
+  background:#ffffff !important;
+  border:1px solid #d1d5db !important;  /* 枠やや濃くして視認性UP */
   color:#111 !important;
+  box-shadow:0 2px 6px rgba(0,0,0,.05);  /* ほんのり影でボタン感 */
 }
 button.linkbtn.btn-start:hover{
-  background:#f9f9f9 !important;
-  border-color:#ddd !important;
+  background:#f7f7f7 !important;
+  border-color:#cbd5e1 !important;
 }
-
     /* --- GAME --- */
     #game{display:none}
     .top{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--line)}
