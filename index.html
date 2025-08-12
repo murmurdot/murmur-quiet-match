@@ -9,7 +9,6 @@
     :root{
       --bg:#fafafa; --ink:#1a1a1a; --soft:#ececec; --line:#e7e7e7; --muted:#6b7280;
       --tile:64px; --gap:10px; --shadow:0 10px 30px rgba(0,0,0,.08);
-      /* ボタン配色（黄色はなし） */
       --yt-bg:#e8f0ff; --yt-bg-hov:#d6e4ff;
       --yt-border:#bcd3ff; --yt-border-hov:#9bbcff;
       --yt-text:#0b3d91; --yt-text-hov:#09306f;
@@ -52,13 +51,10 @@
       transition:background .2s,border-color .2s,color .2s,transform .06s;
       border:1px solid transparent;
     }
-    /* YouTubeボタン：常時うっすら水色 */
-    a.linkbtn,button.linkbtn{
-      background:var(--yt-bg);border-color:var(--yt-border);color:var(--yt-text);
-    }
+    /* YouTubeボタン：常時うっすら水色（黄色は使ってない） */
+    a.linkbtn,button.linkbtn{ background:var(--yt-bg);border-color:var(--yt-border);color:var(--yt-text); }
     a.linkbtn:hover,button.linkbtn:hover{
-      transform:translateY(-1px);
-      background:var(--yt-bg-hov);border-color:var(--yt-border-hov);color:var(--yt-text-hov);
+      transform:translateY(-1px); background:var(--yt-bg-hov); border-color:var(--yt-border-hov); color:var(--yt-text-hov);
     }
     a.linkbtn:link,a.linkbtn:visited{color:var(--yt-text)} /* visited色ぶれ防止 */
 
@@ -66,9 +62,7 @@
     button.linkbtn.btn-start{
       background:var(--start-bg);border-color:var(--start-border);color:#111;box-shadow:0 2px 6px rgba(0,0,0,.05);
     }
-    button.linkbtn.btn-start:hover{
-      background:var(--start-bg-hov);border-color:var(--start-border-hov);
-    }
+    button.linkbtn.btn-start:hover{ background:var(--start-bg-hov);border-color:var(--start-border-hov); }
 
     /* 猫 */
     .cat-small{width:220px;height:auto;opacity:.98}
@@ -105,17 +99,6 @@
     .stage{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:10px 0;text-align:center;cursor:pointer}
     .stage.lock{opacity:.4;cursor:not-allowed}
     .stage.clear{border-color:#a7f3d0;background:#ecfdf5}
-
-    /* モバイル：盤面を少し縮小 */
-    @media (max-width:480px){
-      :root{ --tile:52px; --gap:8px }
-      header img{height:56px}
-      .cat-small{width:200px}
-    }
-    @media (max-width:360px){
-      :root{ --tile:48px; --gap:6px }
-      .cat-small{width:180px}
-    }
   </style>
 </head>
 <body>
@@ -270,13 +253,32 @@
 
     // ------------ Board ------------
     const rows=8, cols=8; let grid=[], selected=null, busy=false, score=0, comboStep=0;
-    function createBoardDom(){ boardEl.style.gridTemplateColumns=`repeat(${cols}, var(--tile))`; boardEl.innerHTML=''; for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){ const cell=document.createElement('div'); cell.className='cell'; cell.dataset.r=r; cell.dataset.c=c; cell.addEventListener('click',onCellClick); const img=document.createElement('img'); img.alt=''; cell.appendChild(img); boardEl.appendChild(cell);} }
-    function getCell(r,c){return boardEl.children[r*cols+c]}
-    function setCellImage(r,c){const idx=grid[r][c]; const cell=getCell(r,c); const img=cell.querySelector('img'); if(idx>=0){img.src=TILE_IMAGES[idx]; cell.style.visibility='visible'} else {img.removeAttribute('src'); cell.style.visibility='hidden'}}
-    function renderAll(){for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) setCellImage(r,c)}
 
+    function createBoardDom(){
+      boardEl.style.gridTemplateColumns=`repeat(${cols}, var(--tile))`;
+      boardEl.innerHTML='';
+      for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){
+        const cell=document.createElement('div');
+        cell.className='cell'; cell.dataset.r=r; cell.dataset.c=c; cell.addEventListener('click',onCellClick);
+        const img=document.createElement('img'); img.alt=''; cell.appendChild(img);
+        boardEl.appendChild(cell);
+      }
+    }
+    function getCell(r,c){return boardEl.children[r*cols+c]}
+    function setCellImage(r,c){
+      const idx=grid[r][c]; const cell=getCell(r,c); const img=cell.querySelector('img');
+      if(idx>=0){img.src=TILE_IMAGES[idx]; cell.style.visibility='visible'} else {img.removeAttribute('src'); cell.style.visibility='hidden'}
+    }
+    function renderAll(){for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) setCellImage(r,c)}
     function randInt(n){return Math.floor(Math.random()*n)}
-    function randTileFor(r,c){let choices=[0,1,2,3,4,5]; const L1=(c>=1)?grid[r][c-1]:-99, L2=(c>=2)?grid[r][c-2]:-98; const U1=(r>=1)?grid[r-1][c]:-97, U2=(r>=2)?grid[r-2][c]:-96; choices=choices.filter(x=>!(x===L1&&x===L2)&&!(x===U1&&x===U2)); if(!choices.length) choices=[0,1,2,3,4,5]; return choices[randInt(choices.length)];}
+    function randTileFor(r,c){
+      let choices=[0,1,2,3,4,5];
+      const L1=(c>=1)?grid[r][c-1]:-99, L2=(c>=2)?grid[r][c-2]:-98;
+      const U1=(r>=1)?grid[r-1][c]:-97, U2=(r>=2)?grid[r-2][c]:-96;
+      choices=choices.filter(x=>!(x===L1&&x===L2)&&!(x===U1&&x===U2));
+      if(!choices.length) choices=[0,1,2,3,4,5];
+      return choices[randInt(choices.length)];
+    }
 
     function generateInitialGrid(){
       grid=Array.from({length:rows},()=>Array(cols).fill(0));
@@ -287,7 +289,12 @@
         if(++guard>160) break;
       }
     }
-    function reshuffle(){const flat=grid.flat(); for(let i=flat.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [flat[i],flat[j]]=[flat[j],flat[i]];} for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) grid[r][c]=flat[r*cols+c]; renderAll();}
+    function reshuffle(){
+      const flat=grid.flat();
+      for(let i=flat.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [flat[i],flat[j]]=[flat[j],flat[i]];}
+      for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) grid[r][c]=flat[r*cols+c];
+      renderAll();
+    }
 
     function onCellClick(e){
       if(busy) return;
@@ -300,15 +307,11 @@
     }
 
     function swapValues(a,b,c,d){const t=grid[a][b]; grid[a][b]=grid[c][d]; grid[c][d]=t; setCellImage(a,b); setCellImage(c,d)}
-
     function findMatches(){
-      const matched=new Set();
-      const seen=Array.from({length:rows},()=>Array(cols).fill(false));
-      const inb=(r,c)=>r>=0&&r<rows&&c>=0&&c<cols;
-      const dirs=[[1,0],[-1,0],[0,1],[0,-1]];
+      const matched=new Set(); const seen=Array.from({length:rows},()=>Array(cols).fill(false));
+      const inb=(r,c)=>r>=0&&r<rows&&c>=0&&c<cols; const dirs=[[1,0],[-1,0],[0,1],[0,-1]];
       for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){
-        if(seen[r][c]) continue;
-        const val=grid[r][c]; if(val===-1){seen[r][c]=true; continue;}
+        if(seen[r][c]) continue; const val=grid[r][c]; if(val===-1){seen[r][c]=true; continue;}
         const q=[[r,c]]; seen[r][c]=true; const comp=[[r,c]];
         while(q.length){
           const [rr,cc]=q.shift();
@@ -321,7 +324,6 @@
       }
       return matched;
     }
-
     function hasAnyMoves(){
       for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){
         const here=grid[r][c];
@@ -338,21 +340,43 @@
       return false;
     }
 
+    // === ここがスマホ自動フィットのキモ ===
+    function fitBoard(){
+      const wrap=document.getElementById('board-wrap'); if(!wrap||!boardEl) return;
+      const cols=8, rows=8;
+      const boardPad=12, boardBorder=1;
+      const wrapW=Math.max(240, wrap.clientWidth - 2); // available width
+      // 高さ側も余白を見て計算（フッターや余白ぶん少し引く）
+      const wrapRect=wrap.getBoundingClientRect();
+      const reserved=150; // ヘッダー/フッターぶん
+      const availH=Math.max(300, window.innerHeight - wrapRect.top - reserved);
+
+      let gap=Math.min(10, Math.max(4, Math.floor(wrapW/cols*0.06)));
+      const tileFromW=Math.floor((wrapW - 2*boardPad - 2*boardBorder - gap*(cols-1))/cols);
+      const tileFromH=Math.floor((availH - 2*boardPad - 2*boardBorder - gap*(rows-1))/rows);
+      let tile=Math.min(64, tileFromW, tileFromH);
+
+      // さらに厳しい時はギャップを少し詰めて再計算
+      if(tile<44){
+        gap=Math.max(4, gap-2);
+        const tW=Math.floor((wrapW - 2*boardPad - 2*boardBorder - gap*(cols-1))/cols);
+        const tH=Math.floor((availH - 2*boardPad - 2*boardBorder - gap*(rows-1))/rows);
+        tile=Math.min(tile, tW, tH);
+      }
+      tile=Math.max(40, tile); // 最小サイズ
+
+      boardEl.style.setProperty('--tile', tile+'px');
+      boardEl.style.setProperty('--gap',  gap+'px');
+      boardEl.style.gridTemplateColumns=`repeat(${cols}, var(--tile))`;
+    }
+
     async function swapAndResolve(r1,c1,r2,c2){
-      busy=true; comboStep=0;  // 連鎖段数カウントのみ維持（表示はしない）
-      playSfx('choice');
-      getCell(r1,c1).classList.remove('selected'); selected=null;
-
-      swapValues(r1,c1,r2,c2);
-      await delay(120);
-
-      let m=findMatches();
-      if(m.size===0){ swapValues(r1,c1,r2,c2); busy=false; return; }
-
+      busy=true; comboStep=0;
+      playSfx('choice'); getCell(r1,c1).classList.remove('selected'); selected=null;
+      swapValues(r1,c1,r2,c2); await delay(120);
+      let m=findMatches(); if(m.size===0){ swapValues(r1,c1,r2,c2); busy=false; return; }
       if(mode==='challenge'){ movesLeft--; updateHud(); }
-      await resolveMatches(m);
-
-      busy=false;
+      await resolveMatches(m); busy=false;
       if(!hasAnyMoves()){ reshuffle(); showToast('No moves — reshuffling'); }
     }
 
@@ -361,13 +385,11 @@
 
     async function resolveMatches(matchedSet){
       comboStep++;
-
       matchedSet.forEach(k=>{ const [r,c]=k.split(',').map(Number); getCell(r,c).classList.add('matching'); });
       await delay(260);
       matchedSet.forEach(k=>{ const [r,c]=k.split(',').map(Number); grid[r][c]=-1; setCellImage(r,c); });
       playSfx('match');
 
-      // スコア（連鎖ボーナスは維持）
       const groups=countGroupsFromSet(matchedSet);
       const base=matchedSet.size*10;
       let add=base;
@@ -384,8 +406,7 @@
         for(let r=rows-1;r>=0;r--){ if(grid[r][c]!==-1){ grid[wr][c]=grid[r][c]; wr--; } }
         for(let r=wr;r>=0;r--) grid[r][c]=-1;
       }
-      renderAll();
-      await delay(240);
+      renderAll(); await delay(240);
 
       // refill
       for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) if(grid[r][c]===-1){ grid[r][c]=randTileFor(r,c); setCellImage(r,c); }
@@ -494,9 +515,9 @@
     }
 
     // ------------ Lifecycle ------------
-    function startGame(){ startSec.style.display='none'; gameSec.style.display='block'; initGame(); updateAudioButtons(); syncVol(); }
+    function startGame(){ startSec.style.display='none'; gameSec.style.display='block'; initGame(); updateAudioButtons(); syncVol(); fitBoard(); }
     function goToStart(){ selected=null; busy=false; gameSec.style.display='none'; startSec.style.display='block'; statusEl.textContent=''; }
-    function initGame(){ score=0; selected=null; busy=false; comboStep=0; createBoardDom(); generateInitialGrid(); renderAll(); }
+    function initGame(){ score=0; selected=null; busy=false; comboStep=0; createBoardDom(); fitBoard(); generateInitialGrid(); renderAll(); }
     function startGameAuto(m){ if(m==='challenge'){ if(unlocked>1){ showResumeDialog(); } else { startStage(1); } } else { mode='calm'; setMode('calm'); startGame(); } }
 
     backBtn.addEventListener('click',()=>{
@@ -518,6 +539,12 @@
 
     // ------------ Toast ------------
     function showToast(text){ toastEl.textContent=text; toastEl.classList.add('show'); clearTimeout(showToast._t); showToast._t=setTimeout(()=>toastEl.classList.remove('show'),1600); }
+
+    // リサイズ/向き変更で都度フィット
+    window.addEventListener('resize', fitBoard);
+    window.addEventListener('orientationchange', fitBoard);
+    // ラップが変化した時も拾う（安全策）
+    new ResizeObserver(fitBoard).observe(document.getElementById('board-wrap'));
 
     // ------------ Preload & header fallback ------------
     (function preload(){ TILE_IMAGES.concat(['assets/images/banner.png'+IMG_VER,'assets/images/welcome_cat.png'+IMG_VER]).forEach(src=>{ const im=new Image(); im.src=src; }); Object.values(SFX).forEach(a=>a.load()); pickNextBgm(); })();
