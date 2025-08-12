@@ -2,19 +2,21 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-  <meta http-equiv="Pragma" content="no-cache" />
-  <meta http-equiv="Expires" content="0" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>murmur — quiet match</title>
   <meta name="description" content="Calm endless mode & stage-based challenge. Minimal café-vibe match-3 with sweets." />
   <style>
     :root{
       --bg:#fafafa; --ink:#1a1a1a; --soft:#ececec; --line:#e7e7e7; --muted:#6b7280; --tile:64px; --shadow:0 10px 30px rgba(0,0,0,.08);
-      --yt-bg:#e1ebff; --yt-border:#9fb8ff; --yt-text:#0b3d91;
-      --yt-bg-hov:#d1e0ff; --yt-border-hov:#86a8ff; --yt-text-hov:#09306f;
-      --start-border:#d1d5db; --start-border-hov:#cbd5e1; --start-bg:#fff; --start-bg-hov:#f7f7f7;
-      --cat-w:260px;
+
+      /* YouTube ボタンの配色（淡い水色・黄色は使わない） */
+      --yt-bg:#e9f1ff; --yt-border:#bcd3ff; --yt-text:#0b3d91;
+      --yt-bg-hov:#dbe7ff; --yt-border-hov:#a8c2ff; --yt-text-hov:#09306f;
+
+      /* Start は白 + グレー枠 */
+      --start-bg:#fff; --start-border:#d1d5db; --start-bg-hov:#f7f7f7; --start-border-hov:#cbd5e1;
+
+      --cat-w:220px;
     }
     *{box-sizing:border-box}
     html,body{height:100%}
@@ -22,7 +24,7 @@
     .wrap{max-width:1120px;margin:0 auto;padding:12px}
     .card{background:#fff;border:1px solid var(--line);border-radius:24px;box-shadow:var(--shadow)}
 
-    /* ヘッダー：バナーのみ（画像欠け時は文字フォールバック） */
+    /* ヘッダー：バナーのみ（画像出ない時は文字を出す） */
     header{display:flex;align-items:center;justify-content:center;gap:16px;padding:18px 12px 8px}
     header img{height:64px;width:auto}
     .brand-fallback{font-weight:700;letter-spacing:.02em;opacity:.9;text-align:center;padding:8px 12px;border:1px dashed var(--line);border-radius:12px;background:#fff}
@@ -39,28 +41,28 @@
     .btn{appearance:none;border:1px solid var(--line);background:#fff;border-radius:999px;padding:10px 14px;cursor:pointer;transition:transform .06s}
     .btn:hover{transform:translateY(-1px)}
 
-    /* 説明文：本文は左寄せ、small（推奨環境）は中央寄せ */
+    /* 説明：本文は左寄せ、smallは中央寄せ */
     .note{color:#444;font-size:.92rem;line-height:1.65;text-align:left;max-width:860px;margin:0 auto}
     .note small{display:block;color:#666;margin-top:6px;text-align:center}
 
-    /* リンク風ボタン（基礎） */
-    a.linkbtn, button.linkbtn{
-      appearance:none; -webkit-appearance:none;
-      display:inline-flex; align-items:center; gap:8px;
-      padding:12px 18px; border-radius:999px; text-decoration:none;
-      font-weight:700; box-shadow:0 2px 8px rgba(0,0,0,.06);
-      transition:background .2s, border-color .2s, color .2s, transform .06s;
+    /* リンク風ボタンの土台 */
+    a.linkbtn,button.linkbtn{
+      appearance:none;-webkit-appearance:none;
+      display:inline-flex;align-items:center;gap:8px;
+      padding:12px 18px;border-radius:999px;text-decoration:none;
+      font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.06);
+      transition:background .2s,border-color .2s,color .2s,transform .06s;
     }
-    /* デフォ：YouTubeボタン（淡い水色） */
-    a.linkbtn, button.linkbtn{ background:var(--yt-bg); border:1px solid var(--yt-border); color:var(--yt-text); }
-    a.linkbtn:hover, button.linkbtn:hover{ transform:translateY(-1px); background:var(--yt-bg-hov); border-color:var(--yt-border-hov); color:var(--yt-text-hov); }
-    a.linkbtn:link, a.linkbtn:visited{ color:var(--yt-text); }
+    /* YouTube（常時うっすら水色） */
+    a.linkbtn,button.linkbtn{background:var(--yt-bg);border:1px solid var(--yt-border);color:var(--yt-text)}
+    a.linkbtn:hover,button.linkbtn:hover{transform:translateY(-1px);background:var(--yt-bg-hov);border-color:var(--yt-border-hov);color:var(--yt-text-hov)}
+    a.linkbtn:link,a.linkbtn:visited{color:var(--yt-text)}
 
-    /* Startボタン：白＋グレー枠（常時ボタン感） */
-    button.linkbtn.btn-start{ background:var(--start-bg); border:1px solid var(--start-border); color:#111; box-shadow:0 2px 6px rgba(0,0,0,.05); }
-    button.linkbtn.btn-start:hover{ background:var(--start-bg-hov); border-color:var(--start-border-hov); }
+    /* Start（白+グレー枠） */
+    button.linkbtn.btn-start{background:var(--start-bg);border:1px solid var(--start-border);color:#111;box-shadow:0 2px 6px rgba(0,0,0,.05)}
+    button.linkbtn.btn-start:hover{background:var(--start-bg-hov);border-color:var(--start-border-hov)}
 
-    /* トップの猫アイコン */
+    /* 猫 */
     .cat-small{width:var(--cat-w);height:auto;opacity:.98}
 
     /* --- GAME --- */
@@ -80,19 +82,17 @@
     .footer{padding:10px 16px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
     .muted{opacity:.65}
 
-    /* 小画面の基本しぼり（保険） */
-    @media (max-width: 480px){
-      :root{ --tile:44px; }
-      #board{ gap:6px; }
-      .cat-small{ width:200px; }
-      .top{ flex-direction:column; align-items:stretch; gap:8px; }
-    }
+    /* スマホでタイル縮小（はみ出し防止） */
+    @media (max-width: 720px){ :root{ --tile:56px } #board{ gap:9px } }
+    @media (max-width: 560px){ :root{ --tile:48px } #board{ gap:8px } }
+    @media (max-width: 420px){ :root{ --tile:44px } #board{ gap:7px } }
+    @media (max-width: 360px){ :root{ --tile:40px } #board{ gap:6px } }
   </style>
 </head>
 <body>
-  <!-- ヘッダー：バナーのみ（画像欠け時はテキスト表示） -->
+  <!-- ヘッダー -->
   <header class="wrap" style="justify-content:center">
-    <img id="bannerImg" src="assets/images/banner.png?v=20250812d" alt="murmur banner" />
+    <img id="bannerImg" src="assets/images/banner.png?v=20250812c" alt="murmur banner" />
     <div id="brandFallback" class="brand-fallback" hidden>murmur. relaxing games — quiet match</div>
   </header>
 
@@ -110,11 +110,7 @@
       </div>
 
       <div class="row">
-        <!-- Startはインラインstyleで固定（最強） -->
-        <button class="linkbtn btn-start" id="startBtn"
-          style="background:#fff !important;border:1px solid #d1d5db !important;color:#111 !important;box-shadow:0 2px 6px rgba(0,0,0,.05) !important">
-          <strong>Start</strong>
-        </button>
+        <button class="linkbtn btn-start" id="startBtn"><strong>Start</strong></button>
       </div>
 
       <div class="note">
@@ -129,13 +125,8 @@
       </div>
 
       <div class="row">
-        <!-- YouTubeもインラインstyleで固定（トップ） -->
-        <a class="linkbtn" href="https://www.youtube.com/channel/UCxXav6WmZ-EhWB3zbIRxFMg"
-           target="_blank" rel="noopener" title="murmur. on YouTube"
-           style="background:#e1ebff !important;border:1px solid #9fb8ff !important;color:#0b3d91 !important">
-          murmur. on YouTube
-        </a>
-        <img class="cat-small" src="assets/images/welcome_cat.png?v=20250812d" alt="cat" />
+        <a class="linkbtn" href="https://www.youtube.com/channel/UCxXav6WmZ-EhWB3zbIRxFMg" target="_blank" rel="noopener" title="murmur. on YouTube">murmur. on YouTube</a>
+        <img class="cat-small" src="assets/images/welcome_cat.png?v=20250812c" alt="cat" />
       </div>
     </div>
   </section>
@@ -143,12 +134,7 @@
   <!-- GAME -->
   <section id="game" class="wrap card" aria-live="polite">
     <div class="ytbar row" style="justify-content:center;padding:10px 0 0;">
-      <!-- YouTubeもインラインstyleで固定（ゲーム画面） -->
-      <a class="linkbtn" href="https://www.youtube.com/channel/UCxXav6WmZ-EhWB3zbIRxFMg"
-         target="_blank" rel="noopener" title="murmur. on YouTube"
-         style="background:#e1ebff !important;border:1px solid #9fb8ff !important;color:#0b3d91 !important">
-        murmur. on YouTube
-      </a>
+      <a class="linkbtn" href="https://www.youtube.com/channel/UCxXav6WmZ-EhWB3zbIRxFMg" target="_blank" rel="noopener" title="murmur. on YouTube">murmur. on YouTube</a>
     </div>
 
     <div class="top">
@@ -173,7 +159,7 @@
     </div>
 
     <div id="board-wrap">
-      <!-- ※ combo バッジは撤去しました -->
+      <!-- コンボ表示はやめる（DOMなし） -->
       <div id="board" role="grid" aria-label="Match board"></div>
     </div>
 
@@ -183,18 +169,24 @@
     </div>
   </section>
 
-  <div class="toast" id="toast" role="status" aria-live="polite"></div>
-  <div class="overlay" id="overlay"><div class="sheet" id="sheet"></div></div>
+  <!-- Toast（画面固定・インラインで確実に） -->
+  <div id="toast" role="status" aria-live="polite"
+       style="position:fixed;left:50%;transform:translate(-50%,0);bottom:18px;background:#111;color:#fff;
+              padding:10px 14px;border-radius:999px;opacity:0;transition:opacity .2s,transform .2s;
+              pointer-events:none;z-index:1000"></div>
+
+  <!-- Overlay（モーダル） -->
+  <div id="overlay"
+       style="position:fixed;inset:0;background:rgba(17,24,39,.46);display:none;align-items:center;justify-content:center;z-index:999">
+    <div id="sheet" role="dialog" aria-modal="true"
+         style="position:relative;background:#fff;border-radius:20px;box-shadow:0 30px 80px rgba(0,0,0,.2);
+                width:min(92vw,760px);padding:18px;text-align:center"></div>
+  </div>
 
   <script>
   (function(){ 'use strict';
-    // ---- もし過去にSW入れてたら無効化（無ければ何も起きない） ----
-    if ('serviceWorker' in navigator) {
-      try { navigator.serviceWorker.getRegistrations().then(rs => rs.forEach(r => r.unregister())); } catch(e){}
-    }
-
     // ------------ Assets & Audio ------------
-    const IMG_VER='?v=20250812d';
+    const IMG_VER='?v=20250812c';
     const TILE_IMAGES=[
       'assets/images/lemon_soda_tile.png'+IMG_VER,
       'assets/images/cafelatte_tile.png'+IMG_VER,
@@ -206,16 +198,8 @@
     const SFX={choice:new Audio('assets/audio/choice.mp3'),match:new Audio('assets/audio/match.mp3')};
     Object.values(SFX).forEach(a=>a.preload='auto');
     const BGMS=['assets/audio/match_game_bgm_1.mp3','assets/audio/match_game_bgm_2.mp3','assets/audio/match_game_bgm_3.mp3','assets/audio/match_game_bgm_4.mp3','assets/audio/match_game_bgm_5.mp3'];
-    let music=new Audio(); music.loop=false; let currentBgm=-1; let musicEnabled=false, sfxEnabled=true;
-    function pickNextBgm(){let i;do{i=Math.floor(Math.random()*BGMS.length);}while(i===currentBgm&&BGMS.length>1);currentBgm=i;music.src=BGMS[i];}
-    function startMusic(){
-      if(!musicEnabled){ musicEnabled=true; pickNextBgm(); music.play().catch(()=>{ showToast('Tap once to enable audio'); }); }
-      updateAudioButtons(); syncVol();
-    }
-    function stopMusic(){ musicEnabled=false; music.pause(); updateAudioButtons(); }
-    music.addEventListener('ended',()=>{if(musicEnabled){pickNextBgm();music.play().catch(()=>{});}});
-
-    function playSfx(name){ if(!sfxEnabled) return; try{ const a=SFX[name]; a.currentTime=0; a.play().catch(()=>{});}catch(e){} }
+    const music=new Audio(); music.loop=false;
+    let currentBgm=-1, musicEnabled=false, sfxEnabled=true, userInteracted=false;
 
     // ------------ DOM ------------
     const startSec=document.getElementById('start');
@@ -239,80 +223,84 @@
     const stageSelBtn=document.getElementById('stageSelectBtn');
     const backBtn=document.getElementById('backBtn');
 
-    // ------------ Start / Pace ------------
+    // ------------ Header fallback ------------
+    const _bn=document.getElementById('bannerImg');
+    _bn?.addEventListener('error',()=>{ _bn.style.display='none'; const fb=document.getElementById('brandFallback'); if(fb) fb.hidden=false; });
+
+    // ------------ Audio ------------
+    function pickNextBgm(){let i; do{i=Math.floor(Math.random()*BGMS.length);}while(i===currentBgm&&BGMS.length>1); currentBgm=i; music.src=BGMS[i];}
+    function startMusic(){ if(!musicEnabled){ musicEnabled=true; pickNextBgm(); music.play().catch(()=>{});} updateAudioButtons(); syncVol(); }
+    function stopMusic(){ musicEnabled=false; music.pause(); updateAudioButtons(); }
+    music.addEventListener('ended',()=>{ if(musicEnabled){ pickNextBgm(); music.play().catch(()=>{});} });
+    function playSfx(name){ if(!sfxEnabled) return; try{ const a=SFX[name]; a.currentTime=0; a.play(); }catch(e){} }
+    function updateAudioButtons(){ const set=(btn,on,l)=>{ if(!btn) return; btn.setAttribute('aria-pressed',String(on)); btn.textContent=l+(on?': On':': Off'); }; set(musicBtn,musicEnabled,'Music'); set(sfxBtn,sfxEnabled,'SFX'); }
+    function syncVol(){ if(music) music.volume=Number(vol2?.value||'0.7'); }
+    musicBtn?.addEventListener('click',()=> musicEnabled? stopMusic(): startMusic());
+    sfxBtn?.addEventListener('click',()=>{ sfxEnabled=!sfxEnabled; updateAudioButtons(); showToast('SFX '+(sfxEnabled?'On':'Off')); });
+    vol2?.addEventListener('input',syncVol);
+    document.addEventListener('pointerdown',()=>{ userInteracted=true });
+
+    // ------------ Start / Mode / Pace ------------
     let mode='calm', pace='slow';
     function setMode(m){ mode=m; if(modeSeg){ [...modeSeg.querySelectorAll('button')].forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.mode===mode))); } }
     modeSeg?.addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; setMode(b.dataset.mode) });
-
     function setPaceInGame(p){ pace=p; if(paceSeg2){ [...paceSeg2.querySelectorAll('button')].forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.pace===pace))); } }
     paceSeg2?.addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; setPaceInGame(b.dataset.pace) });
     function paceFactor(){ return pace==='slow'?1.8 : pace==='normal'?1.3 : 1.05; }
 
-    // ------------ Buttons (audio) ------------
-    function updateAudioButtons(){
-      const set=(btn,on,label)=>{ if(!btn) return; btn.setAttribute('aria-pressed',String(on)); btn.textContent=label+(on?': On':': Off'); };
-      set(musicBtn,musicEnabled,'Music'); set(sfxBtn,sfxEnabled,'SFX');
-    }
-    function syncVol(){ if(music) music.volume=Number(vol2?.value||'0.7'); }
-
-    musicBtn?.addEventListener('click',()=> musicEnabled? stopMusic(): startMusic());
-    sfxBtn?.addEventListener('click',()=>{ sfxEnabled=!sfxEnabled; updateAudioButtons(); showToast('SFX '+(sfxEnabled?'On':'Off')); });
-    vol2?.addEventListener('input',syncVol);
-
-    // ------------ Start button ------------
     startBtn?.addEventListener('click',()=>{
       const ref=document.referrer||'';
       const isYT=/youtube\.com|youtu\.be/.test(ref) || new URLSearchParams(location.search).get('yt')==='1';
       if(isYT){
         const url=new URL(location.href);
-        url.searchParams.set('play','1');
-        url.searchParams.set('mode',mode);
+        url.searchParams.set('play','1'); url.searchParams.set('mode',mode);
         window.open(url.toString(),'_blank');
-      } else {
+      }else{
         startGameAuto(mode);
       }
     });
-    (function autoStart(){ try{ const p=new URLSearchParams(location.search); if(p.get('play')==='1'){ const m=p.get('mode')||'calm'; setMode(m); startGameAuto(m); } }catch(e){ console.warn(e); } })();
+    (function autoStart(){ try{ const p=new URLSearchParams(location.search); if(p.get('play')==='1'){ const m=p.get('mode')||'calm'; setMode(m); startGameAuto(m); } }catch(e){} })();
 
     // ------------ Board State ------------
-    const rows=8, cols=8; let grid=[]; let selected=null; let busy=false; let score=0; let comboStep=0; // 表示はしないが内部計算は維持
+    const rows=8, cols=8; let grid=[], selected=null, busy=false, score=0, comboStep=0;
     function createBoardDom(){ boardEl.style.gridTemplateColumns=`repeat(${cols}, var(--tile))`; boardEl.innerHTML=''; for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){ const cell=document.createElement('div'); cell.className='cell'; cell.dataset.r=r; cell.dataset.c=c; cell.addEventListener('click',onCellClick); const img=document.createElement('img'); img.alt=''; cell.appendChild(img); boardEl.appendChild(cell);} }
     function getCell(r,c){return boardEl.children[r*cols+c]}
     function setCellImage(r,c){const idx=grid[r][c]; const cell=getCell(r,c); const img=cell.querySelector('img'); if(idx>=0){img.src=TILE_IMAGES[idx]; cell.style.visibility='visible'} else {img.removeAttribute('src'); cell.style.visibility='hidden'}}
     function renderAll(){for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) setCellImage(r,c)}
-
     function randInt(n){return Math.floor(Math.random()*n)}
     function randTileFor(r,c){let choices=[0,1,2,3,4,5]; const L1=(c>=1)?grid[r][c-1]:-99, L2=(c>=2)?grid[r][c-2]:-98; const U1=(r>=1)?grid[r-1][c]:-97, U2=(r>=2)?grid[r-2][c]:-96; choices=choices.filter(x=>!(x===L1&&x===L2)&&!(x===U1&&x===U2)); if(!choices.length) choices=[0,1,2,3,4,5]; return choices[randInt(choices.length)];}
-
-    function generateInitialGrid(){
-      grid=Array.from({length:rows},()=>Array(cols).fill(0));
-      for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) grid[r][c]=randTileFor(r,c);
-      let guard=0;
-      while( (findMatches().size>0) || !hasAnyMoves() ){
-        for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) grid[r][c]=randTileFor(r,c);
-        if(++guard>160) break;
-      }
-    }
+    function generateInitialGrid(){ grid=Array.from({length:rows},()=>Array(cols).fill(0)); for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) grid[r][c]=randTileFor(r,c); let guard=0; while( (findMatches().size>0) || !hasAnyMoves() ){ for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) grid[r][c]=randTileFor(r,c); if(++guard>160) break; } }
     function reshuffle(){const flat=grid.flat(); for(let i=flat.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [flat[i],flat[j]]=[flat[j],flat[i]];} for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) grid[r][c]=flat[r*cols+c]; renderAll();}
 
-    function onCellClick(e){ if(busy) return; const r=+e.currentTarget.dataset.r, c=+e.currentTarget.dataset.c; if(selected && selected.r===r && selected.c===c){ getCell(r,c).classList.remove('selected'); selected=null; return; } if(!selected){ selected={r,c}; getCell(r,c).classList.add('selected'); playSfx('choice'); return; } const {r:sr,c:sc}=selected; if(Math.abs(sr-r)+Math.abs(sc-c)!==1){ getCell(sr,sc).classList.remove('selected'); selected={r,c}; getCell(r,c).classList.add('selected'); playSfx('choice'); return; } swapAndResolve(sr,sc,r,c); }
+    function onCellClick(e){ if(busy) return; const r=+e.currentTarget.dataset.r, c=+e.currentTarget.dataset.c;
+      if(selected && selected.r===r && selected.c===c){ getCell(r,c).classList.remove('selected'); selected=null; return; }
+      if(!selected){ selected={r,c}; getCell(r,c).classList.add('selected'); playSfx('choice'); return; }
+      const {r:sr,c:sc}=selected;
+      if(Math.abs(sr-r)+Math.abs(sc-c)!==1){ getCell(sr,sc).classList.remove('selected'); selected={r,c}; getCell(r,c).classList.add('selected'); playSfx('choice'); return; }
+      swapAndResolve(sr,sc,r,c);
+    }
 
     function swapValues(a,b,c,d){const t=grid[a][b]; grid[a][b]=grid[c][d]; grid[c][d]=t; setCellImage(a,b); setCellImage(c,d)}
-
-    function findMatches(){const matched=new Set(); const seen=Array.from({length:rows},()=>Array(cols).fill(false)); const inb=(r,c)=>r>=0&&r<rows&&c>=0&&c<cols; const dirs=[[1,0],[-1,0],[0,1],[0,-1]]; for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){ if(seen[r][c]) continue; const val=grid[r][c]; if(val===-1){seen[r][c]=true; continue;} const q=[[r,c]]; seen[r][c]=true; const comp=[[r,c]]; while(q.length){const [rr,cc]=q.shift(); for(const [dr,dc] of dirs){const nr=rr+dr,nc=cc+dc; if(!inb(nr,nc)||seen[nr][nc]) continue; if(grid[nr][nc]===val){seen[nr][nc]=true; q.push([nr,nc]); comp.push([nr,nc]);}}} if(comp.length>=3) comp.forEach(([rr,cc])=>matched.add(rr+','+cc)); } return matched; }
-    function hasAnyMoves(){ for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){ const here=grid[r][c]; const trySwap=(r2,c2)=>{ if(r2<0||r2>=rows||c2<0||c2>=cols) return false; const t=grid[r2][c2]; if(t===here) return false; grid[r][c]=t; grid[r2][c2]=here; const ok=findMatches().size>0; grid[r][c]=here; grid[r2][c2]=t; return ok; }; if(trySwap(r,c+1) || trySwap(r+1,c)) return true; } return false; }
+    function findMatches(){const matched=new Set(); const seen=Array.from({length:rows},()=>Array(cols).fill(false)); const inb=(r,c)=>r>=0&&r<rows&&c>=0&&c<cols; const dirs=[[1,0],[-1,0],[0,1],[0,-1]];
+      for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){ if(seen[r][c]) continue; const val=grid[r][c]; if(val===-1){seen[r][c]=true; continue;}
+        const q=[[r,c]]; seen[r][c]=true; const comp=[[r,c]];
+        while(q.length){const [rr,cc]=q.shift(); for(const [dr,dc] of dirs){const nr=rr+dr,nc=cc+dc; if(!inb(nr,nc)||seen[nr][nc]) continue; if(grid[nr][nc]===val){seen[nr][nc]=true; q.push([nr,nc]); comp.push([nr,nc]);}}}
+        if(comp.length>=3) comp.forEach(([rr,cc])=>matched.add(rr+','+cc));
+      } return matched;
+    }
+    function hasAnyMoves(){ for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){ const here=grid[r][c];
+      const trySwap=(r2,c2)=>{ if(r2<0||r2>=rows||c2<0||c2>=cols) return false; const t=grid[r2][c2]; if(t===here) return false;
+        grid[r][c]=t; grid[r2][c2]=here; const ok=findMatches().size>0; grid[r][c]=here; grid[r2][c2]=t; return ok; };
+      if(trySwap(r,c+1) || trySwap(r+1,c)) return true; } return false;
+    }
 
     async function swapAndResolve(r1,c1,r2,c2){
-      busy=true; comboStep=0; // 表示しないけど段数は内部で使う
-      playSfx('choice');
-      getCell(r1,c1).classList.remove('selected'); selected=null;
-      swapValues(r1,c1,r2,c2);
-      await delay(120);
-      let m=findMatches();
-      if(m.size===0){ swapValues(r1,c1,r2,c2); busy=false; return; }
+      busy=true; comboStep=0;
+      playSfx('choice'); getCell(r1,c1).classList.remove('selected'); selected=null;
+      swapValues(r1,c1,r2,c2); await delay(120);
+      let m=findMatches(); if(m.size===0){ swapValues(r1,c1,r2,c2); busy=false; return; }
       if(mode==='challenge'){ movesLeft--; updateHud(); }
-      await resolveMatches(m);
-      busy=false;
+      await resolveMatches(m); busy=false;
       if(!hasAnyMoves()){ reshuffle(); showToast('No moves — reshuffling'); }
     }
 
@@ -320,21 +308,17 @@
     function updateHud(){ movesEl.textContent=movesLeft; stageEl.textContent=currentStage; targetEl.textContent=targetScore; scoreEl.textContent=score; }
 
     async function resolveMatches(matchedSet){
-      comboStep++; // 表示しないがスコア計算のため維持
-
+      comboStep++;
       matchedSet.forEach(k=>{ const [r,c]=k.split(',').map(Number); getCell(r,c).classList.add('matching'); });
       await delay(260);
       matchedSet.forEach(k=>{ const [r,c]=k.split(',').map(Number); grid[r][c]=-1; setCellImage(r,c); });
       playSfx('match');
 
       const base=matchedSet.size*10;
-      let add=base;
-      if(mode==='calm'){
-        // 連鎖ボーナスはほんの少しだけ残す（表示はしない）
-        const chainBonus = base * Math.max(0, comboStep-1) * 0.06;
-        add = Math.round(base + chainBonus);
-      }
-      score += add; updateHud();
+      // （表示用コンボは廃止。スコアだけほんのり連鎖ボーナス）
+      const chainBonus = base * Math.max(0, comboStep-1) * 0.06;
+      score += Math.round(base + chainBonus);
+      updateHud();
 
       // gravity
       for(let c=0;c<cols;c++){
@@ -342,8 +326,7 @@
         for(let r=rows-1;r>=0;r--){ if(grid[r][c]!==-1){ grid[wr][c]=grid[r][c]; wr--; } }
         for(let r=wr;r>=0;r--) grid[r][c]=-1;
       }
-      renderAll();
-      await delay(240);
+      renderAll(); await delay(240);
       // refill
       for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) if(grid[r][c]===-1){ grid[r][c]=randTileFor(r,c); setCellImage(r,c); }
       await delay(200);
@@ -360,22 +343,41 @@
     }
 
     // ------------ Challenge ------------
-    let currentStage=1; let unlocked=parseInt(localStorage.getItem('mmq_unlocked')||'1',10); if(!(unlocked>=1&&unlocked<=100)) unlocked=1; let savedStage=parseInt(localStorage.getItem('mmq_currentStage')||String(unlocked),10); if(!(savedStage>=1&&savedStage<=unlocked)) savedStage=unlocked;
-    let targetScore=0; let movesLeft=0;
+    let currentStage=1;
+    let unlocked=parseInt(localStorage.getItem('mmq_unlocked')||'1',10); if(!(unlocked>=1&&unlocked<=100)) unlocked=1;
+    let savedStage=parseInt(localStorage.getItem('mmq_currentStage')||String(unlocked),10); if(!(savedStage>=1&&savedStage<=unlocked)) savedStage=unlocked;
+    let targetScore=0, movesLeft=0;
     function stageConfig(n){ const baseTarget=450, grow=50; const baseMoves=20, stepEvery=10, minMoves=15; const moves=Math.max(minMoves, baseMoves - Math.floor((n-1)/stepEvery)); const target=baseTarget + grow*(n-1); return {moves,target}; }
 
-    function openStageSelect(){ const max=100; let gridHtml=''; for(let i=1;i<=max;i++){ const lock=i>unlocked, cleared=i<unlocked; gridHtml += `<div class="stage ${lock?'lock':''} ${cleared?'clear':''}" data-n="${i}">${i}</div>`; } showOverlay(`
-      <button class="close" id="closeOv">×</button>
-      <h2>Challenge — Stage Select</h2>
-      <div class="muted" style="margin:4px 0 8px">Choose a stage to play. Cleared stages are marked; locked stages unlock as you progress.</div>
-      <div class="stage-grid">${gridHtml}</div>
-      <div style="margin-top:10px"><button class="btn" id="backToStart">Back</button></div>`);
-      document.getElementById('closeOv').onclick=hideOverlay; document.getElementById('backToStart').onclick=()=>{ hideOverlay(); goToStart(); };
-      document.querySelectorAll('.stage').forEach(el=> el.onclick=()=>{ const n=+el.dataset.n; if(n>unlocked) return; hideOverlay(); startStage(n); }); }
+    function openStageSelect(){
+      const max=100; let gridHtml='';
+      for(let i=1;i<=max;i++){
+        const lock=i>unlocked, cleared=i<unlocked;
+        gridHtml+=`<div class="stage ${lock?'lock':''} ${cleared?'clear':''}" data-n="${i}">${i}</div>`;
+      }
+      showOverlay(`
+        <button class="close" id="closeOv">×</button>
+        <h2>Challenge — Stage Select</h2>
+        <div class="muted" style="margin:4px 0 8px">Choose a stage to play. Cleared stages are marked; locked stages unlock as you progress.</div>
+        <div class="stage-grid">${gridHtml}</div>
+        <div style="margin-top:10px"><button class="btn" id="backToStart">Back</button></div>`);
+      document.getElementById('closeOv').onclick=hideOverlay;
+      document.getElementById('backToStart').onclick=()=>{ hideOverlay(); goToStart(); };
+      document.querySelectorAll('.stage').forEach(el=>{
+        el.onclick=()=>{ const n=+el.dataset.n; if(n>unlocked) return; hideOverlay(); startStage(n); };
+      });
+    }
 
-    function startStage(n){ mode='challenge'; setMode('challenge'); currentStage=n; const cfg=stageConfig(n); targetScore=cfg.target; movesLeft=cfg.moves; startGame(); stageSelBtn.hidden=false; stageInfo.hidden=false; movesWrap.hidden=false; updateHud(); localStorage.setItem('mmq_currentStage', String(currentStage)); }
+    function startStage(n){
+      mode='challenge'; setMode('challenge'); currentStage=n;
+      const cfg=stageConfig(n); targetScore=cfg.target; movesLeft=cfg.moves;
+      startGame(); stageSelBtn.hidden=false; stageInfo.hidden=false; movesWrap.hidden=false;
+      updateHud(); localStorage.setItem('mmq_currentStage', String(currentStage));
+    }
 
-    function onStageClear(){ if(unlocked<currentStage+1){ unlocked=currentStage+1; localStorage.setItem('mmq_unlocked', String(unlocked)); } showOverlay(`
+    function onStageClear(){
+      if(unlocked<currentStage+1){ unlocked=currentStage+1; localStorage.setItem('mmq_unlocked', String(unlocked)); }
+      showOverlay(`
         <button class="close" id="closeOv">×</button>
         <h2>Stage ${currentStage} — Cleared 🎉</h2>
         <p class="muted">Score ${score} / Target ${targetScore}</p>
@@ -384,9 +386,14 @@
           <button class="btn" id="select">Stage Select</button>
           <button class="btn" id="retry">Retry</button>
         </div>`);
-      document.getElementById('closeOv').onclick=hideOverlay; document.getElementById('next').onclick=()=>{ hideOverlay(); startStage(Math.min(100,currentStage+1)); }; document.getElementById('select').onclick=()=>{ openStageSelect(); }; document.getElementById('retry').onclick=()=>{ hideOverlay(); startStage(currentStage); }; }
+      document.getElementById('closeOv').onclick=hideOverlay;
+      document.getElementById('next').onclick=()=>{ hideOverlay(); startStage(Math.min(100,currentStage+1)); };
+      document.getElementById('select').onclick=()=>{ openStageSelect(); };
+      document.getElementById('retry').onclick=()=>{ hideOverlay(); startStage(currentStage); };
+    }
 
-    function onStageFail(){ showOverlay(`
+    function onStageFail(){
+      showOverlay(`
         <button class="close" id="close">×</button>
         <h2>Stage ${currentStage} — Try again</h2>
         <p class="muted">Score ${score} / Target ${targetScore}</p>
@@ -394,34 +401,20 @@
           <button class="btn" id="retry">Retry</button>
           <button class="btn" id="select">Stage Select</button>
         </div>`);
-      document.getElementById('close').onclick=hideOverlay; document.getElementById('retry').onclick=()=>{ hideOverlay(); startStage(currentStage); }; document.getElementById('select').onclick=()=>{ openStageSelect(); }; }
-
-    // ------------ Overlay helpers ------------
-    const overlay=document.getElementById('overlay'); const sheet=document.getElementById('sheet');
-    function showOverlay(html){ sheet.innerHTML=html; overlay.classList.add('show'); }
-    function hideOverlay(){ overlay.classList.remove('show'); sheet.innerHTML=''; }
-
-    function showResumeDialog(){
-      const resumeStage = savedStage || unlocked || 1;
-      showOverlay(`
-        <button class="close" id="closeOv">×</button>
-        <h2>Challenge — Continue?</h2>
-        <p class="muted">Resume from your last unfinished stage, or start from Stage 1.</p>
-        <div class="row" style="justify-content:center">
-          <button class="btn" id="resume">Resume (Stage ${resumeStage})</button>
-          <button class="btn" id="fromStart">Start from Stage 1</button>
-        </div>`);
-      document.getElementById('closeOv').onclick=hideOverlay;
-      document.getElementById('resume').onclick=()=>{ hideOverlay(); startStage(resumeStage); };
-      document.getElementById('fromStart').onclick=()=>{ hideOverlay(); localStorage.setItem('mmq_currentStage','1'); startStage(1); };
+      document.getElementById('close').onclick=hideOverlay;
+      document.getElementById('retry').onclick=()=>{ hideOverlay(); startStage(currentStage); };
+      document.getElementById('select').onclick=()=>{ openStageSelect(); };
     }
 
+    // ------------ Overlay helpers（確実なモーダル表示） ------------
+    const overlay=document.getElementById('overlay'); const sheet=document.getElementById('sheet');
+    function showOverlay(html){ sheet.innerHTML=html; overlay.style.display='flex'; document.body.style.overflow='hidden'; }
+    function hideOverlay(){ overlay.style.display='none'; sheet.innerHTML=''; document.body.style.overflow=''; }
+
     // ------------ Lifecycle ------------
-    function startGame(){ startSec.style.display='none'; gameSec.style.display='block'; initGame(); updateAudioButtons(); syncVol(); resizeBoard(); }
+    function startGame(){ startSec.style.display='none'; gameSec.style.display='block'; initGame(); updateAudioButtons(); syncVol(); }
     function goToStart(){ selected=null; busy=false; gameSec.style.display='none'; startSec.style.display='block'; statusEl.textContent=''; }
-
     function initGame(){ score=0; selected=null; busy=false; comboStep=0; createBoardDom(); generateInitialGrid(); renderAll(); }
-
     function startGameAuto(m){ if(m==='challenge'){ if(unlocked>1){ showResumeDialog(); } else { startStage(1); } } else { mode='calm'; setMode('calm'); startGame(); } }
 
     backBtn.addEventListener('click',()=>{
@@ -438,56 +431,36 @@
       document.getElementById('stay').onclick=()=> hideOverlay();
     });
     restartBtn.addEventListener('click',()=> initGame());
+    stageSelBtn.addEventListener('click',()=> openStageSelect());
 
-    // ------------ Toast ------------
-    function showToast(text){ toastEl.textContent=text; toastEl.classList.add('show'); clearTimeout(showToast._t); showToast._t=setTimeout(()=>toastEl.classList.remove('show'),1600); }
-
-    // ------------ Preload & header fallback ------------
-    (function preload(){ TILE_IMAGES.concat(['assets/images/banner.png'+IMG_VER,'assets/images/welcome_cat.png'+IMG_VER]).forEach(src=>{ const im=new Image(); im.src=src; }); Object.values(SFX).forEach(a=>a.load()); pickNextBgm(); })();
-    const _bn=document.getElementById('bannerImg');
-    _bn?.addEventListener('error',()=>{ _bn.style.display='none'; const fb=document.getElementById('brandFallback'); if(fb) fb.hidden=false; });
-
-    // ------------ 自動リサイズ（スマホはみ出し防止） ------------
-    function resizeBoard(){
-      if(!boardEl) return;
-      const cols=8, rows=8;
-      const wrap=boardEl.parentElement; if(!wrap) return;
-      const gap = (window.innerWidth <= 480) ? 6 : 10;
-      boardEl.style.gap = gap + 'px';
-
-      const pad = 24; // board内左右padding 12*2
-      const availableW = wrap.clientWidth - pad - gap*(cols-1);
-      const tileW = Math.floor(availableW / cols);
-
-      const headerH = document.querySelector('header')?.offsetHeight || 0;
-      const topBarH = document.querySelector('.top')?.offsetHeight || 0;
-      const footerH = document.querySelector('.footer')?.offsetHeight || 0;
-      const chrome = headerH + topBarH + footerH + 120; // 余白
-      const availH = window.innerHeight - chrome - pad - gap*(rows-1);
-      const tileH = Math.floor(availH / rows);
-
-      const tile = Math.max(36, Math.min(64, tileW, tileH));
-      document.documentElement.style.setProperty('--tile', tile + 'px');
+    function showResumeDialog(){
+      const resumeStage = savedStage || unlocked || 1;
+      showOverlay(`
+        <button class="close" id="closeResume">×</button>
+        <h2>Challenge — Continue?</h2>
+        <p class="muted">Resume from your last unfinished stage, or start from Stage 1.</p>
+        <div class="row" style="justify-content:center">
+          <button class="btn" id="resume">Resume (Stage ${resumeStage})</button>
+          <button class="btn" id="fromStart">Start from Stage 1</button>
+        </div>`);
+      document.getElementById('closeResume').onclick=hideOverlay;
+      document.getElementById('resume').onclick=()=>{ hideOverlay(); startStage(resumeStage); };
+      document.getElementById('fromStart').onclick=()=>{ hideOverlay(); localStorage.setItem('mmq_currentStage','1'); startStage(1); };
     }
-    window.addEventListener('resize', resizeBoard);
+
+    // ------------ Toast（確実に中央下に出す） ------------
+    function showToast(text){
+      toastEl.textContent = text;
+      toastEl.style.opacity = '1';
+      toastEl.style.transform = 'translate(-50%,-3px)';
+      clearTimeout(showToast._t);
+      showToast._t = setTimeout(()=>{
+        toastEl.style.opacity = '0';
+        toastEl.style.transform = 'translate(-50%,0)';
+      },1600);
+    }
   })();
   </script>
-
-  <!-- 最後に勝つCSS（外部からの上書きへの保険） -->
-  <style id="last-win">
-    a.linkbtn, button.linkbtn{
-      background:#e1ebff !important;
-      border:1px solid #9fb8ff !important;
-      color:#0b3d91 !important;
-      filter:none !important;
-      mix-blend-mode:normal !important;
-    }
-    button.linkbtn.btn-start{
-      background:#fff !important;
-      border:1px solid #d1d5db !important;
-      color:#111 !important;
-    }
-  </style>
 </body>
 </html>
 
