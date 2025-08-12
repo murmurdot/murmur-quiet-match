@@ -40,50 +40,40 @@
     .note{color:#444;font-size:.92rem;line-height:1.65;text-align:left;max-width:860px;margin:0 auto}
     .note small{display:block;color:#666;margin-top:6px;text-align:center}
 
-    /* YouTubeリンクボタン：淡い水色の塗りつぶし（<a>でも<button>でもOK） */
-    .linkbtn{
-      display:inline-flex;align-items:center;gap:8px;
-      border:1px solid #bcd3ff;
-      background:#edf3ff;
-      border-radius:999px;padding:12px 18px;text-decoration:none;
-      color:#0b3d91;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.06);
-      transition:background .2s, border-color .2s, color .2s, transform .06s;
-    }
-    .linkbtn:hover{
-      transform:translateY(-1px);
-      background:#dfeaff;
-      border-color:#a9c5ff;
-      color:#09306f;
-
-a.linkbtn:link, a.linkbtn:visited{ color:#0b3d91 !important; }
-    } /* ← ここ忘れない */
-
-/* YouTubeボタン：見えやすい淡い水色（常時塗り） */
+/* Link-like buttons（YouTube/Start共通の土台・Safari対策込み） */
 a.linkbtn, button.linkbtn{
   appearance:none; -webkit-appearance:none;
-  background:#e1ebff !important;     /* 既存より一段濃い淡水色 */
+  display:inline-flex; align-items:center; gap:8px;
+  padding:12px 18px; border-radius:999px; text-decoration:none;
+  font-weight:700; box-shadow:0 2px 8px rgba(0,0,0,.06);
+  transition:background .2s, border-color .2s, color .2s, transform .06s;
+  /* デフォ：YouTube用の見えやすい淡い水色 */
+  background:#e1ebff !important;
   border:1px solid #9fb8ff !important;
   color:#0b3d91 !important;
 }
-/* ホバーは少しだけ濃く */
-.linkbtn:hover{
+/* hover（共通） */
+a.linkbtn:hover, button.linkbtn:hover{
   transform:translateY(-1px);
   background:#d1e0ff !important;
   border-color:#86a8ff !important;
   color:#09306f !important;
 }
+/* アンカーの visited 色ぶれ防止 */
+a.linkbtn:link, a.linkbtn:visited{ color:#0b3d91 !important; }
 
-/* Startボタン：白＋グレー枠（常時表示） */
+/* Startボタン（白＋グレー枠で常時ボタン感） */
 button.linkbtn.btn-start{
   background:#ffffff !important;
-  border:1px solid #d1d5db !important;  /* 枠やや濃くして視認性UP */
+  border:1px solid #d1d5db !important;
   color:#111 !important;
-  box-shadow:0 2px 6px rgba(0,0,0,.05);  /* ほんのり影でボタン感 */
+  box-shadow:0 2px 6px rgba(0,0,0,.05);
 }
 button.linkbtn.btn-start:hover{
   background:#f7f7f7 !important;
   border-color:#cbd5e1 !important;
 }
+    
     /* --- GAME --- */
     #game{display:none}
     .top{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--line)}
@@ -512,10 +502,3 @@ button.linkbtn.btn-start:hover{
   </script>
 </body>
 </html>
-
-
-
-
-
-
-
