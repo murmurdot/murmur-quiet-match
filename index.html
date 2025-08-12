@@ -8,23 +8,16 @@
   <style>
     :root{
       --bg:#fafafa; --ink:#1a1a1a; --soft:#ececec; --line:#e7e7e7; --muted:#6b7280; --shadow:0 10px 30px rgba(0,0,0,.08);
-      --tile:64px;                 /* PC既定のタイルサイズ */
-      --cat-w:260px;               /* 猫さんの幅 */
+      --tile:64px;                 /* デフォ（PC）は64px固定 */
+      --gap:10px;                  /* 盤面グリッドのギャップ */
+      --cat-w:260px;
 
-      /* YouTubeボタン配色（必要ならここだけ触ればOK）*/
-      --yt-bg:#e1ebff;     --yt-border:#9fb8ff;   --yt-text:#0b3d91;
+      /* YouTubeボタン配色 */
+      --yt-bg:#e1ebff;     --yt-border:#9fb8ff;     --yt-text:#0b3d91;
       --yt-bg-hov:#d1e0ff; --yt-border-hov:#86a8ff; --yt-text-hov:#09306f;
 
       /* Startボタン配色 */
       --start-bg:#fff; --start-bg-hov:#f7f7f7; --start-border:#d1d5db; --start-border-hov:#cbd5e1;
-    }
-
-    /* スマホで自動で“きゅっ”と縮む（PCは64pxのまま） */
-    @media (max-width: 480px){
-      :root{
-        /* 余白やギャップを見込んだ概算。端末幅に合わせて8列が収まるよう調整 */
-        --tile: clamp(42px, calc((100vw - 56px)/8 - 4px), 64px);
-      }
     }
 
     *{box-sizing:border-box}
@@ -33,7 +26,7 @@
     .wrap{max-width:1120px;margin:0 auto;padding:12px}
     .card{background:#fff;border:1px solid var(--line);border-radius:24px;box-shadow:var(--shadow)}
 
-    /* ヘッダー（バナーのみ。画像落ちたらテキスト） */
+    /* ヘッダー（バナーのみ） */
     header{display:flex;align-items:center;justify-content:center;gap:16px;padding:18px 12px 8px}
     header img{height:64px;width:auto;cursor:pointer}
     .brand-fallback{font-weight:700;letter-spacing:.02em;opacity:.9;text-align:center;padding:8px 12px;border:1px dashed var(--line);border-radius:12px;background:#fff}
@@ -50,14 +43,13 @@
     .btn{appearance:none;border:1px solid var(--line);background:#fff;border-radius:999px;padding:10px 14px;cursor:pointer;transition:transform .06s}
     .btn:hover{transform:translateY(-1px)}
 
-    /* 説明文：本文は左寄せ、small（推奨環境）は中央寄せ */
+    /* 説明文：本文は左寄せ、smallは中央 */
     .note{color:#444;font-size:.92rem;line-height:1.65;text-align:left;max-width:860px;margin:0 auto}
     .note small{display:block;color:#666;margin-top:6px;text-align:center}
 
-    /* 画像（猫） */
     .cat-small{width:var(--cat-w);height:auto;opacity:.98}
 
-    /* リンク風ボタン（YouTube/Start 土台） */
+    /* リンク風ボタン（YouTube/Start 共通土台） */
     a.linkbtn, button.linkbtn{
       appearance:none; -webkit-appearance:none;
       display:inline-flex; align-items:center; gap:8px;
@@ -79,11 +71,11 @@
     }
     a.linkbtn:link, a.linkbtn:visited{ color:var(--yt-text); }
 
-    /* 2行表示用（YouTubeボタンを縦積み） */
+    /* 2行表示（YouTubeボタン） */
     .linkbtn.linkbtn--stack{ flex-direction:column; gap:2px; text-align:center; }
     .linkbtn .sub{ font-size:.85em; font-weight:600; opacity:.85; letter-spacing:.01em; line-height:1.1; }
 
-    /* Startボタン（白＋グレー枠で常時ボタン感） */
+    /* Startボタン（白＋グレー枠） */
     button.linkbtn.btn-start{
       background:var(--start-bg);
       border:1px solid var(--start-border);
@@ -102,7 +94,17 @@
     .pill{border:1px solid var(--line);background:#fff;border-radius:999px;padding:10px 14px;min-width:90px;text-align:center}
 
     #board-wrap{padding:16px;display:flex;justify-content:center;position:relative}
-    #board{display:grid;gap:10px;padding:12px;background:linear-gradient(180deg,#fff,#f7f7f7);border:1px solid var(--line);border-radius:24px;box-shadow:var(--shadow);max-width:100%}
+    #board{
+      width:100%;
+      max-width:100%;
+      display:grid;
+      gap:var(--gap);
+      padding:12px;
+      background:linear-gradient(180deg,#fff,#f7f7f7);
+      border:1px solid var(--line);
+      border-radius:24px;
+      box-shadow:var(--shadow)
+    }
     .cell{width:var(--tile);height:var(--tile);border-radius:18px;display:grid;place-items:center;background:#fff;border:1px solid var(--line);position:relative;overflow:hidden}
     .cell img{width:90%;height:90%;object-fit:contain;pointer-events:none;user-select:none}
     .cell.selected{outline:3px solid #111}
@@ -214,8 +216,7 @@
 
   <script>
   (function(){ 'use strict';
-    // ------------ Flags ------------
-    const COMBO_ENABLED=false; // 将来的に復活したくなったら true に
+    const COMBO_ENABLED=false;
 
     // ------------ Assets & Audio ------------
     const IMG_VER='?v=20250811j';
@@ -246,7 +247,7 @@
     music.addEventListener('ended',()=>{ if(musicEnabled){ pickNextBgm(); music.play().catch(()=>{});} });
     function playSfx(name){ if(!sfxEnabled) return; try{ const a=SFX[name]; a.currentTime=0; a.play().catch(()=>{});}catch(e){} }
 
-    // バックグラウンド時はBGM停止（戻ったら必要なら再開）
+    // バックグラウンド時はBGM停止（復帰時に必要なら再生）
     document.addEventListener('visibilitychange', ()=>{
       if(document.hidden){
         wasPlayingBeforeHide = !music.paused;
@@ -303,9 +304,8 @@
     }
     function syncVol(){ if(music) music.volume=Number(vol2?.value||'0.7'); }
     musicBtn?.addEventListener('click',()=> musicEnabled? stopMusic(): startMusic());
-    sfxBtn?.addEventListener('click',()=>{ sfxEnabled=!sfxEnabled; updateAudioButtons(); /* トーストは出さない */ });
+    sfxBtn?.addEventListener('click',()=>{ sfxEnabled=!sfxEnabled; updateAudioButtons(); });
     vol2?.addEventListener('input',syncVol);
-    document.addEventListener('pointerdown',()=>{ /* iOS対策のための初回タップフラグが必要ならここで */ });
 
     // ------------ Start button ------------
     startBtn?.addEventListener('click',()=>{
@@ -432,28 +432,18 @@
     }
 
     function delay(ms){ return new Promise(res=>setTimeout(res, ms*paceFactor())); }
-    function updateHud(){ movesEl.textContent=movesLeft; stageEl.textContent=currentStage; targetEl.textContent=targetScore; /* scoreEl は calm では任意表示。ここでは未使用 */ }
+    function updateHud(){ movesEl.textContent=movesLeft; stageEl.textContent=currentStage; targetEl.textContent=targetScore; }
 
     async function resolveMatches(matchedSet){
       comboStep++;
-      const groups=countGroupsFromSet(matchedSet);
-      if(COMBO_ENABLED) addCombo(groups);
-
-      // 消去アニメ
       matchedSet.forEach(k=>{ const [r,c]=k.split(',').map(Number); getCell(r,c).classList.add('matching'); });
       await delay(260);
       matchedSet.forEach(k=>{ const [r,c]=k.split(',').map(Number); grid[r][c]=-1; setCellImage(r,c); });
       playSfx('match');
 
-      // スコア（簡易）
       const base=matchedSet.size*10; let add=base;
-      if(mode==='calm' && COMBO_ENABLED){
-        const simultaneous=Math.max(0, groups-1)*5;
-        add=Math.round(base + Math.max(0,comboStep-1)*0.06*base + simultaneous);
-      }
-      score = (score||0) + add; /* calm ではUI表示していないが内部では加算 */
+      score = (score||0) + add;
 
-      // 重力
       for(let c=0;c<cols;c++){
         let wr=rows-1;
         for(let r=rows-1;r>=0;r--){ if(grid[r][c]!==-1){ grid[wr][c]=grid[r][c]; wr--; } }
@@ -461,31 +451,18 @@
       }
       renderAll();
       await delay(240);
-      // 補充
+
       for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) if(grid[r][c]===-1){ grid[r][c]=randTileFor(r,c); setCellImage(r,c); }
       await delay(200);
 
       const more=findMatches();
       if(more.size>0){ await resolveMatches(more); }
       else {
-        comboStep=0; comboTotal=0;
         if(mode==='challenge'){
           if(score>=targetScore){ onStageClear(); }
           else if(movesLeft<=0){ onStageFail(); }
         }
       }
-    }
-
-    function countGroupsFromSet(set){
-      if(!COMBO_ENABLED) return 0;
-      const keys=[...set]; const coords=keys.map(k=>k.split(',').map(Number)); const n=coords.length; if(n===0) return 0;
-      const adj=Array.from({length:n},()=>[]);
-      for(let i=0;i<n;i++){ const [r1,c1]=coords[i];
-        for(let j=i+1;j<n;j++){ const [r2,c2]=coords[j]; if(Math.abs(r1-r2)+Math.abs(c1-c2)===1){ adj[i].push(j); adj[j].push(i); } }
-      }
-      const seen=new Array(n).fill(false); let groups=0;
-      for(let i=0;i<n;i++) if(!seen[i]){ groups++; const q=[i]; seen[i]=true; while(q.length){ const v=q.shift(); for(const w of adj[v]) if(!seen[w]){ seen[w]=true; q.push(w); } } }
-      return groups;
     }
 
     // ------------ Challenge ------------
@@ -571,7 +548,7 @@
     }
 
     // ------------ Lifecycle ------------
-    function startGame(){ startSec.style.display='none'; gameSec.style.display='block'; initGame(); updateAudioButtons(); syncVol(); }
+    function startGame(){ startSec.style.display='none'; gameSec.style.display='block'; initGame(); fitTiles(); updateAudioButtons(); syncVol(); }
     function goToStart(){ selected=null; busy=false; gameSec.style.display='none'; startSec.style.display='block'; statusEl.textContent=''; }
 
     function initGame(){ score=0; selected=null; busy=false; comboStep=0; comboTotal=0; createBoardDom(); generateInitialGrid(); renderAll(); }
@@ -599,6 +576,24 @@
     });
     restartBtn.addEventListener('click',()=> initGame());
     stageSelBtn.addEventListener('click',()=> openStageSelect());
+
+    // ------------ Fit tiles to container (スマホでのはみ出し防止) ------------
+    function fitTiles(){
+      // 盤面の「内容幅」を測ってそこに8列＋ギャップをぴったり収める
+      const cs=getComputedStyle(boardEl);
+      const padX=parseFloat(cs.paddingLeft)+parseFloat(cs.paddingRight);
+      const gap=parseFloat(cs.gap)||10;
+      const innerWidth=boardEl.clientWidth - padX; // グリッドが使える実幅
+      const tile=Math.floor( (innerWidth - (gap*(8-1))) / 8 );
+      const clamped=Math.max(38, Math.min(64, tile)); // 下限38 / 上限64（PCは64に張り付く）
+      document.documentElement.style.setProperty('--tile', clamped+'px');
+    }
+    const ro=new ResizeObserver(()=> fitTiles());
+    ro.observe(boardEl);
+    window.addEventListener('orientationchange', ()=> setTimeout(fitTiles, 200));
+    window.addEventListener('resize', ()=> fitTiles());
+    // 初期化直後にもう一度（フォント/画像のレイアウト確定後）
+    requestAnimationFrame(()=> fitTiles());
 
     // ------------ Toast ------------
     function showToast(text){ toastEl.textContent=text; toastEl.classList.add('show'); clearTimeout(showToast._t); showToast._t=setTimeout(()=>toastEl.classList.remove('show'),1600); }
