@@ -22,7 +22,7 @@
     .wrap{max-width:1120px;margin:0 auto;padding:12px}
     .card{background:#fff;border:1px solid var(--line);border-radius:24px;box-shadow:var(--shadow)}
 
-    /* Header (banner only) */
+    /* Header */
     header{display:flex;align-items:center;justify-content:center;gap:16px;padding:18px 12px 8px}
     header img{height:64px;width:auto;cursor:pointer}
     .brand-fallback{font-weight:700;letter-spacing:.02em;opacity:.9;text-align:center;padding:8px 12px;border:1px dashed var(--line);border-radius:12px;background:#fff}
@@ -38,7 +38,6 @@
     .seg button[aria-pressed="true"]{background:#111;color:#fff;box-shadow:var(--shadow)}
     .btn{appearance:none;border:1px solid var(--line);background:#fff;border-radius:999px;padding:10px 14px;cursor:pointer;transition:transform .06s}
     .btn:hover{transform:translateY(-1px)}
-
     .note{color:#444;font-size:.92rem;line-height:1.65;text-align:left;max-width:860px;margin:0 auto}
     .note small{display:block;color:#666;margin-top:6px;text-align:center}
     .free{font-size:.85rem;color:#4b5563;margin-top:2px;text-align:center}
@@ -88,33 +87,20 @@
     #combo{position:absolute;left:50%;top:45%;transform:translate(-50%,-50%) scale(.98);background:#111;color:#fff;padding:10px 14px;border-radius:14px;font-weight:800;font-size:1.05rem;opacity:0;transition:opacity .22s, transform .28s;box-shadow:0 18px 40px rgba(0,0,0,.18);z-index:90;pointer-events:none}
     #combo.show{opacity:1;transform:translate(-50%,-50%) scale(1.02)}
 
-    /* Modal Overlay (critical) */
-    .overlay{
-      position:fixed; inset:0; background:rgba(17,24,39,.46);
-      display:none; align-items:center; justify-content:center; z-index:80;
-    }
+    /* Modal Overlay */
+    .overlay{position:fixed;inset:0;background:rgba(17,24,39,.46);display:none;align-items:center;justify-content:center;z-index:80}
     .overlay.show{display:flex}
-    .sheet{
-      position:relative; background:#fff; border-radius:20px; box-shadow:0 30px 80px rgba(0,0,0,.2);
-      width:min(92vw,760px); padding:18px; text-align:center
-    }
-    .close{
-      position:absolute; right:10px; top:10px; width:28px; height:28px; border-radius:999px;
-      background:#ffffffcc; border:1px solid #e5e7eb; display:grid; place-items:center; cursor:pointer
-    }
+    .sheet{position:relative;background:#fff;border-radius:20px;box-shadow:0 30px 80px rgba(0,0,0,.2);width:min(92vw,760px);padding:18px;text-align:center}
+    .close{position:absolute;right:10px;top:10px;width:28px;height:28px;border-radius:999px;background:#ffffffcc;border:1px solid #e5e7eb;display:grid;place-items:center;cursor:pointer}
     .stage-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(56px,1fr));gap:8px;max-height:min(60vh,520px);overflow:auto;padding:8px}
     .stage{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:10px 0;text-align:center;cursor:pointer}
     .stage.lock{opacity:.4;cursor:not-allowed}
     .stage.clear{border-color:#a7f3d0;background:#ecfdf5}
 
-    /* Small affiliate slot */
-    .adslot{width:100%;display:flex;justify-content:center;margin:6px 0 2px}
-    .adslot .adbox{
-      min-width:220px; max-width:320px; width:100%;
-      border:1px dashed var(--line); border-radius:12px; padding:8px 10px; text-align:center; background:#fff;
-      color:#6b7280; font-size:.8rem;
-    }
-    .adslot .adbox a{color:#2563eb;text-decoration:none}
+    /* Affiliate (game screen only; empty → hidden) */
+    .adslot{width:100%;display:flex;justify-content:center;margin:8px 0}
+    .adslot:empty{display:none}
+    .adslot .adbox{min-width:220px;max-width:320px;width:100%;border:1px dashed var(--line);border-radius:12px;padding:8px 10px;text-align:center;background:#fff}
   </style>
 </head>
 <body>
@@ -149,14 +135,6 @@
           They may reset on different devices/browsers, private/incognito mode, or when clearing site data.<br/>
           <strong>Recommended</strong>: Latest Chrome / Edge / Firefox / Safari on desktop or tablet.
         </small>
-      </div>
-
-      <!-- Small affiliate slot (replace with your tag later) -->
-      <div class="adslot">
-        <div class="adbox">
-          <div>— small affiliate spot —</div>
-          <!-- paste ad script/snippet here when ready -->
-        </div>
       </div>
 
       <div class="row">
@@ -203,6 +181,9 @@
       <div id="combo" aria-live="polite"></div>
       <div id="board" role="grid" aria-label="Match board"></div>
     </div>
+
+    <!-- small affiliate slot (game only). Paste your tag inside .adslot (leave it empty to hide) -->
+    <div class="adslot" id="adslotGame"></div>
 
     <div class="footer">
       <div class="muted">murmur · calm sweets match</div>
@@ -267,7 +248,7 @@
     function updateAudioButtons(){ const s=(btn,on,l)=>{ if(!btn) return; btn.setAttribute('aria-pressed',String(on)); btn.textContent=l+(on?': On':': Off');}; s(musicBtn,musicEnabled,'Music'); s(sfxBtn,sfxEnabled,'SFX'); }
     function syncVol(){ if(music) music.volume=Number(vol2?.value||'0.7'); }
     musicBtn?.addEventListener('click',()=> musicEnabled? stopMusic(): startMusic());
-    sfxBtn?.addEventListener('click',()=>{ sfxEnabled=!sfxEnabled; updateAudioButtons(); /* no toast */ });
+    sfxBtn?.addEventListener('click',()=>{ sfxEnabled=!sfxEnabled; updateAudioButtons(); });
     vol2?.addEventListener('input',syncVol);
 
     /* Pause BGM when tab hidden; do not auto-resume */
@@ -606,13 +587,23 @@
       }catch(e){}
     }
 
+    /* ------------ Ensure board after reload (fix) ------------ */
+    function ensureBoardReady(){
+      if (gameSec.style.display === 'block' && boardEl.children.length !== (rows*cols)) {
+        initGame();
+        return true;
+      }
+      return false;
+    }
+
     /* ------------ Preload & Events ------------ */
-    (function preload(){ TILE_IMAGES.concat(['assets/images/banner.png'+IMG_VER,'assets/images/welcome_cat.png'+IMG_VER]).forEach(src=>{ const im=new Image(); im.src=src; }); Object.values(SFX).forEach(a=>a.load()); pickNextBgm(); })();
+    (function preload(){ TILE_IMAGES.concat(['assets/images/banner.png'+IMG_VER,'assets/images/welcome_cat.png'+IMG_VER]).forEach(src=>{ const im=new Image(); im.src=src; }); Object.values(SFX).forEach(a=>a.load()); })();
 
     window.addEventListener('resize', fitBoard, {passive:true});
-    window.addEventListener('orientationchange', ()=> setTimeout(fitBoard, 60), {passive:true});
-    window.addEventListener('load', fitBoard, {passive:true});
-    window.addEventListener('pageshow', ()=> setTimeout(fitBoard, 60), {passive:true});
+    window.addEventListener('orientationchange', ()=> setTimeout(()=>{ ensureBoardReady(); fitBoard(); }, 60), {passive:true});
+    window.addEventListener('load', ()=>{ ensureBoardReady(); fitBoard(); }, {passive:true});
+    window.addEventListener('pageshow', ()=>{ ensureBoardReady(); setTimeout(fitBoard, 60); }, {passive:true});
+    new ResizeObserver(()=>{ fitBoard(); }).observe(boardWrap);
 
   })();
   </script>
