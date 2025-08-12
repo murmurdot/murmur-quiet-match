@@ -90,7 +90,6 @@
 
     /* Combo element is present but never shown (disabled in JS) */
     #combo{display:none}
-
   </style>
 </head>
 <body>
@@ -137,7 +136,7 @@
 
       <!-- Optional affiliate (hidden until href is real) -->
       <div class="sponsor" id="sponsor" hidden>
-        <a class="affi" href="#" target="_blank" rel="sponsored nofollow noopener">Support (affiliate)</a>
+        <a class="affi" id="affiLink" href="#" target="_blank" rel="sponsored nofollow noopener">Support (affiliate)</a>
       </div>
     </div>
   </section>
@@ -187,168 +186,195 @@
 
   <script>
   (function(){ 'use strict';
-    const IMG_VER='?v=20250811j';
-    const TILE_IMAGES=[
+    var IMG_VER='?v=20250811j';
+    var TILE_IMAGES=[
       'assets/images/lemon_soda_tile.png'+IMG_VER,
       'assets/images/cafelatte_tile.png'+IMG_VER,
       'assets/images/strawberry_tart_tile.png'+IMG_VER,
       'assets/images/caramelpudding_tile.png'+IMG_VER,
       'assets/images/violet_soda_tile.png'+IMG_VER,
-      'assets/images/vanilla_macaron_tile.png'+IMG_VER,
+      'assets/images/vanilla_macaron_tile.png'+IMG_VER
     ];
 
-    const SFX={choice:new Audio('assets/audio/choice.mp3'),match:new Audio('assets/audio/match.mp3')};
-    Object.values(SFX).forEach(a=>a.preload='auto');
-    const BGMS=['assets/audio/match_game_bgm_1.mp3','assets/audio/match_game_bgm_2.mp3','assets/audio/match_game_bgm_3.mp3','assets/audio/match_game_bgm_4.mp3','assets/audio/match_game_bgm_5.mp3'];
-    let music=new Audio(); music.loop=false;
-    let currentBgm=-1, musicEnabled=false, sfxEnabled=true;
+    var SFX={choice:new Audio('assets/audio/choice.mp3'),match:new Audio('assets/audio/match.mp3')};
+    try{ Object.values(SFX).forEach(function(a){ a.preload='auto'; }); }catch(_){}
+    var BGMS=['assets/audio/match_game_bgm_1.mp3','assets/audio/match_game_bgm_2.mp3','assets/audio/match_game_bgm_3.mp3','assets/audio/match_game_bgm_4.mp3','assets/audio/match_game_bgm_5.mp3'];
+    var music=new Audio(); music.loop=false;
+    var currentBgm=-1, musicEnabled=false, sfxEnabled=true;
 
-    const startSec=document.getElementById('start');
-    const gameSec=document.getElementById('game');
-    const boardWrap=document.getElementById('board-wrap');
-    const boardEl=document.getElementById('board');
-    const toastEl=document.getElementById('toast');
-    const comboEl=document.getElementById('combo');
-    const scoreEl=document.getElementById('score');
-    const movesWrap=document.getElementById('movesWrap');
-    const movesEl=document.getElementById('moves');
-    const stageInfo=document.getElementById('stageInfo');
-    const stageEl=document.getElementById('stage');
-    const targetEl=document.getElementById('target');
-    const statusEl=document.getElementById('status');
-    const modeSeg=document.getElementById('modeSeg');
-    const startBtn=document.getElementById('startBtn');
-    const paceSeg2=document.getElementById('paceSeg2');
-    const musicBtn=document.getElementById('musicBtn');
-    const sfxBtn=document.getElementById('sfxBtn');
-    const vol2=document.getElementById('vol2');
-    const restartBtn=document.getElementById('restartBtn');
-    const stageSelBtn=document.getElementById('stageSelectBtn');
-    const backBtn=document.getElementById('backBtn');
-    const banner=document.getElementById('bannerImg');
+    var startSec=document.getElementById('start');
+    var gameSec=document.getElementById('game');
+    var boardWrap=document.getElementById('board-wrap');
+    var boardEl=document.getElementById('board');
+    var toastEl=document.getElementById('toast');
+    var comboEl=document.getElementById('combo');
+    var scoreEl=document.getElementById('score');
+    var movesWrap=document.getElementById('movesWrap');
+    var movesEl=document.getElementById('moves');
+    var stageInfo=document.getElementById('stageInfo');
+    var stageEl=document.getElementById('stage');
+    var targetEl=document.getElementById('target');
+    var statusEl=document.getElementById('status');
+    var modeSeg=document.getElementById('modeSeg');
+    var startBtn=document.getElementById('startBtn');
+    var paceSeg2=document.getElementById('paceSeg2');
+    var musicBtn=document.getElementById('musicBtn');
+    var sfxBtn=document.getElementById('sfxBtn');
+    var vol2=document.getElementById('vol2');
+    var restartBtn=document.getElementById('restartBtn');
+    var stageSelBtn=document.getElementById('stageSelectBtn');
+    var backBtn=document.getElementById('backBtn');
+    var banner=document.getElementById('bannerImg');
+    var sponsor=document.getElementById('sponsor');
+    var affiLink=document.getElementById('affiLink');
 
-    banner?.addEventListener('error',()=>{ banner.style.display='none'; const fb=document.getElementById('brandFallback'); if(fb) fb.hidden=false; });
-    banner?.addEventListener('click',()=> goToStart());
+    if(banner){
+      banner.addEventListener('error',function(){
+        banner.style.display='none';
+        var fb=document.getElementById('brandFallback'); if(fb) fb.hidden=false;
+      });
+      banner.addEventListener('click',function(){ goToStart(); });
+    }
 
-    function pickNextBgm(){ let i; do { i=Math.floor(Math.random()*BGMS.length);} while(i===currentBgm && BGMS.length>1); currentBgm=i; music.src=BGMS[i]; }
-    function startMusic(){ if(!musicEnabled){ musicEnabled=true; pickNextBgm(); music.play().catch(()=>{});} updateAudioButtons(); syncVol(); }
-    function stopAllAudio(){ // BGM + SFX hard stop
+    function pickNextBgm(){ var i; do{ i=Math.floor(Math.random()*BGMS.length);}while(i===currentBgm && BGMS.length>1); currentBgm=i; music.src=BGMS[i]; }
+    function startMusic(){ if(!musicEnabled){ musicEnabled=true; pickNextBgm(); music.play().catch(function(){});} updateAudioButtons(); syncVol(); }
+    function stopAllAudio(){
       musicEnabled=false; music.pause();
-      try{ Object.values(SFX).forEach(a=>{ a.pause(); a.currentTime=0; }); }catch(_){}
+      try{ Object.values(SFX).forEach(function(a){ a.pause(); a.currentTime=0; }); }catch(_){}
       updateAudioButtons();
     }
-    music.addEventListener('ended',()=>{ if(musicEnabled){ pickNextBgm(); music.play().catch(()=>{}); }});
-    function playSfx(name){ if(!sfxEnabled) return; try{ const a=SFX[name]; a.currentTime=0; a.play().catch(()=>{});}catch(_){} }
-    function updateAudioButtons(){ const s=(btn,on,l)=>{ if(!btn) return; btn.setAttribute('aria-pressed',String(on)); btn.textContent=l+(on?': On':': Off');}; s(musicBtn,musicEnabled,'Music'); s(sfxBtn,sfxEnabled,'SFX'); }
-    function syncVol(){ if(music) music.volume=Number(vol2?.value||'0.7'); }
-    musicBtn?.addEventListener('click',()=> musicEnabled? stopAllAudio(): startMusic());
-    sfxBtn?.addEventListener('click',()=>{ sfxEnabled=!sfxEnabled; updateAudioButtons(); /* no toast */ });
-    vol2?.addEventListener('input',syncVol);
+    music.addEventListener('ended',function(){ if(musicEnabled){ pickNextBgm(); music.play().catch(function(){}); }});
+    function playSfx(name){ if(!sfxEnabled) return; try{ var a=SFX[name]; a.currentTime=0; a.play().catch(function(){});}catch(_){} }
+    function updateAudioButtons(){
+      function s(btn,on,l){ if(!btn) return; btn.setAttribute('aria-pressed',String(on)); btn.textContent=l+(on?': On':': Off'); }
+      s(musicBtn,musicEnabled,'Music'); s(sfxBtn,sfxEnabled,'SFX');
+    }
+    function syncVol(){ if(music) music.volume=Number((vol2&&vol2.value)||'0.7'); }
+    if(musicBtn){ musicBtn.addEventListener('click',function(){ musicEnabled? stopAllAudio(): startMusic(); }); }
+    if(sfxBtn){ sfxBtn.addEventListener('click',function(){ sfxEnabled=!sfxEnabled; updateAudioButtons(); }); }
+    if(vol2){ vol2.addEventListener('input',syncVol); }
 
-    // No background playback after screen off / tab hidden
-    document.addEventListener('visibilitychange',()=>{ if(document.hidden){ stopAllAudio(); } });
+    document.addEventListener('visibilitychange',function(){ if(document.hidden){ stopAllAudio(); } });
 
-    let mode='calm', pace='slow';
-    function setMode(m){ mode=m; if(modeSeg){ [...modeSeg.querySelectorAll('button')].forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.mode===mode))); } }
-    modeSeg?.addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; setMode(b.dataset.mode) });
-    function setPaceInGame(p){ pace=p; if(paceSeg2){ [...paceSeg2.querySelectorAll('button')].forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.pace===pace))); } }
-    paceSeg2?.addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; setPaceInGame(b.dataset.pace) });
+    var mode='calm', pace='slow';
+    function setMode(m){ mode=m; if(modeSeg){ var bs=modeSeg.querySelectorAll('button'); for(var i=0;i<bs.length;i++){ var b=bs[i]; b.setAttribute('aria-pressed', String(b.getAttribute('data-mode')===mode)); } } }
+    if(modeSeg){
+      modeSeg.addEventListener('click',function(e){
+        var b=e.target && e.target.closest ? e.target.closest('button') : e.target;
+        if(!b || b.tagName!=='BUTTON') return;
+        setMode(b.getAttribute('data-mode'));
+      });
+    }
+    function setPaceInGame(p){ pace=p; if(paceSeg2){ var bs=paceSeg2.querySelectorAll('button'); for(var i=0;i<bs.length;i++){ var b=bs[i]; b.setAttribute('aria-pressed', String(b.getAttribute('data-pace')===pace)); } } }
+    if(paceSeg2){
+      paceSeg2.addEventListener('click',function(e){
+        var b=e.target && e.target.closest ? e.target.closest('button') : e.target;
+        if(!b || b.tagName!=='BUTTON') return;
+        setPaceInGame(b.getAttribute('data-pace'));
+      });
+    }
     function paceFactor(){ return pace==='slow'?1.8 : pace==='normal'?1.3 : 1.05; }
 
-    startBtn?.addEventListener('click',()=>{
-      const ref=document.referrer||'';
-      const isYT=/youtube\.com|youtu\.be/.test(ref) || new URLSearchParams(location.search).get('yt')==='1';
-      if(isYT){
-        const url=new URL(location.href);
-        url.searchParams.set('play','1');
-        url.searchParams.set('mode',mode);
-        window.open(url.toString(),'_blank');
-      } else {
-        startGameAuto(mode);
-      }
-    });
-    (function autoStart(){ try{ const p=new URLSearchParams(location.search); if(p.get('play')==='1'){ const m=p.get('mode')||'calm'; setMode(m); startGameAuto(m); } }catch(_){}})();
+    if(startBtn){
+      startBtn.addEventListener('click',function(){
+        var ref=document.referrer||'';
+        var isYT=/youtube\.com|youtu\.be/.test(ref) || (function(){ try{ return (new URLSearchParams(location.search)).get('yt')==='1'; }catch(_){ return false; }})();
+        if(isYT){
+          var url=new URL(location.href);
+          url.searchParams.set('play','1'); url.searchParams.set('mode',mode);
+          window.open(url.toString(),'_blank');
+        }else{
+          startGameAuto(mode);
+        }
+      });
+    }
+    (function autoStart(){ try{ var p=new URLSearchParams(location.search); if(p.get('play')==='1'){ var m=p.get('mode')||'calm'; setMode(m); startGameAuto(m); } }catch(_){}})();
 
-    const rows=8, cols=8;
-    let grid=[], selected=null, busy=false, score=0, comboStep=0, comboTotal=0;
-    let cancelled=false; // abort long chains when leaving
+    var rows=8, cols=8, grid=[], selected=null, busy=false, score=0, comboStep=0, comboTotal=0;
+    var cancelled=false;
 
     function createBoardDom(){
-      boardEl.style.gridTemplateColumns=`repeat(${cols}, var(--tile))`;
+      boardEl.style.gridTemplateColumns='repeat('+cols+', var(--tile))';
       boardEl.innerHTML='';
-      for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){
-        const cell=document.createElement('div'); cell.className='cell'; cell.dataset.r=r; cell.dataset.c=c;
+      for(var r=0;r<rows;r++) for(var c=0;c<cols;c++){
+        var cell=document.createElement('div'); cell.className='cell'; cell.dataset.r=r; cell.dataset.c=c;
         cell.addEventListener('click',onCellClick);
-        const img=document.createElement('img'); img.alt='';
+        var img=document.createElement('img'); img.alt='';
         cell.appendChild(img); boardEl.appendChild(cell);
       }
     }
-    function getCell(r,c){return boardEl.children[r*cols+c]}
+    function getCell(r,c){ return boardEl.children[r*cols+c]; }
     function setCellImage(r,c){
-      const idx=grid[r][c]; const cell=getCell(r,c); const img=cell.querySelector('img');
-      if(idx>=0){img.src=TILE_IMAGES[idx]; cell.style.visibility='visible'} else {img.removeAttribute('src'); cell.style.visibility='hidden'}
+      var idx=grid[r][c]; var cell=getCell(r,c); var img=cell.querySelector('img');
+      if(idx>=0){ img.src=TILE_IMAGES[idx]; cell.style.visibility='visible'; }
+      else { img.removeAttribute('src'); cell.style.visibility='hidden'; }
     }
-    function renderAll(){for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) setCellImage(r,c)}
-    function randInt(n){return Math.floor(Math.random()*n)}
+    function renderAll(){ for(var r=0;r<rows;r++) for(var c=0;c<cols;c++) setCellImage(r,c); }
+    function randInt(n){ return Math.floor(Math.random()*n); }
     function randTileFor(r,c){
-      let ch=[0,1,2,3,4,5];
-      const L1=(c>=1)?grid[r][c-1]:-99, L2=(c>=2)?grid[r][c-2]:-98;
-      const U1=(r>=1)?grid[r-1][c]:-97, U2=(r>=2)?grid[r-2][c]:-96;
-      ch=ch.filter(x=>!(x===L1&&x===L2)&&!(x===U1&&x===U2));
+      var ch=[0,1,2,3,4,5];
+      var L1=(c>=1)?grid[r][c-1]:-99, L2=(c>=2)?grid[r][c-2]:-98;
+      var U1=(r>=1)?grid[r-1][c]:-97, U2=(r>=2)?grid[r-2][c]:-96;
+      ch=ch.filter(function(x){ return !((x===L1&&x===L2)||(x===U1&&x===U2)); });
       if(!ch.length) ch=[0,1,2,3,4,5];
       return ch[randInt(ch.length)];
     }
 
     function generateInitialGrid(){
-      grid=Array.from({length:rows},()=>Array(cols).fill(0));
-      for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) grid[r][c]=randTileFor(r,c);
-      let guard=0;
+      grid=Array.from({length:rows},function(){ return Array(cols).fill(0); });
+      for(var r=0;r<rows;r++) for(var c=0;c<cols;c++) grid[r][c]=randTileFor(r,c);
+      var guard=0;
       while( (findMatches().size>0) || !hasAnyMoves() ){
-        for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) grid[r][c]=randTileFor(r,c);
+        for(r=0;r<rows;r++) for(c=0;c<cols;c++) grid[r][c]=randTileFor(r,c);
         if(++guard>160) break;
       }
     }
     function reshuffle(){
-      const flat=grid.flat();
-      for(let i=flat.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [flat[i],flat[j]]=[flat[j],flat[i]];}
-      for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) grid[r][c]=flat[r*cols+c];
+      var flat=grid.flat();
+      for(var i=flat.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=flat[i]; flat[i]=flat[j]; flat[j]=t; }
+      for(var r=0;r<rows;r++) for(var c=0;c<cols;c++) grid[r][c]=flat[r*cols+c];
       renderAll();
     }
 
     function onCellClick(e){
       if(busy) return;
-      const r=+e.currentTarget.dataset.r, c=+e.currentTarget.dataset.c;
+      var r=+e.currentTarget.dataset.r, c=+e.currentTarget.dataset.c;
       if(selected && selected.r===r && selected.c===c){ getCell(r,c).classList.remove('selected'); selected=null; return; }
-      if(!selected){ selected={r,c}; getCell(r,c).classList.add('selected'); playSfx('choice'); return; }
-      const {r:sr,c:sc}=selected;
-      if(Math.abs(sr-r)+Math.abs(sc-c)!==1){ getCell(sr,sc).classList.remove('selected'); selected={r,c}; getCell(r,c).classList.add('selected'); playSfx('choice'); return; }
+      if(!selected){ selected={r:r,c:c}; getCell(r,c).classList.add('selected'); playSfx('choice'); return; }
+      var sr=selected.r, sc=selected.c;
+      if(Math.abs(sr-r)+Math.abs(sc-c)!==1){ getCell(sr,sc).classList.remove('selected'); selected={r:r,c:c}; getCell(r,c).classList.add('selected'); playSfx('choice'); return; }
       swapAndResolve(sr,sc,r,c);
     }
-    function swapValues(a,b,c,d){const t=grid[a][b]; grid[a][b]=grid[c][d]; grid[c][d]=t; setCellImage(a,b); setCellImage(c,d)}
+    function swapValues(a,b,c,d){ var t=grid[a][b]; grid[a][b]=grid[c][d]; grid[c][d]=t; setCellImage(a,b); setCellImage(c,d); }
     function findMatches(){
-      const matched=new Set();
-      const seen=Array.from({length:rows},()=>Array(cols).fill(false));
-      const inb=(r,c)=>r>=0&&r<rows&&c>=0&&c<cols; const dirs=[[1,0],[-1,0],[0,1],[0,-1]];
-      for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){
-        if(seen[r][c]) continue; const val=grid[r][c];
-        if(val===-1){seen[r][c]=true; continue;}
-        const q=[[r,c]]; seen[r][c]=true; const comp=[[r,c]];
+      var matched=new Set();
+      var seen=Array.from({length:rows},function(){ return Array(cols).fill(false); });
+      var dirs=[[1,0],[-1,0],[0,1],[0,-1]];
+      function inb(r,c){ return r>=0&&r<rows&&c>=0&&c<cols; }
+      for(var r=0;r<rows;r++) for(var c=0;c<cols;c++){
+        if(seen[r][c]) continue; var val=grid[r][c];
+        if(val===-1){ seen[r][c]=true; continue; }
+        var q=[[r,c]]; seen[r][c]=true; var comp=[[r,c]];
         while(q.length){
-          const [rr,cc]=q.shift();
-          for(const [dr,dc] of dirs){
-            const nr=rr+dr,nc=cc+dc; if(!inb(nr,nc)||seen[nr][nc]) continue;
-            if(grid[nr][nc]===val){seen[nr][nc]=true; q.push([nr,nc]); comp.push([nr,nc]);}
+          var cur=q.shift(); var rr=cur[0], cc=cur[1];
+          for(var di=0;di<dirs.length;di++){
+            var dr=dirs[di][0], dc=dirs[di][1]; var nr=rr+dr, nc=cc+dc;
+            if(!inb(nr,nc)||seen[nr][nc]) continue;
+            if(grid[nr][nc]===val){ seen[nr][nc]=true; q.push([nr,nc]); comp.push([nr,nc]); }
           }
         }
-        if(comp.length>=3) comp.forEach(([rr,cc])=>matched.add(rr+','+cc));
+        if(comp.length>=3) comp.forEach(function(p){ matched.add(p[0]+','+p[1]); });
       }
       return matched;
     }
     function hasAnyMoves(){
-      for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){
-        const here=grid[r][c];
-        const trySwap=(r2,c2)=>{ if(r2<0||r2>=rows||c2<0||c2>=cols) return false; const t=grid[r2][c2]; if(t===here) return false;
-          grid[r][c]=t; grid[r2][c2]=here; const ok=findMatches().size>0; grid[r][c]=here; grid[r2][c2]=t; return ok; };
+      for(var r=0;r<rows;r++) for(var c=0;c<cols;c++){
+        var here=grid[r][c];
+        var trySwap=function(r2,c2){
+          if(r2<0||r2>=rows||c2<0||c2>=cols) return false;
+          var t=grid[r2][c2]; if(t===here) return false;
+          grid[r][c]=t; grid[r2][c2]=here; var ok=findMatches().size>0; grid[r][c]=here; grid[r2][c2]=t; return ok;
+        };
         if(trySwap(r,c+1) || trySwap(r+1,c)) return true;
       }
       return false;
@@ -358,45 +384,44 @@
       busy=true; comboStep=0; comboTotal=0;
       playSfx('choice'); getCell(r1,c1).classList.remove('selected'); selected=null;
       swapValues(r1,c1,r2,c2); await delay(120);
-      let m=findMatches(); if(m.size===0){ swapValues(r1,c1,r2,c2); busy=false; return; }
+      var m=findMatches(); if(m.size===0){ swapValues(r1,c1,r2,c2); busy=false; return; }
       if(mode==='challenge'){ movesLeft--; updateHud(); }
       await resolveMatches(m); busy=false;
       if(!hasAnyMoves()){ reshuffle(); showToast('No moves — reshuffling'); }
     }
 
-    function delay(ms){ return new Promise(res=>setTimeout(res, ms*paceFactor())); }
+    function delay(ms){ return new Promise(function(res){ setTimeout(res, ms*paceFactor()); }); }
     function updateHud(){ movesEl.textContent=movesLeft; stageEl.textContent=currentStage; targetEl.textContent=targetScore; scoreEl.textContent=score; }
 
-    const SHOW_COMBO=false; // hard-off
+    var SHOW_COMBO=false;
     async function resolveMatches(matchedSet){
       if(cancelled) return;
       comboStep++;
-      if(SHOW_COMBO){ const groups=countGroupsFromSet(matchedSet); addCombo(groups); }
+      if(SHOW_COMBO){ /* combo表示は無効化中 */ }
 
-      matchedSet.forEach(k=>{ const [r,c]=k.split(',').map(Number); getCell(r,c).classList.add('matching'); });
+      matchedSet.forEach(function(k){ var p=k.split(','); var r=+p[0], c=+p[1]; getCell(r,c).classList.add('matching'); });
       await delay(260); if(cancelled) return;
-      matchedSet.forEach(k=>{ const [r,c]=k.split(',').map(Number); grid[r][c]=-1; setCellImage(r,c); });
+      matchedSet.forEach(function(k){ var p=k.split(','); var r=+p[0], c=+p[1]; grid[r][c]=-1; setCellImage(r,c); });
       playSfx('match');
 
-      const base=matchedSet.size*10; let add=base;
+      var base=matchedSet.size*10; var add=base;
       if(mode==='calm'){
-        const chainBonus = base * Math.max(0, comboStep-1) * 0.06;
-        const simultaneous = 0; // combo off => no text, but keep mild scoring if needed
-        add = Math.round(base + chainBonus + simultaneous);
+        var chainBonus = base * Math.max(0, comboStep-1) * 0.06;
+        add = Math.round(base + chainBonus);
       }
       score += add; updateHud();
 
-      for(let c=0;c<cols;c++){
-        let wr=rows-1;
-        for(let r=rows-1;r>=0;r--){ if(grid[r][c]!==-1){ grid[wr][c]=grid[r][c]; wr--; } }
-        for(let r=wr;r>=0;r--) grid[r][c]=-1;
+      for(var c=0;c<cols;c++){
+        var wr=rows-1;
+        for(var r=rows-1;r>=0;r--){ if(grid[r][c]!==-1){ grid[wr][c]=grid[r][c]; wr--; } }
+        for(r=wr;r>=0;r--) grid[r][c]=-1;
       }
       renderAll(); await delay(240); if(cancelled) return;
 
-      for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) if(grid[r][c]===-1){ grid[r][c]=randTileFor(r,c); setCellImage(r,c); }
+      for(var r=0;r<rows;r++) for(var c=0;c<cols;c++) if(grid[r][c]===-1){ grid[r][c]=randTileFor(r,c); setCellImage(r,c); }
       await delay(200); if(cancelled) return;
 
-      const more=findMatches();
+      var more=findMatches();
       if(more.size>0){ await resolveMatches(more); }
       else {
         comboStep=0; comboTotal=0;
@@ -407,112 +432,94 @@
       }
     }
 
-    function countGroupsFromSet(set){
-      const keys=[...set];
-      const coords=keys.map(k=>k.split(',').map(Number));
-      const n=coords.length; if(n===0) return 0;
-      const adj=Array.from({length:n},()=>[]);
-      for(let i=0;i<n;i++){
-        const [r1,c1]=coords[i];
-        for(let j=i+1;j<n;j++){
-          const [r2,c2]=coords[j];
-          if(Math.abs(r1-r2)+Math.abs(c1-c2)===1){ adj[i].push(j); adj[j].push(i); }
-        }
-      }
-      const seen=new Array(n).fill(false); let groups=0;
-      for(let i=0;i<n;i++) if(!seen[i]){
-        groups++; const q=[i]; seen[i]=true;
-        while(q.length){ const v=q.shift(); for(const w of adj[v]) if(!seen[w]){ seen[w]=true; q.push(w); } }
-      }
-      return groups;
-    }
-
-    let currentStage=1;
-    let unlocked=parseInt(localStorage.getItem('mmq_unlocked')||'1',10); if(!(unlocked>=1&&unlocked<=100)) unlocked=1;
-    let savedStage=parseInt(localStorage.getItem('mmq_currentStage')||String(unlocked),10); if(!(savedStage>=1&&savedStage<=unlocked)) savedStage=unlocked;
-    let targetScore=0, movesLeft=0;
-    function stageConfig(n){ const baseTarget=450, grow=50; const baseMoves=20, stepEvery=10, minMoves=15; const moves=Math.max(minMoves, baseMoves - Math.floor((n-1)/stepEvery)); const target=baseTarget + grow*(n-1); return {moves,target}; }
+    var currentStage=1;
+    var unlocked=parseInt(localStorage.getItem('mmq_unlocked')||'1',10); if(!(unlocked>=1&&unlocked<=100)) unlocked=1;
+    var savedStage=parseInt(localStorage.getItem('mmq_currentStage')||String(unlocked),10); if(!(savedStage>=1&&savedStage<=unlocked)) savedStage=unlocked;
+    var targetScore=0, movesLeft=0;
+    function stageConfig(n){ var baseTarget=450, grow=50; var baseMoves=20, stepEvery=10, minMoves=15; var moves=Math.max(minMoves, baseMoves - Math.floor((n-1)/stepEvery)); var target=baseTarget + grow*(n-1); return {moves:moves,target:target}; }
 
     function openStageSelect(){
-      const max=100; let gridHtml='';
-      for(let i=1;i<=max;i++){
-        const lock=i>unlocked, cleared=i<unlocked;
-        gridHtml+=`<div class="stage ${lock?'lock':''} ${cleared?'clear':''}" data-n="${i}">${i}</div>`;
+      var max=100, gridHtml='';
+      for(var i=1;i<=max;i++){
+        var lock=i>unlocked, cleared=i<unlocked;
+        gridHtml+='<div class="stage '+(lock?'lock':'')+' '+(cleared?'clear':'')+'" data-n="'+i+'">'+i+'</div>';
       }
-      showOverlay(`
-        <button class="close" id="closeOv">×</button>
-        <h2>Challenge — Stage Select</h2>
-        <div class="muted" style="margin:4px 0 8px">Choose a stage to play. Cleared stages are marked; locked stages unlock as you progress.</div>
-        <div class="stage-grid">${gridHtml}</div>`);
-      document.getElementById('closeOv').onclick=hideOverlay;
-      document.querySelectorAll('.stage').forEach(el=>{
-        el.onclick=()=>{ const n=+el.dataset.n; if(n>unlocked) return; hideOverlay(); startStage(n); };
-      });
+      showOverlay(
+        '<button class="close" id="closeOv">×</button>'+
+        '<h2>Challenge — Stage Select</h2>'+
+        '<div class="muted" style="margin:4px 0 8px">Choose a stage to play. Cleared stages are marked; locked stages unlock as you progress.</div>'+
+        '<div class="stage-grid">'+gridHtml+'</div>'
+      );
+      var closeOv=document.getElementById('closeOv'); if(closeOv) closeOv.onclick=hideOverlay;
+      var nodes=document.querySelectorAll('.stage'); for(var j=0;j<nodes.length;j++){
+        nodes[j].onclick=function(){ var n=+this.getAttribute('data-n'); if(n>unlocked) return; hideOverlay(); startStage(n); };
+      }
     }
 
     function startStage(n){
       mode='challenge'; setMode('challenge'); currentStage=n;
-      const cfg=stageConfig(n); targetScore=cfg.target; movesLeft=cfg.moves;
+      var cfg=stageConfig(n); targetScore=cfg.target; movesLeft=cfg.moves;
       startGame(); stageSelBtn.hidden=false; stageInfo.hidden=false; movesWrap.hidden=false;
       updateHud(); localStorage.setItem('mmq_currentStage', String(currentStage));
     }
 
     function onStageClear(){
       if(unlocked<currentStage+1){ unlocked=currentStage+1; localStorage.setItem('mmq_unlocked', String(unlocked)); }
-      showOverlay(`
-        <button class="close" id="closeOv">×</button>
-        <h2>Stage ${currentStage} — Cleared 🎉</h2>
-        <p class="muted">Score ${score} / Target ${targetScore}</p>
-        <div class="row" style="justify-content:center">
-          <button class="btn" id="next">Next</button>
-          <button class="btn" id="select">Stage Select</button>
-          <button class="btn" id="retry">Retry</button>
-        </div>`);
-      document.getElementById('closeOv').onclick=hideOverlay;
-      document.getElementById('next').onclick=()=>{ hideOverlay(); startStage(Math.min(100,currentStage+1)); };
-      document.getElementById('select').onclick=()=>{ openStageSelect(); };
-      document.getElementById('retry').onclick=()=>{ hideOverlay(); startStage(currentStage); };
+      showOverlay(
+        '<button class="close" id="closeOv">×</button>'+
+        '<h2>Stage '+currentStage+' — Cleared 🎉</h2>'+
+        '<p class="muted">Score '+score+' / Target '+targetScore+'</p>'+
+        '<div class="row" style="justify-content:center">'+
+          '<button class="btn" id="next">Next</button>'+
+          '<button class="btn" id="select">Stage Select</button>'+
+          '<button class="btn" id="retry">Retry</button>'+
+        '</div>'
+      );
+      var closeOv=document.getElementById('closeOv'); if(closeOv) closeOv.onclick=hideOverlay;
+      var next=document.getElementById('next'); if(next) next.onclick=function(){ hideOverlay(); startStage(Math.min(100,currentStage+1)); };
+      var sel=document.getElementById('select'); if(sel) sel.onclick=function(){ openStageSelect(); };
+      var retry=document.getElementById('retry'); if(retry) retry.onclick=function(){ hideOverlay(); startStage(currentStage); };
     }
 
     function onStageFail(){
-      showOverlay(`
-        <button class="close" id="close">×</button>
-        <h2>Stage ${currentStage} — Try again</h2>
-        <p class="muted">Score ${score} / Target ${targetScore}</p>
-        <div class="row" style="justify-content:center">
-          <button class="btn" id="retry">Retry</button>
-          <button class="btn" id="select">Stage Select</button>
-        </div>`);
-      document.getElementById('close').onclick=hideOverlay;
-      document.getElementById('retry').onclick=()=>{ hideOverlay(); startStage(currentStage); };
-      document.getElementById('select').onclick=()=>{ openStageSelect(); };
+      showOverlay(
+        '<button class="close" id="close">×</button>'+
+        '<h2>Stage '+currentStage+' — Try again</h2>'+
+        '<p class="muted">Score '+score+' / Target '+targetScore+'</p>'+
+        '<div class="row" style="justify-content:center">'+
+          '<button class="btn" id="retry">Retry</button>'+
+          '<button class="btn" id="select">Stage Select</button>'+
+        '</div>'
+      );
+      var close=document.getElementById('close'); if(close) close.onclick=hideOverlay;
+      var retry=document.getElementById('retry'); if(retry) retry.onclick=function(){ hideOverlay(); startStage(currentStage); };
+      var sel=document.getElementById('select'); if(sel) sel.onclick=function(){ openStageSelect(); };
     }
 
-    const overlay=document.getElementById('overlay'); const sheet=document.getElementById('sheet');
+    var overlay=document.getElementById('overlay'); var sheet=document.getElementById('sheet');
     function showOverlay(html){ sheet.innerHTML=html; overlay.classList.add('show'); }
     function hideOverlay(){ overlay.classList.remove('show'); sheet.innerHTML=''; }
 
     function showResumeDialog(){
-      const resumeStage = savedStage || unlocked || 1;
-      showOverlay(`
-        <button class="close" id="closeOv">×</button>
-        <h2>Challenge — Continue?</h2>
-        <p class="muted">Resume from your last unfinished stage, or start from Stage 1.</p>
-        <div class="row" style="justify-content:center">
-          <button class="btn" id="resume">Resume (Stage ${resumeStage})</button>
-          <button class="btn" id="fromStart">Start from Stage 1</button>
-        </div>`);
-      document.getElementById('closeOv').onclick=hideOverlay;
-      document.getElementById('resume').onclick=()=>{ hideOverlay(); startStage(resumeStage); };
-      document.getElementById('fromStart').onclick=()=>{ hideOverlay(); localStorage.setItem('mmq_currentStage','1'); startStage(1); };
+      var resumeStage = savedStage || unlocked || 1;
+      showOverlay(
+        '<button class="close" id="closeOv">×</button>'+
+        '<h2>Challenge — Continue?</h2>'+
+        '<p class="muted">Resume from your last unfinished stage, or start from Stage 1.</p>'+
+        '<div class="row" style="justify-content:center">'+
+          '<button class="btn" id="resume">Resume (Stage '+resumeStage+')</button>'+
+          '<button class="btn" id="fromStart">Start from Stage 1</button>'+
+        '</div>'
+      );
+      var closeOv=document.getElementById('closeOv'); if(closeOv) closeOv.onclick=hideOverlay;
+      var resume=document.getElementById('resume'); if(resume) resume.onclick=function(){ hideOverlay(); startStage(resumeStage); };
+      var fromStart=document.getElementById('fromStart'); if(fromStart) fromStart.onclick=function(){ hideOverlay(); localStorage.setItem('mmq_currentStage','1'); startStage(1); };
     }
 
     function startGame(){ startSec.style.display='none'; gameSec.style.display='block'; initGame(); updateAudioButtons(); syncVol(); fitBoard(); }
     function goToStart(){
-      // abort any running chains and stop all sounds
       cancelled=true; busy=false; selected=null; stopAllAudio();
       gameSec.style.display='none'; startSec.style.display='block'; statusEl.textContent='';
-      // clean combo text just in case
       if(comboEl){ comboEl.textContent=''; comboEl.classList.remove('show'); }
     }
 
@@ -523,81 +530,95 @@
 
     function startGameAuto(m){ if(m==='challenge'){ if(unlocked>1){ showResumeDialog(); } else { startStage(1); } } else { mode='calm'; setMode('calm'); startGame(); } }
 
-    backBtn.addEventListener('click',()=>{
-      showOverlay(`
-        <button class="close" id="closeOv">×</button>
-        <h2>Leave game?</h2>
-        <p class="muted">Current in-progress board will reset. Continue?</p>
-        <div class="row" style="justify-content:center">
-          <button class="btn" id="leave">Home</button>
-          <button class="btn" id="stay">Cancel</button>
-        </div>`);
-      document.getElementById('closeOv').onclick=hideOverlay;
-      document.getElementById('leave').onclick=()=>{ hideOverlay(); goToStart(); };
-      document.getElementById('stay').onclick=()=> hideOverlay();
-    });
-    restartBtn.addEventListener('click',()=> initGame());
-    stageSelBtn.addEventListener('click',()=> openStageSelect());
+    if(backBtn){
+      backBtn.addEventListener('click',function(){
+        showOverlay(
+          '<button class="close" id="closeOv">×</button>'+
+          '<h2>Leave game?</h2>'+
+          '<p class="muted">Current in-progress board will reset. Continue?</p>'+
+          '<div class="row" style="justify-content:center">'+
+            '<button class="btn" id="leave">Home</button>'+
+            '<button class="btn" id="stay">Cancel</button>'+
+          '</div>'
+        );
+        var closeOv=document.getElementById('closeOv'); if(closeOv) closeOv.onclick=hideOverlay;
+        var leave=document.getElementById('leave'); if(leave) leave.onclick=function(){ hideOverlay(); goToStart(); };
+        var stay=document.getElementById('stay'); if(stay) stay.onclick=function(){ hideOverlay(); };
+      });
+    }
+    if(restartBtn){ restartBtn.addEventListener('click',function(){ initGame(); }); }
+    if(stageSelBtn){ stageSelBtn.addEventListener('click',function(){ openStageSelect(); }); }
 
-    function showToast(text){ toastEl.textContent=text; toastEl.classList.add('show'); clearTimeout(showToast._t); showToast._t=setTimeout(()=>toastEl.classList.remove('show'),1600); }
+    function showToast(text){
+      toastEl.textContent=text; toastEl.classList.add('show');
+      clearTimeout(showToast._t);
+      showToast._t=setTimeout(function(){ toastEl.classList.remove('show'); },1600);
+    }
 
-    // Mobile-safe tile sizing: compute -> measure -> tighten until it fits
     function fitBoard(){
       try{
         if (gameSec.style.display !== 'block') return;
-        const rect = boardWrap.getBoundingClientRect();
-        const wrapW = rect.width || 0;
-        if (!wrapW || wrapW < 120) { requestAnimationFrame(fitBoard); return; }
+        var rect = boardWrap.getBoundingClientRect();
+        var wrapW = rect.width || 0;
+        if (!wrapW || wrapW < 120) { setTimeout(fitBoard, 16); return; }
 
-        const csBoard = getComputedStyle(boardEl);
-        const padL = parseFloat(csBoard.paddingLeft)||12;
-        const padR = parseFloat(csBoard.paddingRight)||12;
-        let gap = (wrapW < 520 ? 6 : 10);
-        const isDesktop = window.matchMedia('(min-width: 900px)').matches;
+        var csBoard = window.getComputedStyle(boardEl);
+        var padL = parseFloat(csBoard.paddingLeft)||12;
+        var padR = parseFloat(csBoard.paddingRight)||12;
+        var gap = (wrapW < 520 ? 6 : 10);
+        var isDesktop = window.matchMedia && window.matchMedia('(min-width: 900px)').matches;
 
-        let tile = isDesktop ? 64 : Math.floor((wrapW - padL - padR - (cols-1)*gap) / cols);
-        if (!Number.isFinite(tile)) tile = 48;
+        var tile = isDesktop ? 64 : Math.floor((wrapW - padL - padR - (cols-1)*gap) / cols);
+        if (!isFinite(tile)) tile = 48;
         tile = Math.max(32, Math.min(64, tile));
 
         document.documentElement.style.setProperty('--grid-gap', gap+'px');
 
-        // tighten until it really fits
-        const fits = () => {
-          const cs = getComputedStyle(boardEl);
-          const g = parseFloat(cs.gap)||gap;
-          const w = cols*tile + (cols-1)*g + padL + padR;
+        var fits = function(){
+          var cs = window.getComputedStyle(boardEl);
+          var g = parseFloat(cs.gap)||gap;
+          var w = cols*tile + (cols-1)*g + padL + padR;
           return w <= wrapW - 1;
         };
         while(!fits() && tile > 28){ tile--; }
 
         document.documentElement.style.setProperty('--tile', tile+'px');
-        boardEl.style.gridTemplateColumns = `repeat(${cols}, var(--tile))`;
+        boardEl.style.gridTemplateColumns = 'repeat('+cols+', var(--tile))';
       }catch(_){}
     }
 
-    // Preload
-    (function preload(){ TILE_IMAGES.concat(['assets/images/banner.png'+IMG_VER,'assets/images/welcome_cat.png'+IMG_VER]).forEach(src=>{ const im=new Image(); im.src=src; }); Object.values(SFX).forEach(a=>a.load()); pickNextBgm(); })();
+    (function preload(){
+      try{
+        TILE_IMAGES.concat(['assets/images/banner.png'+IMG_VER,'assets/images/welcome_cat.png'+IMG_VER])
+          .forEach(function(src){ var im=new Image(); im.src=src; });
+        Object.values(SFX).forEach(function(a){ a.load(); });
+        pickNextBgm();
+      }catch(_){}
+    })();
 
-    // Fallbacks for reload / bfcache
     window.addEventListener('resize', fitBoard, {passive:true});
-    window.addEventListener('load', () => {
+    window.addEventListener('load', function(){
       if (gameSec.style.display === 'block' && boardEl.children.length === 0) { initGame(); }
       fitBoard();
     }, {passive:true});
-    window.addEventListener('pageshow', () => {
+    window.addEventListener('pageshow', function(){
       if (gameSec.style.display === 'block' && boardEl.children.length === 0) { initGame(); }
       setTimeout(fitBoard, 60);
     }, {passive:true});
-    new ResizeObserver(() => fitBoard()).observe(boardWrap);
+    if (window.ResizeObserver && boardWrap){
+      new ResizeObserver(function(){ fitBoard(); }).observe(boardWrap);
+    }
 
     // Auto-show affiliate if href is real
-    (function(){ const sp=document.getElementById('sponsor'); const a=sp?.querySelector('a'); if(sp && a && a.href && !a.href.endsWith('#')) sp.hidden=false; })();
+    if(sponsor && affiLink && affiLink.getAttribute('href') && affiLink.getAttribute('href')!=='#'){
+      sponsor.hidden=false;
+    }
 
-    // Combo API kept for potential future, but disabled
-    function addCombo(_groups){ /* disabled */ }
+    // keep API surface
+    function addCombo(){ /* disabled */ }
 
-    let targetScore=0, movesLeft=0;
   })();
   </script>
 </body>
 </html>
+
