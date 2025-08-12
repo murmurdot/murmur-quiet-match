@@ -20,7 +20,6 @@
     .wrap{max-width:1120px;margin:0 auto;padding:12px}
     .card{background:#fff;border:1px solid var(--line);border-radius:24px;box-shadow:var(--shadow)}
 
-    /* Header */
     header{display:flex;align-items:center;justify-content:center;gap:16px;padding:18px 12px 8px}
     header img{height:64px;width:auto;cursor:pointer}
     .brand-fallback{font-weight:700;letter-spacing:.02em;opacity:.9;text-align:center;padding:8px 12px;border:1px dashed var(--line);border-radius:12px;background:#fff}
@@ -51,17 +50,12 @@
     }
     .linkbtn .line1{display:block;font-weight:800}
     .linkbtn .line2{display:block;font-weight:600;opacity:.9;font-size:.85em;line-height:1.2;margin-top:1px}
-
-    /* YouTube (soft blue) */
     a.linkbtn, button.linkbtn{ background:var(--yt-bg); border:1px solid var(--yt-border); color:var(--yt-text); }
     a.linkbtn:hover, button.linkbtn:hover{ transform:translateY(-1px); background:var(--yt-bg-hov); border-color:var(--yt-border-hov); color:var(--yt-text-hov); }
     a.linkbtn:link, a.linkbtn:visited{ color:var(--yt-text); }
-
-    /* Start button (white + gray border) */
     button.linkbtn.btn-start{ background:var(--start-bg); border:1px solid var(--start-border); color:#111; box-shadow:0 2px 6px rgba(0,0,0,.05); }
     button.linkbtn.btn-start:hover{ background:var(--start-bg-hov); border-color:var(--start-border-hov); }
 
-    /* Cat */
     .cat-small{width:var(--cat-w);height:auto;opacity:.98}
 
     /* GAME */
@@ -81,7 +75,7 @@
     .footer{padding:10px 16px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
     .muted{opacity:.65}
 
-    /* Combo badge (center) */
+    /* Combo (center) — can be disabled via SHOW_COMBO=false */
     #combo{position:absolute;left:50%;top:45%;transform:translate(-50%,-50%) scale(.98);background:#111;color:#fff;padding:10px 14px;border-radius:14px;font-weight:800;font-size:1.05rem;opacity:0;transition:opacity .22s, transform .28s;box-shadow:0 18px 40px rgba(0,0,0,.18);z-index:90;pointer-events:none}
     #combo.show{opacity:1;transform:translate(-50%,-50%) scale(1.02)}
 
@@ -95,7 +89,7 @@
     .stage.lock{opacity:.4;cursor:not-allowed}
     .stage.clear{border-color:#a7f3d0;background:#ecfdf5}
 
-    /* Affiliate (game screen only; empty → hidden) */
+    /* Affiliate slot (game only; empty → hidden) */
     .adslot{width:100%;display:flex;justify-content:center;margin:8px 0}
     .adslot:empty{display:none}
     .adslot .adbox{min-width:220px;max-width:320px;width:100%;border:1px dashed var(--line);border-radius:12px;padding:8px 10px;text-align:center;background:#fff}
@@ -193,6 +187,13 @@
 
   <script>
   (function(){ 'use strict';
+    /* ===== Router (hash) =====
+       #home / #calm / #challenge をURLに保持 → リロードしてもその画面を復元
+    */
+    const route = ()=> (location.hash.replace('#','')||'home');
+    const goto = (r)=>{ if(route()!==r){ location.hash='#'+r; } else { renderRoute(); } };
+    window.addEventListener('hashchange', renderRoute);
+
     /* ------------ Assets & Audio ------------ */
     const IMG_VER='?v=20250811j';
     const TILE_IMAGES=[
@@ -233,17 +234,9 @@
     const overlay=document.getElementById('overlay'); const sheet=document.getElementById('sheet');
     const _bn=document.getElementById('bannerImg');
 
-    /* ---- Session-persisted UI state (per tab) ---- */
-    const SS_VIEW='mmq_view_sess';   // 'home' | 'game'
-    const SS_MODE='mmq_mode_sess';   // 'calm' | 'challenge'
-    function saveView(v){ try{ sessionStorage.setItem(SS_VIEW, v);}catch(e){} }
-    function saveMode(m){ try{ sessionStorage.setItem(SS_MODE, m);}catch(e){} }
-    function loadView(){ try{ return sessionStorage.getItem(SS_VIEW)||'home'; }catch(e){ return 'home'; } }
-    function loadMode(){ try{ return sessionStorage.getItem(SS_MODE)||'calm'; }catch(e){ return 'calm'; } }
-
-    /* Header: fallback + Home nav */
+    /* ------------ Header actions ------------ */
     _bn?.addEventListener('error',()=>{ _bn.style.display='none'; const fb=document.getElementById('brandFallback'); if(fb) fb.hidden=false; });
-    _bn?.addEventListener('click',()=> goToStart());
+    _bn?.addEventListener('click',()=> goto('home'));
 
     /* ------------ Audio controls ------------ */
     function pickNextBgm(){let i; do{i=Math.floor(Math.random()*BGMS.length);}while(i===currentBgm&&BGMS.length>1); currentBgm=i; music.src=BGMS[i];}
@@ -255,35 +248,23 @@
     function syncVol(){ if(music) music.volume=Number(vol2?.value||'0.7'); }
     musicBtn?.addEventListener('click',()=> musicEnabled? stopMusic(): startMusic());
     sfxBtn?.addEventListener('click',()=>{ sfxEnabled=!sfxEnabled; updateAudioButtons(); });
-    vol2?.addEventListener('input',syncVol);
     document.addEventListener('visibilitychange',()=>{ if(document.hidden){ stopMusic(); } });
 
-    /* ------------ Start / Mode / Pace ------------ */
+    /* ------------ Mode / Pace ------------ */
     let mode='calm', pace='slow';
-    function setMode(m){ mode=m; saveMode(m);
-      if(modeSeg){ [...modeSeg.querySelectorAll('button')].forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.mode===mode))); }
-    }
+    function setMode(m){ mode=m; if(modeSeg){ [...modeSeg.querySelectorAll('button')].forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.mode===mode))); } }
     modeSeg?.addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; setMode(b.dataset.mode) });
     function setPaceInGame(p){ pace=p; if(paceSeg2){ [...paceSeg2.querySelectorAll('button')].forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.pace===pace))); } }
     paceSeg2?.addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; setPaceInGame(b.dataset.pace) });
     function paceFactor(){ return pace==='slow'?1.8 : pace==='normal'?1.3 : 1.05; }
 
     startBtn?.addEventListener('click',()=>{
-      const ref=document.referrer||'';
-      const isYT=/youtube\.com|youtu\.be/.test(ref) || new URLSearchParams(location.search).get('yt')==='1';
-      if(isYT){
-        const url=new URL(location.href);
-        url.searchParams.set('play','1');
-        url.searchParams.set('mode',mode);
-        window.open(url.toString(),'_blank');
-      } else {
-        startGameAuto(mode);
-      }
+      // まずルートを切り替える（確実にCalm/Challengeへ）
+      goto(mode==='challenge' ? 'challenge' : 'calm');
     });
 
     /* ------------ Board State ------------ */
     const rows=8, cols=8; let grid=[], selected=null, busy=false, score=0, comboStep=0, comboTotal=0;
-
     function createBoardDom(){
       boardEl.style.gridTemplateColumns=`repeat(${cols}, var(--tile))`;
       boardEl.innerHTML='';
@@ -295,10 +276,7 @@
       }
     }
     function getCell(r,c){return boardEl.children[r*cols+c]}
-    function setCellImage(r,c){
-      const idx=grid[r][c]; const cell=getCell(r,c); const img=cell.querySelector('img');
-      if(idx>=0){img.src=TILE_IMAGES[idx]; cell.style.visibility='visible'} else {img.removeAttribute('src'); cell.style.visibility='hidden'}
-    }
+    function setCellImage(r,c){const idx=grid[r][c]; const cell=getCell(r,c); const img=cell.querySelector('img'); if(idx>=0){img.src=TILE_IMAGES[idx]; cell.style.visibility='visible'} else {img.removeAttribute('src'); cell.style.visibility='hidden'}}
     function renderAll(){for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) setCellImage(r,c)}
     function randInt(n){return Math.floor(Math.random()*n)}
     function randTileFor(r,c){
@@ -341,12 +319,10 @@
     }
     function swapValues(a,b,c,d){const t=grid[a][b]; grid[a][b]=grid[c][d]; grid[c][d]=t; setCellImage(a,b); setCellImage(c,d)}
     function findMatches(){
-      const matched=new Set();
-      const seen=Array.from({length:rows},()=>Array(cols).fill(false));
+      const matched=new Set(); const seen=Array.from({length:rows},()=>Array(cols).fill(false));
       const inb=(r,c)=>r>=0&&r<rows&&c>=0&&c<cols; const dirs=[[1,0],[-1,0],[0,1],[0,-1]];
       for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){
-        if(seen[r][c]) continue; const val=grid[r][c];
-        if(val===-1){seen[r][c]=true; continue;}
+        if(seen[r][c]) continue; const val=grid[r][c]; if(val===-1){seen[r][c]=true; continue;}
         const q=[[r,c]]; seen[r][c]=true; const comp=[[r,c]];
         while(q.length){
           const [rr,cc]=q.shift();
@@ -384,6 +360,26 @@
 
     function delay(ms){ return new Promise(res=>setTimeout(res, ms*paceFactor())); }
     function updateHud(){ movesEl.textContent=movesLeft; stageEl.textContent=currentStage; targetEl.textContent=targetScore; scoreEl.textContent=score; }
+
+    const SHOW_COMBO=false; // ★表示したくないならfalse
+    let comboHideTimer=null;
+    function addCombo(groups){
+      if(!SHOW_COMBO){ comboEl.classList.remove('show'); comboEl.textContent=''; return; }
+      const g=Math.max(1, Number(groups)||1);
+      comboTotal+=g;
+      const show=(comboStep>=2)||(comboStep===1&&g>=2);
+      if(show){
+        const tail=(g>=2)?('×'+g):'';
+        comboEl.textContent='Combo '+comboStep+tail;
+        comboEl.classList.add('show');
+        if(comboHideTimer) clearTimeout(comboHideTimer);
+        const BASE=420, PER=110, MAX=900;
+        let dur=(BASE+Math.max(0,comboStep-1)*PER)*paceFactor(); if(dur>MAX) dur=MAX;
+        comboHideTimer=setTimeout(()=>comboEl.classList.remove('show'),dur);
+      }else{
+        comboEl.classList.remove('show'); comboEl.textContent='';
+      }
+    }
 
     async function resolveMatches(matchedSet, sid){
       if(!isActive(sid)) return;
@@ -431,44 +427,13 @@
     }
 
     function countGroupsFromSet(set){
-      const keys=[...set];
-      const coords=keys.map(k=>k.split(',').map(Number));
-      const n=coords.length; if(n===0) return 0;
+      const keys=[...set]; const coords=keys.map(k=>k.split(',').map(Number)); const n=coords.length; if(n===0) return 0;
       const adj=Array.from({length:n},()=>[]);
-      for(let i=0;i<n;i++){
-        const [r1,c1]=coords[i];
-        for(let j=i+1;j<n;j++){
-          const [r2,c2]=coords[j];
-          if(Math.abs(r1-r2)+Math.abs(c1-c2)===1){ adj[i].push(j); adj[j].push(i); }
-        }
-      }
+      for(let i=0;i<n;i++){ const [r1,c1]=coords[i];
+        for(let j=i+1;j<n;j++){ const [r2,c2]=coords[j]; if(Math.abs(r1-r2)+Math.abs(c1-c2)===1){ adj[i].push(j); adj[j].push(i); } } }
       const seen=new Array(n).fill(false); let groups=0;
-      for(let i=0;i<n;i++) if(!seen[i]){
-        groups++; const q=[i]; seen[i]=true;
-        while(q.length){ const v=q.shift(); for(const w of adj[v]) if(!seen[w]){ seen[w]=true; q.push(w); } }
-      }
+      for(let i=0;i<n;i++) if(!seen[i]){ groups++; const q=[i]; seen[i]=true; while(q.length){ const v=q.shift(); for(const w of adj[v]) if(!seen[w]){ seen[w]=true; q.push(w); } } }
       return groups;
-    }
-
-    /* ------------ Combo display ------------ */
-    let comboHideTimer=null;
-    function addCombo(groups){
-      const g=Math.max(1, Number(groups)||1);
-      comboTotal+=g;
-      const show=(comboStep>=2)||(comboStep===1&&g>=2);
-      if(show){
-        const tail=(g>=2)?('×'+g):'';
-        comboEl.textContent='Combo '+comboStep+tail;
-        comboEl.classList.add('show');
-        if(comboHideTimer) clearTimeout(comboHideTimer);
-        const BASE=420, PER=110, MAX=900;
-        let dur=(BASE+Math.max(0,comboStep-1)*PER)*paceFactor();
-        if(dur>MAX) dur=MAX;
-        comboHideTimer=setTimeout(()=>comboEl.classList.remove('show'),dur);
-      }else{
-        comboEl.classList.remove('show');
-        comboEl.textContent='';
-      }
     }
 
     /* ------------ Challenge ------------ */
@@ -496,7 +461,8 @@
     }
 
     function startStage(n){
-      setMode('challenge'); currentStage=n;
+      mode='challenge';
+      currentStage=n;
       const cfg=stageConfig(n); targetScore=cfg.target; movesLeft=cfg.moves;
       startGame(); stageSelBtn.hidden=false; stageInfo.hidden=false; movesWrap.hidden=false;
       updateHud(); localStorage.setItem('mmq_currentStage', String(currentStage));
@@ -539,30 +505,19 @@
 
     /* ------------ Lifecycle ------------ */
     function startGame(){
-      startSec.style.display='none'; gameSec.style.display='block'; saveView('game');
-      sessionId++; // cancel pending chains from previous game
+      startSec.style.display='none'; gameSec.style.display='block';
+      sessionId++; // cancel pending chains
       initGame(); updateAudioButtons(); syncVol(); fitBoard();
     }
     function goToStart(){
-      selected=null; busy=false; gameSec.style.display='none'; startSec.style.display='block'; statusEl.textContent=''; saveView('home');
-      stopMusic();
-      // force-stop any sfx and pending chains
-      sessionId++;
-      Object.values(SFX).forEach(a=>{ try{a.pause(); a.currentTime=0;}catch(e){} });
+      selected=null; busy=false; gameSec.style.display='none'; startSec.style.display='block'; statusEl.textContent='';
+      stopMusic(); sessionId++; Object.values(SFX).forEach(a=>{ try{a.pause(); a.currentTime=0;}catch(e){} });
       comboEl.classList.remove('show'); comboEl.textContent='';
+      // Home画面のモード初期表示はCalmに戻す（UIの混乱防止）
+      setMode('calm');
     }
 
     function initGame(){ score=0; selected=null; busy=false; comboStep=0; comboTotal=0; createBoardDom(); generateInitialGrid(); renderAll(); fitBoard(); }
-
-    function startGameAuto(m){
-      setMode(m);
-      if(m==='challenge'){
-        const resume = parseInt(localStorage.getItem('mmq_currentStage')||'1',10);
-        startStage(resume>=1?resume:1); // 直開始（リロードでそのままChallengeへ）
-      } else {
-        startGame();
-      }
-    }
 
     backBtn.addEventListener('click',()=>{
       showOverlay(`
@@ -574,7 +529,7 @@
           <button class="btn" id="stay">Cancel</button>
         </div>`);
       document.getElementById('closeOv').onclick=hideOverlay;
-      document.getElementById('leave').onclick=()=>{ hideOverlay(); goToStart(); };
+      document.getElementById('leave').onclick=()=>{ hideOverlay(); goto('home'); };
       document.getElementById('stay').onclick=()=> hideOverlay();
     });
     restartBtn.addEventListener('click',()=> initGame());
@@ -587,51 +542,63 @@
         const rect = boardWrap.getBoundingClientRect();
         const wrapW = rect.width || 0;
         if (!wrapW || wrapW < 120) { requestAnimationFrame(fitBoard); return; }
-
         const inner = Math.max(0, wrapW - 28);
         let gap = inner < 520 ? 6 : 10;
         const pad = 24;
         let tile = Math.floor((inner - pad - (cols-1)*gap) / cols);
-
         const isDesktop = window.matchMedia('(min-width: 900px)').matches;
         if (isDesktop) { tile = 64; gap = 10; }
         if (!Number.isFinite(tile)) tile = 48;
         tile = Math.max(36, Math.min(64, tile));
-
         document.documentElement.style.setProperty('--tile', tile+'px');
         document.documentElement.style.setProperty('--grid-gap', gap+'px');
         boardEl.style.gridTemplateColumns = `repeat(${cols}, var(--tile))`;
       }catch(e){}
     }
 
-    /* ------------ Boot: restore last view/mode or ?play ------------ */
-    let booted=false;
-    function boot(){
-      if(booted) return; booted=true;
-      try{
-        const p=new URLSearchParams(location.search);
-        if(p.get('play')==='1'){
-          const m = p.get('mode') || loadMode() || 'calm';
-          startGameAuto(m);
-          return;
-        }
-        const savedView = loadView();      // 'home' | 'game'
-        const savedMode = loadMode();      // 'calm' | 'challenge'
-        if(savedView === 'game'){
-          startGameAuto(savedMode);        // 直でそのモードへ
+    /* ------------ Route rendering ------------ */
+    function renderRoute(){
+      hideOverlay(); // 画面切替時は必ずモーダルを閉じる
+      const r = route();
+      if(r==='calm'){
+        setMode('calm');
+        startGame();
+      }else if(r==='challenge'){
+        setMode('challenge');
+        if(unlocked>1){
+          // 直開始ではなく、再開/最初からを確認
+          showOverlay(`
+            <button class="close" id="closeOv">×</button>
+            <h2>Challenge — Continue?</h2>
+            <p class="muted">Resume from your last unfinished stage, or start from Stage 1.</p>
+            <div class="row" style="justify-content:center">
+              <button class="btn" id="resume">Resume (Stage ${savedStage||1})</button>
+              <button class="btn" id="fromStart">Start from Stage 1</button>
+            </div>`);
+          document.getElementById('closeOv').onclick=()=>{ goto('home'); }; // 閉じたらHomeへ
+          document.getElementById('resume').onclick=()=>{ hideOverlay(); startStage(savedStage||1); };
+          document.getElementById('fromStart').onclick=()=>{ hideOverlay(); localStorage.setItem('mmq_currentStage','1'); startStage(1); };
         }else{
-          goToStart();                     // Homeのまま
-          setMode(savedMode);              // HomeでもモードUIは復元
+          startStage(1);
         }
-      }catch(e){
+      }else{
         goToStart();
       }
     }
 
+    /* ------------ Boot ------------ */
+    // ?play=1&mode=challenge もサポート（ハッシュに変換）
+    (function boot(){
+      const p=new URLSearchParams(location.search);
+      if(p.get('play')==='1'){
+        const m = (p.get('mode')==='challenge')?'challenge':'calm';
+        location.hash='#'+m;
+      }
+      renderRoute();
+    })();
+
     /* ------------ Preload & Events ------------ */
     (function preload(){ TILE_IMAGES.concat(['assets/images/banner.png'+IMG_VER,'assets/images/welcome_cat.png'+IMG_VER]).forEach(src=>{ const im=new Image(); im.src=src; }); Object.values(SFX).forEach(a=>a.load()); })();
-
-    document.addEventListener('DOMContentLoaded', boot);
     window.addEventListener('resize', fitBoard, {passive:true});
     window.addEventListener('orientationchange', ()=> setTimeout(fitBoard, 60), {passive:true});
     window.addEventListener('pageshow', (e)=>{ if(e.persisted){ fitBoard(); } }, {passive:true});
@@ -640,3 +607,4 @@
   </script>
 </body>
 </html>
+
