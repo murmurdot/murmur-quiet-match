@@ -2,19 +2,19 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>murmur — quiet match</title>
   <meta name="description" content="Calm endless mode & stage-based challenge. Minimal café-vibe match-3 with sweets." />
   <style>
     :root{
       --bg:#fafafa; --ink:#1a1a1a; --soft:#ececec; --line:#e7e7e7; --muted:#6b7280; --tile:64px; --shadow:0 10px 30px rgba(0,0,0,.08);
-      /* ここを触れば配色だけ簡単に調整できる */
-      --yt-bg:#e1ebff;     /* YouTubeボタンの常時背景（淡い水色） */
-      --yt-border:#9fb8ff; /* YouTubeボタンの枠 */
-      --yt-text:#0b3d91;   /* YouTubeボタンの文字色 */
+      --yt-bg:#e1ebff; --yt-border:#9fb8ff; --yt-text:#0b3d91;
       --yt-bg-hov:#d1e0ff; --yt-border-hov:#86a8ff; --yt-text-hov:#09306f;
       --start-border:#d1d5db; --start-border-hov:#cbd5e1; --start-bg:#fff; --start-bg-hov:#f7f7f7;
-      --cat-w:260px; /* 猫さんの幅。大きければ 220px などに */
+      --cat-w:260px;
     }
     *{box-sizing:border-box}
     html,body{height:100%}
@@ -22,7 +22,7 @@
     .wrap{max-width:1120px;margin:0 auto;padding:12px}
     .card{background:#fff;border:1px solid var(--line);border-radius:24px;box-shadow:var(--shadow)}
 
-    /* ヘッダー：バナーのみ */
+    /* ヘッダー：バナーのみ（画像欠け時は文字フォールバック） */
     header{display:flex;align-items:center;justify-content:center;gap:16px;padding:18px 12px 8px}
     header img{height:64px;width:auto}
     .brand-fallback{font-weight:700;letter-spacing:.02em;opacity:.9;text-align:center;padding:8px 12px;border:1px dashed var(--line);border-radius:12px;background:#fff}
@@ -43,7 +43,7 @@
     .note{color:#444;font-size:.92rem;line-height:1.65;text-align:left;max-width:860px;margin:0 auto}
     .note small{display:block;color:#666;margin-top:6px;text-align:center}
 
-    /* リンク風ボタン（YouTube/Startの土台） */
+    /* リンク風ボタン（基礎） */
     a.linkbtn, button.linkbtn{
       appearance:none; -webkit-appearance:none;
       display:inline-flex; align-items:center; gap:8px;
@@ -51,32 +51,14 @@
       font-weight:700; box-shadow:0 2px 8px rgba(0,0,0,.06);
       transition:background .2s, border-color .2s, color .2s, transform .06s;
     }
-    /* YouTubeボタン（常時うっすら水色） */
-    a.linkbtn, button.linkbtn{
-      background:var(--yt-bg);
-      border:1px solid var(--yt-border);
-      color:var(--yt-text);
-    }
-    a.linkbtn:hover, button.linkbtn:hover{
-      transform:translateY(-1px);
-      background:var(--yt-bg-hov);
-      border-color:var(--yt-border-hov);
-      color:var(--yt-text-hov);
-    }
-    /* 訪問済み色ぶれ防止（<a>のみ） */
+    /* デフォ：YouTubeボタン（淡い水色） */
+    a.linkbtn, button.linkbtn{ background:var(--yt-bg); border:1px solid var(--yt-border); color:var(--yt-text); }
+    a.linkbtn:hover, button.linkbtn:hover{ transform:translateY(-1px); background:var(--yt-bg-hov); border-color:var(--yt-border-hov); color:var(--yt-text-hov); }
     a.linkbtn:link, a.linkbtn:visited{ color:var(--yt-text); }
 
-    /* Startボタン（白＋グレー枠で常時ボタン感） */
-    button.linkbtn.btn-start{
-      background:var(--start-bg);
-      border:1px solid var(--start-border);
-      color:#111;
-      box-shadow:0 2px 6px rgba(0,0,0,.05);
-    }
-    button.linkbtn.btn-start:hover{
-      background:var(--start-bg-hov);
-      border-color:var(--start-border-hov);
-    }
+    /* Startボタン：白＋グレー枠（常時ボタン感） */
+    button.linkbtn.btn-start{ background:var(--start-bg); border:1px solid var(--start-border); color:#111; box-shadow:0 2px 6px rgba(0,0,0,.05); }
+    button.linkbtn.btn-start:hover{ background:var(--start-bg-hov); border-color:var(--start-border-hov); }
 
     /* トップの猫アイコン */
     .cat-small{width:var(--cat-w);height:auto;opacity:.98}
@@ -101,24 +83,19 @@
     .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;background:#111;color:#fff;padding:10px 14px;border-radius:999px;opacity:0;transition:opacity .2s,transform .2s;pointer-events:none;z-index:60}
     .toast.show{opacity:1;transform:translateX(-50%) translateY(-3px)}
 
-    /* Combo — single-line (front, center) */
-    #combo{position:absolute;left:50%;top:45%;transform:translate(-50%,-50%) scale(.98);background:#111;color:#fff;padding:10px 14px;border-radius:14px;font-weight:800;font-size:1.05rem;opacity:0;transition:opacity .22s, transform .28s;box-shadow:0 18px 40px rgba(0,0,0,.18);z-index:9999;pointer-events:none}
-
-    /* Overlay */
-    .overlay{position:fixed;inset:0;background:rgba(17,24,39,.46);display:none;align-items:center;justify-content:center;z-index:50}
-    .overlay.show{display:flex}
-    .sheet{position:relative;background:#fff;border-radius:20px;box-shadow:0 30px 80px rgba(0,0,0,.2);width:min(92vw,760px);padding:18px;text-align:center}
-    .close{position:absolute;right:10px;top:10px;width:28px;height:28px;border-radius:999px;background:#ffffffcc;border:1px solid #e5e7eb;display:grid;place-items:center;cursor:pointer}
-    .stage-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(56px,1fr));gap:8px;max-height:min(60vh,520px);overflow:auto;padding:8px}
-    .stage{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:10px 0;text-align:center;cursor:pointer}
-    .stage.lock{opacity:.4;cursor:not-allowed}
-    .stage.clear{border-color:#a7f3d0;background:#ecfdf5}
+    /* 小画面の基本しぼり（保険） */
+    @media (max-width: 480px){
+      :root{ --tile:44px; }
+      #board{ gap:6px; }
+      .cat-small{ width:200px; }
+      .top{ flex-direction:column; align-items:stretch; gap:8px; }
+    }
   </style>
 </head>
 <body>
   <!-- ヘッダー：バナーのみ（画像欠け時はテキスト表示） -->
   <header class="wrap" style="justify-content:center">
-    <img id="bannerImg" src="assets/images/banner.png?v=20250811j" alt="murmur banner" />
+    <img id="bannerImg" src="assets/images/banner.png?v=20250812c" alt="murmur banner" />
     <div id="brandFallback" class="brand-fallback" hidden>murmur. relaxing games — quiet match</div>
   </header>
 
@@ -136,7 +113,11 @@
       </div>
 
       <div class="row">
-        <button class="linkbtn btn-start" id="startBtn"><strong>Start</strong></button>
+        <!-- Startはインラインstyleで固定（最強） -->
+        <button class="linkbtn btn-start" id="startBtn"
+          style="background:#fff !important;border:1px solid #d1d5db !important;color:#111 !important;box-shadow:0 2px 6px rgba(0,0,0,.05) !important">
+          <strong>Start</strong>
+        </button>
       </div>
 
       <div class="note">
@@ -151,8 +132,13 @@
       </div>
 
       <div class="row">
-        <a class="linkbtn" href="https://www.youtube.com/channel/UCxXav6WmZ-EhWB3zbIRxFMg" target="_blank" rel="noopener" title="murmur. on YouTube">murmur. on YouTube</a>
-        <img class="cat-small" src="assets/images/welcome_cat.png?v=20250811j" alt="cat" />
+        <!-- YouTubeもインラインstyleで固定（トップ） -->
+        <a class="linkbtn" href="https://www.youtube.com/channel/UCxXav6WmZ-EhWB3zbIRxFMg"
+           target="_blank" rel="noopener" title="murmur. on YouTube"
+           style="background:#e1ebff !important;border:1px solid #9fb8ff !important;color:#0b3d91 !important">
+          murmur. on YouTube
+        </a>
+        <img class="cat-small" src="assets/images/welcome_cat.png?v=20250812c" alt="cat" />
       </div>
     </div>
   </section>
@@ -160,7 +146,12 @@
   <!-- GAME -->
   <section id="game" class="wrap card" aria-live="polite">
     <div class="ytbar row" style="justify-content:center;padding:10px 0 0;">
-      <a class="linkbtn" href="https://www.youtube.com/channel/UCxXav6WmZ-EhWB3zbIRxFMg" target="_blank" rel="noopener" title="murmur. on YouTube">murmur. on YouTube</a>
+      <!-- YouTubeもインラインstyleで固定（ゲーム画面） -->
+      <a class="linkbtn" href="https://www.youtube.com/channel/UCxXav6WmZ-EhWB3zbIRxFMg"
+         target="_blank" rel="noopener" title="murmur. on YouTube"
+         style="background:#e1ebff !important;border:1px solid #9fb8ff !important;color:#0b3d91 !important">
+        murmur. on YouTube
+      </a>
     </div>
 
     <div class="top">
@@ -200,8 +191,13 @@
 
   <script>
   (function(){ 'use strict';
+    // ---- もし過去にSW入れてたら無効化（無ければ何も起きない） ----
+    if ('serviceWorker' in navigator) {
+      try { navigator.serviceWorker.getRegistrations().then(rs => rs.forEach(r => r.unregister())); } catch(e){}
+    }
+
     // ------------ Assets & Audio ------------
-    const IMG_VER='?v=20250811j';
+    const IMG_VER='?v=20250812c';
     const TILE_IMAGES=[
       'assets/images/lemon_soda_tile.png'+IMG_VER,
       'assets/images/cafelatte_tile.png'+IMG_VER,
@@ -213,7 +209,12 @@
     const SFX={choice:new Audio('assets/audio/choice.mp3'),match:new Audio('assets/audio/match.mp3')};
     Object.values(SFX).forEach(a=>a.preload='auto');
     const BGMS=['assets/audio/match_game_bgm_1.mp3','assets/audio/match_game_bgm_2.mp3','assets/audio/match_game_bgm_3.mp3','assets/audio/match_game_bgm_4.mp3','assets/audio/match_game_bgm_5.mp3'];
-    let music=new Audio(); music.loop=false; let currentBgm=-1; let musicEnabled=false, sfxEnabled=true;
+    let music=new Audio(); music.loop=false; let currentBgm=-1; let musicEnabled=false, sfxEnabled=true; let userInteracted=false;
+    function pickNextBgm(){let i;do{i=Math.floor(Math.random()*BGMS.length);}while(i===currentBgm&&BGMS.length>1);currentBgm=i;music.src=BGMS[i];}
+    function startMusic(){if(!musicEnabled){musicEnabled=true;pickNextBgm();music.play().catch(()=>{});}updateAudioButtons();syncVol();}
+    function stopMusic(){musicEnabled=false;music.pause();updateAudioButtons();}
+    music.addEventListener('ended',()=>{if(musicEnabled){pickNextBgm();music.play().catch(()=>{});}});
+    function playSfx(name){if(!sfxEnabled) return; try{const a=SFX[name]; a.currentTime=0; a.play().catch(()=>{});}catch(e){}}
 
     // ------------ DOM ------------
     const startSec=document.getElementById('start');
@@ -238,28 +239,17 @@
     const stageSelBtn=document.getElementById('stageSelectBtn');
     const backBtn=document.getElementById('backBtn');
 
-    // ------------ Audio controls ------------
-    let currentBgm=-1, userInteracted=false;
-    function pickNextBgm(){let i; do{i=Math.floor(Math.random()*BGMS.length);}while(i===currentBgm&&BGMS.length>1); currentBgm=i; music.src=BGMS[i];}
-    function startMusic(){ if(!musicEnabled){ musicEnabled=true; pickNextBgm(); music.play().catch(()=>{});} updateAudioButtons(); syncVol(); }
-    function stopMusic(){ musicEnabled=false; music.pause(); updateAudioButtons(); }
-    music.addEventListener('ended',()=>{ if(musicEnabled){ pickNextBgm(); music.play().catch(()=>{});} });
-    function playSfx(name){ try{ const a=SFX[name]; a.currentTime=0; a.play().catch(()=>{});}catch(e){} }
-    function updateAudioButtons(){ const s=(btn,on,l)=>{ if(!btn) return; btn.setAttribute('aria-pressed',String(on)); btn.textContent=l+(on?': On':': Off');}; s(musicBtn,musicEnabled,'Music'); s(sfxBtn,sfxEnabled,'SFX'); }
-    function syncVol(){ if(music) music.volume=Number(vol2?.value||'0.7'); }
-    musicBtn?.addEventListener('click',()=> musicEnabled? stopMusic(): startMusic());
-    sfxBtn?.addEventListener('click',()=>{ sfxEnabled=!sfxEnabled; updateAudioButtons(); showToast('SFX '+(sfxEnabled?'On':'Off')); });
-    vol2?.addEventListener('input',syncVol);
-    document.addEventListener('pointerdown',()=>{ userInteracted=true });
-
-    // ------------ Start/Mode/Pace ------------
-    let mode='calm', pace='slow';
+    // ------------ Start mode / Pace ------------
+    let mode='calm';
     function setMode(m){ mode=m; if(modeSeg){ [...modeSeg.querySelectorAll('button')].forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.mode===mode))); } }
     modeSeg?.addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; setMode(b.dataset.mode) });
+
+    let pace='slow';
     function setPaceInGame(p){ pace=p; if(paceSeg2){ [...paceSeg2.querySelectorAll('button')].forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.pace===pace))); } }
     paceSeg2?.addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; setPaceInGame(b.dataset.pace) });
     function paceFactor(){ return pace==='slow'?1.8 : pace==='normal'?1.3 : 1.05; }
 
+    // ------------ Start button ------------
     startBtn?.addEventListener('click',()=>{
       const ref=document.referrer||'';
       const isYT=/youtube\.com|youtu\.be/.test(ref) || new URLSearchParams(location.search).get('yt')==='1';
@@ -272,45 +262,110 @@
         startGameAuto(mode);
       }
     });
-    (function autoStart(){ try{ const p=new URLSearchParams(location.search); if(p.get('play')==='1'){ const m=p.get('mode')||'calm'; setMode(m); startGameAuto(m); } }catch(e){} })();
+    (function autoStart(){ try{ const p=new URLSearchParams(location.search); if(p.get('play')==='1'){ const m=p.get('mode')||'calm'; setMode(m); startGameAuto(m); } }catch(e){ console.warn(e); } })();
 
     // ------------ Board State ------------
     const rows=8, cols=8; let grid=[], selected=null, busy=false, score=0, comboStep=0, comboTotal=0;
-    function createBoardDom(){ boardEl.style.gridTemplateColumns=`repeat(${cols}, var(--tile))`; boardEl.innerHTML=''; for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){ const cell=document.createElement('div'); cell.className='cell'; cell.dataset.r=r; cell.dataset.c=c; cell.addEventListener('click',onCellClick); const img=document.createElement('img'); img.alt=''; cell.appendChild(img); boardEl.appendChild(cell);} }
-    function getCell(r,c){return boardEl.children[r*cols+c]}
-    function setCellImage(r,c){const idx=grid[r][c]; const cell=getCell(r,c); const img=cell.querySelector('img'); if(idx>=0){img.src=TILE_IMAGES[idx]; cell.style.visibility='visible'} else {img.removeAttribute('src'); cell.style.visibility='hidden'}}
-    function renderAll(){for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) setCellImage(r,c)}
-    function randInt(n){return Math.floor(Math.random()*n)}
-    function randTileFor(r,c){let choices=[0,1,2,3,4,5]; const L1=(c>=1)?grid[r][c-1]:-99, L2=(c>=2)?grid[r][c-2]:-98; const U1=(r>=1)?grid[r-1][c]:-97, U2=(r>=2)?grid[r-2][c]:-96; choices=choices.filter(x=>!(x===L1&&x===L2)&&!(x===U1&&x===U2)); if(!choices.length) choices=[0,1,2,3,4,5]; return choices[randInt(choices.length)];}
-    function generateInitialGrid(){ grid=Array.from({length:rows},()=>Array(cols).fill(0)); for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) grid[r][c]=randTileFor(r,c); let guard=0; while( (findMatches().size>0) || !hasAnyMoves() ){ for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) grid[r][c]=randTileFor(r,c); if(++guard>160) break; } }
-    function reshuffle(){const flat=grid.flat(); for(let i=flat.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [flat[i],flat[j]]=[flat[j],flat[i]];} for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) grid[r][c]=flat[r*cols+c]; renderAll();}
 
-    function onCellClick(e){ if(busy) return; const r=+e.currentTarget.dataset.r, c=+e.currentTarget.dataset.c;
+    function createBoardDom(){
+      boardEl.style.gridTemplateColumns=`repeat(${cols}, var(--tile))`;
+      boardEl.innerHTML='';
+      for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){
+        const cell=document.createElement('div'); cell.className='cell'; cell.dataset.r=r; cell.dataset.c=c; cell.addEventListener('click',onCellClick);
+        const img=document.createElement('img'); img.alt=''; cell.appendChild(img); boardEl.appendChild(cell);
+      }
+    }
+    function getCell(r,c){return boardEl.children[r*cols+c]}
+    function setCellImage(r,c){
+      const idx=grid[r][c]; const cell=getCell(r,c); const img=cell.querySelector('img');
+      if(idx>=0){ img.src=TILE_IMAGES[idx]; cell.style.visibility='visible'; }
+      else { img.removeAttribute('src'); cell.style.visibility='hidden'; }
+    }
+    function renderAll(){ for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) setCellImage(r,c); }
+
+    function randInt(n){return Math.floor(Math.random()*n)}
+    function randTileFor(r,c){
+      let choices=[0,1,2,3,4,5];
+      const L1=(c>=1)?grid[r][c-1]:-99, L2=(c>=2)?grid[r][c-2]:-98;
+      const U1=(r>=1)?grid[r-1][c]:-97, U2=(r>=2)?grid[r-2][c]:-96;
+      choices=choices.filter(x=>!(x===L1&&x===L2)&&!(x===U1&&x===U2));
+      if(!choices.length) choices=[0,1,2,3,4,5];
+      return choices[randInt(choices.length)];
+    }
+
+    function generateInitialGrid(){
+      grid=Array.from({length:rows},()=>Array(cols).fill(0));
+      for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) grid[r][c]=randTileFor(r,c);
+      let guard=0;
+      while( (findMatches().size>0) || !hasAnyMoves() ){
+        for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) grid[r][c]=randTileFor(r,c);
+        if(++guard>160) break;
+      }
+    }
+    function reshuffle(){
+      const flat=grid.flat();
+      for(let i=flat.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [flat[i],flat[j]]=[flat[j],flat[i]]; }
+      for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) grid[r][c]=flat[r*cols+c];
+      renderAll();
+    }
+
+    function onCellClick(e){
+      if(busy) return;
+      const r=+e.currentTarget.dataset.r, c=+e.currentTarget.dataset.c;
       if(selected && selected.r===r && selected.c===c){ getCell(r,c).classList.remove('selected'); selected=null; return; }
       if(!selected){ selected={r,c}; getCell(r,c).classList.add('selected'); playSfx('choice'); return; }
       const {r:sr,c:sc}=selected;
       if(Math.abs(sr-r)+Math.abs(sc-c)!==1){ getCell(sr,sc).classList.remove('selected'); selected={r,c}; getCell(r,c).classList.add('selected'); playSfx('choice'); return; }
       swapAndResolve(sr,sc,r,c);
     }
-    function swapValues(a,b,c,d){const t=grid[a][b]; grid[a][b]=grid[c][d]; grid[c][d]=t; setCellImage(a,b); setCellImage(c,d)}
-    function findMatches(){const matched=new Set(); const seen=Array.from({length:rows},()=>Array(cols).fill(false)); const inb=(r,c)=>r>=0&&r<rows&&c>=0&&c<cols; const dirs=[[1,0],[-1,0],[0,1],[0,-1]];
-      for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){ if(seen[r][c]) continue; const val=grid[r][c]; if(val===-1){seen[r][c]=true; continue;}
+
+    function swapValues(a,b,c,d){ const t=grid[a][b]; grid[a][b]=grid[c][d]; grid[c][d]=t; setCellImage(a,b); setCellImage(c,d); }
+
+    function findMatches(){
+      const matched=new Set();
+      const seen=Array.from({length:rows},()=>Array(cols).fill(false));
+      const inb=(r,c)=>r>=0&&r<rows&&c>=0&&c<cols;
+      const dirs=[[1,0],[-1,0],[0,1],[0,-1]];
+      for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){
+        if(seen[r][c]) continue;
+        const val=grid[r][c]; if(val===-1){ seen[r][c]=true; continue; }
         const q=[[r,c]]; seen[r][c]=true; const comp=[[r,c]];
-        while(q.length){const [rr,cc]=q.shift(); for(const [dr,dc] of dirs){const nr=rr+dr,nc=cc+dc; if(!inb(nr,nc)||seen[nr][nc]) continue; if(grid[nr][nc]===val){seen[nr][nc]=true; q.push([nr,nc]); comp.push([nr,nc]);}}}
+        while(q.length){
+          const [rr,cc]=q.shift();
+          for(const [dr,dc] of dirs){
+            const nr=rr+dr, nc=cc+dc;
+            if(!inb(nr,nc)||seen[nr][nc]) continue;
+            if(grid[nr][nc]===val){ seen[nr][nc]=true; q.push([nr,nc]); comp.push([nr,nc]); }
+          }
+        }
         if(comp.length>=3) comp.forEach(([rr,cc])=>matched.add(rr+','+cc));
-      } return matched;
+      }
+      return matched;
     }
-    function hasAnyMoves(){ for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){ const here=grid[r][c];
-      const trySwap=(r2,c2)=>{ if(r2<0||r2>=rows||c2<0||c2>=cols) return false; const t=grid[r2][c2]; if(t===here) return false;
-        grid[r][c]=t; grid[r2][c2]=here; const ok=findMatches().size>0; grid[r][c]=here; grid[r2][c2]=t; return ok; };
-      if(trySwap(r,c+1) || trySwap(r+1,c)) return true; } return false;
+
+    function hasAnyMoves(){
+      for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){
+        const here=grid[r][c];
+        const trySwap=(r2,c2)=>{
+          if(r2<0||r2>=rows||c2<0||c2>=cols) return false;
+          const t=grid[r2][c2]; if(t===here) return false;
+          grid[r][c]=t; grid[r2][c2]=here;
+          const ok=findMatches().size>0;
+          grid[r][c]=here; grid[r2][c2]=t;
+          return ok;
+        };
+        if(trySwap(r,c+1) || trySwap(r+1,c)) return true;
+      }
+      return false;
     }
 
     async function swapAndResolve(r1,c1,r2,c2){
       busy=true; comboStep=0; comboTotal=0;
-      playSfx('choice'); getCell(r1,c1).classList.remove('selected'); selected=null;
+      playSfx('choice');
+      getCell(r1,c1).classList.remove('selected'); selected=null;
       swapValues(r1,c1,r2,c2); await delay(120);
-      let m=findMatches(); if(m.size===0){ swapValues(r1,c1,r2,c2); busy=false; return; }
+      let m=findMatches();
+      if(m.size===0){ swapValues(r1,c1,r2,c2); busy=false; return; }
       if(mode==='challenge'){ movesLeft--; updateHud(); }
       await resolveMatches(m); busy=false;
       if(!hasAnyMoves()){ reshuffle(); showToast('No moves — reshuffling'); }
@@ -486,9 +541,18 @@
     }
 
     // ------------ Lifecycle ------------
-    function startGame(){ startSec.style.display='none'; gameSec.style.display='block'; initGame(); updateAudioButtons(); syncVol(); }
+    function startGame(){
+      startSec.style.display='none';
+      gameSec.style.display='block';
+      initGame();
+      updateAudioButtons();
+      syncVol();
+      resizeBoard(); // 画面に合わせてタイルを調整
+    }
     function goToStart(){ selected=null; busy=false; gameSec.style.display='none'; startSec.style.display='block'; statusEl.textContent=''; }
+
     function initGame(){ score=0; selected=null; busy=false; comboStep=0; comboTotal=0; createBoardDom(); generateInitialGrid(); renderAll(); }
+
     function startGameAuto(m){ if(m==='challenge'){ if(unlocked>1){ showResumeDialog(); } else { startStage(1); } } else { mode='calm'; setMode('calm'); startGame(); } }
 
     backBtn.addEventListener('click',()=>{
@@ -513,8 +577,50 @@
     (function preload(){ TILE_IMAGES.concat(['assets/images/banner.png'+IMG_VER,'assets/images/welcome_cat.png'+IMG_VER]).forEach(src=>{ const im=new Image(); im.src=src; }); Object.values(SFX).forEach(a=>a.load()); pickNextBgm(); })();
     const _bn=document.getElementById('bannerImg');
     _bn?.addEventListener('error',()=>{ _bn.style.display='none'; const fb=document.getElementById('brandFallback'); if(fb) fb.hidden=false; });
+
+    // ------------ 自動リサイズ（スマホはみ出し防止） ------------
+    function resizeBoard(){
+      if(!boardEl) return;
+      const cols=8, rows=8;
+      const wrap=boardEl.parentElement; if(!wrap) return;
+      const gap = (window.innerWidth <= 480) ? 6 : 10;
+      boardEl.style.gap = gap + 'px';
+
+      const pad = 24; // board内左右padding 12*2
+      const availableW = wrap.clientWidth - pad - gap*(cols-1);
+      const tileW = Math.floor(availableW / cols);
+
+      const headerH = document.querySelector('header')?.offsetHeight || 0;
+      const topBarH = document.querySelector('.top')?.offsetHeight || 0;
+      const footerH = document.querySelector('.footer')?.offsetHeight || 0;
+      const chrome = headerH + topBarH + footerH + 120; // 余白
+      const availH = window.innerHeight - chrome - pad - gap*(rows-1);
+      const tileH = Math.floor(availH / rows);
+
+      const tile = Math.max(36, Math.min(64, tileW, tileH));
+      document.documentElement.style.setProperty('--tile', tile + 'px');
+    }
+    window.addEventListener('resize', resizeBoard);
+    document.addEventListener('pointerdown',()=>{ userInteracted=true });
   })();
   </script>
+
+  <!-- 最後に勝つCSS（外部からの上書きへの保険） -->
+  <style id="last-win">
+    a.linkbtn, button.linkbtn{
+      background:#e1ebff !important;
+      border:1px solid #9fb8ff !important;
+      color:#0b3d91 !important;
+      filter:none !important;
+      mix-blend-mode:normal !important;
+    }
+    button.linkbtn.btn-start{
+      background:#fff !important;
+      border:1px solid #d1d5db !important;
+      color:#111 !important;
+    }
+  </style>
 </body>
 </html>
+
 
