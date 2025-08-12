@@ -119,6 +119,12 @@
     /* Affiliate spot (game screen only) */
     .adspot{font-size:.82rem;opacity:.85;margin-left:12px;white-space:nowrap}
     .adspot a{text-decoration:none;border-bottom:1px dotted currentColor}
+
+    /* Mobile: hide volume slider */
+@media (hover: none) and (pointer: coarse) {
+  #volWrap { display: none !important; }
+}
+
   </style>
 </head>
 <body>
@@ -190,7 +196,7 @@
         </div>
         <button class="btn" id="musicBtn" aria-pressed="false">Music: Off</button>
         <button class="btn" id="sfxBtn" aria-pressed="true">SFX: On</button>
-        <label class="row" style="gap:6px;margin-left:6px">Music Vol <input id="vol2" type="range" min="0" max="1" step="0.01" value="0.7" /></label>
+        <label id="volWrap" class="row" style="gap:6px;margin-left:6px">Music Vol <input id="vol2" type="range" min="0" max="1" step="0.01" value="0.7" /></label>
         <button class="btn" id="restartBtn">Restart</button>
         <button class="btn" id="stageSelectBtn" hidden>Stage Select</button>
         <button class="btn" id="backBtn">Home</button>
@@ -258,6 +264,17 @@
     const restartBtn=document.getElementById('restartBtn');
     const stageSelBtn=document.getElementById('stageSelectBtn');
     const backBtn=document.getElementById('backBtn');
+const volWrap = document.getElementById('volWrap');
+(function hideVolumeOnMobile(){
+  const coarse = window.matchMedia?.('(pointer: coarse)').matches;
+  const noHover = window.matchMedia?.('(hover: none)').matches;
+  const uaMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  if ((coarse && noHover) || uaMobile) {
+    volWrap?.setAttribute('hidden','');
+  } else {
+    volWrap?.removeAttribute('hidden');
+  }
+})();
     const adSpot=document.getElementById('adSpot');
     const adLink=document.getElementById('adLink');
 
