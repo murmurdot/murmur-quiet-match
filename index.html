@@ -80,9 +80,6 @@
     .footer{padding:10px 16px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
     .muted{opacity:.65}
 
-    .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;background:#111;color:#fff;padding:10px 14px;border-radius:999px;opacity:0;transition:opacity .2s,transform .2s;pointer-events:none;z-index:60}
-    .toast.show{opacity:1;transform:translateX(-50%) translateY(-3px)}
-
     /* 小画面の基本しぼり（保険） */
     @media (max-width: 480px){
       :root{ --tile:44px; }
@@ -95,7 +92,7 @@
 <body>
   <!-- ヘッダー：バナーのみ（画像欠け時はテキスト表示） -->
   <header class="wrap" style="justify-content:center">
-    <img id="bannerImg" src="assets/images/banner.png?v=20250812c" alt="murmur banner" />
+    <img id="bannerImg" src="assets/images/banner.png?v=20250812d" alt="murmur banner" />
     <div id="brandFallback" class="brand-fallback" hidden>murmur. relaxing games — quiet match</div>
   </header>
 
@@ -138,7 +135,7 @@
            style="background:#e1ebff !important;border:1px solid #9fb8ff !important;color:#0b3d91 !important">
           murmur. on YouTube
         </a>
-        <img class="cat-small" src="assets/images/welcome_cat.png?v=20250812c" alt="cat" />
+        <img class="cat-small" src="assets/images/welcome_cat.png?v=20250812d" alt="cat" />
       </div>
     </div>
   </section>
@@ -176,7 +173,7 @@
     </div>
 
     <div id="board-wrap">
-      <div id="combo" aria-live="polite"></div>
+      <!-- ※ combo バッジは撤去しました -->
       <div id="board" role="grid" aria-label="Match board"></div>
     </div>
 
@@ -197,7 +194,7 @@
     }
 
     // ------------ Assets & Audio ------------
-    const IMG_VER='?v=20250812c';
+    const IMG_VER='?v=20250812d';
     const TILE_IMAGES=[
       'assets/images/lemon_soda_tile.png'+IMG_VER,
       'assets/images/cafelatte_tile.png'+IMG_VER,
@@ -209,19 +206,22 @@
     const SFX={choice:new Audio('assets/audio/choice.mp3'),match:new Audio('assets/audio/match.mp3')};
     Object.values(SFX).forEach(a=>a.preload='auto');
     const BGMS=['assets/audio/match_game_bgm_1.mp3','assets/audio/match_game_bgm_2.mp3','assets/audio/match_game_bgm_3.mp3','assets/audio/match_game_bgm_4.mp3','assets/audio/match_game_bgm_5.mp3'];
-    let music=new Audio(); music.loop=false; let currentBgm=-1; let musicEnabled=false, sfxEnabled=true; let userInteracted=false;
+    let music=new Audio(); music.loop=false; let currentBgm=-1; let musicEnabled=false, sfxEnabled=true;
     function pickNextBgm(){let i;do{i=Math.floor(Math.random()*BGMS.length);}while(i===currentBgm&&BGMS.length>1);currentBgm=i;music.src=BGMS[i];}
-    function startMusic(){if(!musicEnabled){musicEnabled=true;pickNextBgm();music.play().catch(()=>{});}updateAudioButtons();syncVol();}
-    function stopMusic(){musicEnabled=false;music.pause();updateAudioButtons();}
+    function startMusic(){
+      if(!musicEnabled){ musicEnabled=true; pickNextBgm(); music.play().catch(()=>{ showToast('Tap once to enable audio'); }); }
+      updateAudioButtons(); syncVol();
+    }
+    function stopMusic(){ musicEnabled=false; music.pause(); updateAudioButtons(); }
     music.addEventListener('ended',()=>{if(musicEnabled){pickNextBgm();music.play().catch(()=>{});}});
-    function playSfx(name){if(!sfxEnabled) return; try{const a=SFX[name]; a.currentTime=0; a.play().catch(()=>{});}catch(e){}}
+
+    function playSfx(name){ if(!sfxEnabled) return; try{ const a=SFX[name]; a.currentTime=0; a.play().catch(()=>{});}catch(e){} }
 
     // ------------ DOM ------------
     const startSec=document.getElementById('start');
     const gameSec=document.getElementById('game');
     const boardEl=document.getElementById('board');
     const toastEl=document.getElementById('toast');
-    const comboEl=document.getElementById('combo');
     const scoreEl=document.getElementById('score');
     const movesWrap=document.getElementById('movesWrap');
     const movesEl=document.getElementById('moves');
@@ -239,15 +239,25 @@
     const stageSelBtn=document.getElementById('stageSelectBtn');
     const backBtn=document.getElementById('backBtn');
 
-    // ------------ Start mode / Pace ------------
-    let mode='calm';
+    // ------------ Start / Pace ------------
+    let mode='calm', pace='slow';
     function setMode(m){ mode=m; if(modeSeg){ [...modeSeg.querySelectorAll('button')].forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.mode===mode))); } }
     modeSeg?.addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; setMode(b.dataset.mode) });
 
-    let pace='slow';
     function setPaceInGame(p){ pace=p; if(paceSeg2){ [...paceSeg2.querySelectorAll('button')].forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.pace===pace))); } }
     paceSeg2?.addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; setPaceInGame(b.dataset.pace) });
     function paceFactor(){ return pace==='slow'?1.8 : pace==='normal'?1.3 : 1.05; }
+
+    // ------------ Buttons (audio) ------------
+    function updateAudioButtons(){
+      const set=(btn,on,label)=>{ if(!btn) return; btn.setAttribute('aria-pressed',String(on)); btn.textContent=label+(on?': On':': Off'); };
+      set(musicBtn,musicEnabled,'Music'); set(sfxBtn,sfxEnabled,'SFX');
+    }
+    function syncVol(){ if(music) music.volume=Number(vol2?.value||'0.7'); }
+
+    musicBtn?.addEventListener('click',()=> musicEnabled? stopMusic(): startMusic());
+    sfxBtn?.addEventListener('click',()=>{ sfxEnabled=!sfxEnabled; updateAudioButtons(); showToast('SFX '+(sfxEnabled?'On':'Off')); });
+    vol2?.addEventListener('input',syncVol);
 
     // ------------ Start button ------------
     startBtn?.addEventListener('click',()=>{
@@ -265,33 +275,14 @@
     (function autoStart(){ try{ const p=new URLSearchParams(location.search); if(p.get('play')==='1'){ const m=p.get('mode')||'calm'; setMode(m); startGameAuto(m); } }catch(e){ console.warn(e); } })();
 
     // ------------ Board State ------------
-    const rows=8, cols=8; let grid=[], selected=null, busy=false, score=0, comboStep=0, comboTotal=0;
-
-    function createBoardDom(){
-      boardEl.style.gridTemplateColumns=`repeat(${cols}, var(--tile))`;
-      boardEl.innerHTML='';
-      for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){
-        const cell=document.createElement('div'); cell.className='cell'; cell.dataset.r=r; cell.dataset.c=c; cell.addEventListener('click',onCellClick);
-        const img=document.createElement('img'); img.alt=''; cell.appendChild(img); boardEl.appendChild(cell);
-      }
-    }
+    const rows=8, cols=8; let grid=[]; let selected=null; let busy=false; let score=0; let comboStep=0; // 表示はしないが内部計算は維持
+    function createBoardDom(){ boardEl.style.gridTemplateColumns=`repeat(${cols}, var(--tile))`; boardEl.innerHTML=''; for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){ const cell=document.createElement('div'); cell.className='cell'; cell.dataset.r=r; cell.dataset.c=c; cell.addEventListener('click',onCellClick); const img=document.createElement('img'); img.alt=''; cell.appendChild(img); boardEl.appendChild(cell);} }
     function getCell(r,c){return boardEl.children[r*cols+c]}
-    function setCellImage(r,c){
-      const idx=grid[r][c]; const cell=getCell(r,c); const img=cell.querySelector('img');
-      if(idx>=0){ img.src=TILE_IMAGES[idx]; cell.style.visibility='visible'; }
-      else { img.removeAttribute('src'); cell.style.visibility='hidden'; }
-    }
-    function renderAll(){ for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) setCellImage(r,c); }
+    function setCellImage(r,c){const idx=grid[r][c]; const cell=getCell(r,c); const img=cell.querySelector('img'); if(idx>=0){img.src=TILE_IMAGES[idx]; cell.style.visibility='visible'} else {img.removeAttribute('src'); cell.style.visibility='hidden'}}
+    function renderAll(){for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) setCellImage(r,c)}
 
     function randInt(n){return Math.floor(Math.random()*n)}
-    function randTileFor(r,c){
-      let choices=[0,1,2,3,4,5];
-      const L1=(c>=1)?grid[r][c-1]:-99, L2=(c>=2)?grid[r][c-2]:-98;
-      const U1=(r>=1)?grid[r-1][c]:-97, U2=(r>=2)?grid[r-2][c]:-96;
-      choices=choices.filter(x=>!(x===L1&&x===L2)&&!(x===U1&&x===U2));
-      if(!choices.length) choices=[0,1,2,3,4,5];
-      return choices[randInt(choices.length)];
-    }
+    function randTileFor(r,c){let choices=[0,1,2,3,4,5]; const L1=(c>=1)?grid[r][c-1]:-99, L2=(c>=2)?grid[r][c-2]:-98; const U1=(r>=1)?grid[r-1][c]:-97, U2=(r>=2)?grid[r-2][c]:-96; choices=choices.filter(x=>!(x===L1&&x===L2)&&!(x===U1&&x===U2)); if(!choices.length) choices=[0,1,2,3,4,5]; return choices[randInt(choices.length)];}
 
     function generateInitialGrid(){
       grid=Array.from({length:rows},()=>Array(cols).fill(0));
@@ -302,72 +293,26 @@
         if(++guard>160) break;
       }
     }
-    function reshuffle(){
-      const flat=grid.flat();
-      for(let i=flat.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [flat[i],flat[j]]=[flat[j],flat[i]]; }
-      for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) grid[r][c]=flat[r*cols+c];
-      renderAll();
-    }
+    function reshuffle(){const flat=grid.flat(); for(let i=flat.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [flat[i],flat[j]]=[flat[j],flat[i]];} for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) grid[r][c]=flat[r*cols+c]; renderAll();}
 
-    function onCellClick(e){
-      if(busy) return;
-      const r=+e.currentTarget.dataset.r, c=+e.currentTarget.dataset.c;
-      if(selected && selected.r===r && selected.c===c){ getCell(r,c).classList.remove('selected'); selected=null; return; }
-      if(!selected){ selected={r,c}; getCell(r,c).classList.add('selected'); playSfx('choice'); return; }
-      const {r:sr,c:sc}=selected;
-      if(Math.abs(sr-r)+Math.abs(sc-c)!==1){ getCell(sr,sc).classList.remove('selected'); selected={r,c}; getCell(r,c).classList.add('selected'); playSfx('choice'); return; }
-      swapAndResolve(sr,sc,r,c);
-    }
+    function onCellClick(e){ if(busy) return; const r=+e.currentTarget.dataset.r, c=+e.currentTarget.dataset.c; if(selected && selected.r===r && selected.c===c){ getCell(r,c).classList.remove('selected'); selected=null; return; } if(!selected){ selected={r,c}; getCell(r,c).classList.add('selected'); playSfx('choice'); return; } const {r:sr,c:sc}=selected; if(Math.abs(sr-r)+Math.abs(sc-c)!==1){ getCell(sr,sc).classList.remove('selected'); selected={r,c}; getCell(r,c).classList.add('selected'); playSfx('choice'); return; } swapAndResolve(sr,sc,r,c); }
 
-    function swapValues(a,b,c,d){ const t=grid[a][b]; grid[a][b]=grid[c][d]; grid[c][d]=t; setCellImage(a,b); setCellImage(c,d); }
+    function swapValues(a,b,c,d){const t=grid[a][b]; grid[a][b]=grid[c][d]; grid[c][d]=t; setCellImage(a,b); setCellImage(c,d)}
 
-    function findMatches(){
-      const matched=new Set();
-      const seen=Array.from({length:rows},()=>Array(cols).fill(false));
-      const inb=(r,c)=>r>=0&&r<rows&&c>=0&&c<cols;
-      const dirs=[[1,0],[-1,0],[0,1],[0,-1]];
-      for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){
-        if(seen[r][c]) continue;
-        const val=grid[r][c]; if(val===-1){ seen[r][c]=true; continue; }
-        const q=[[r,c]]; seen[r][c]=true; const comp=[[r,c]];
-        while(q.length){
-          const [rr,cc]=q.shift();
-          for(const [dr,dc] of dirs){
-            const nr=rr+dr, nc=cc+dc;
-            if(!inb(nr,nc)||seen[nr][nc]) continue;
-            if(grid[nr][nc]===val){ seen[nr][nc]=true; q.push([nr,nc]); comp.push([nr,nc]); }
-          }
-        }
-        if(comp.length>=3) comp.forEach(([rr,cc])=>matched.add(rr+','+cc));
-      }
-      return matched;
-    }
-
-    function hasAnyMoves(){
-      for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){
-        const here=grid[r][c];
-        const trySwap=(r2,c2)=>{
-          if(r2<0||r2>=rows||c2<0||c2>=cols) return false;
-          const t=grid[r2][c2]; if(t===here) return false;
-          grid[r][c]=t; grid[r2][c2]=here;
-          const ok=findMatches().size>0;
-          grid[r][c]=here; grid[r2][c2]=t;
-          return ok;
-        };
-        if(trySwap(r,c+1) || trySwap(r+1,c)) return true;
-      }
-      return false;
-    }
+    function findMatches(){const matched=new Set(); const seen=Array.from({length:rows},()=>Array(cols).fill(false)); const inb=(r,c)=>r>=0&&r<rows&&c>=0&&c<cols; const dirs=[[1,0],[-1,0],[0,1],[0,-1]]; for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){ if(seen[r][c]) continue; const val=grid[r][c]; if(val===-1){seen[r][c]=true; continue;} const q=[[r,c]]; seen[r][c]=true; const comp=[[r,c]]; while(q.length){const [rr,cc]=q.shift(); for(const [dr,dc] of dirs){const nr=rr+dr,nc=cc+dc; if(!inb(nr,nc)||seen[nr][nc]) continue; if(grid[nr][nc]===val){seen[nr][nc]=true; q.push([nr,nc]); comp.push([nr,nc]);}}} if(comp.length>=3) comp.forEach(([rr,cc])=>matched.add(rr+','+cc)); } return matched; }
+    function hasAnyMoves(){ for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){ const here=grid[r][c]; const trySwap=(r2,c2)=>{ if(r2<0||r2>=rows||c2<0||c2>=cols) return false; const t=grid[r2][c2]; if(t===here) return false; grid[r][c]=t; grid[r2][c2]=here; const ok=findMatches().size>0; grid[r][c]=here; grid[r2][c2]=t; return ok; }; if(trySwap(r,c+1) || trySwap(r+1,c)) return true; } return false; }
 
     async function swapAndResolve(r1,c1,r2,c2){
-      busy=true; comboStep=0; comboTotal=0;
+      busy=true; comboStep=0; // 表示しないけど段数は内部で使う
       playSfx('choice');
       getCell(r1,c1).classList.remove('selected'); selected=null;
-      swapValues(r1,c1,r2,c2); await delay(120);
+      swapValues(r1,c1,r2,c2);
+      await delay(120);
       let m=findMatches();
       if(m.size===0){ swapValues(r1,c1,r2,c2); busy=false; return; }
       if(mode==='challenge'){ movesLeft--; updateHud(); }
-      await resolveMatches(m); busy=false;
+      await resolveMatches(m);
+      busy=false;
       if(!hasAnyMoves()){ reshuffle(); showToast('No moves — reshuffling'); }
     }
 
@@ -375,20 +320,19 @@
     function updateHud(){ movesEl.textContent=movesLeft; stageEl.textContent=currentStage; targetEl.textContent=targetScore; scoreEl.textContent=score; }
 
     async function resolveMatches(matchedSet){
-      comboStep++;
-      const groups=countGroupsFromSet(matchedSet);
-      addCombo(groups);
+      comboStep++; // 表示しないがスコア計算のため維持
 
       matchedSet.forEach(k=>{ const [r,c]=k.split(',').map(Number); getCell(r,c).classList.add('matching'); });
       await delay(260);
       matchedSet.forEach(k=>{ const [r,c]=k.split(',').map(Number); grid[r][c]=-1; setCellImage(r,c); });
       playSfx('match');
 
-      const base=matchedSet.size*10; let add=base;
+      const base=matchedSet.size*10;
+      let add=base;
       if(mode==='calm'){
+        // 連鎖ボーナスはほんの少しだけ残す（表示はしない）
         const chainBonus = base * Math.max(0, comboStep-1) * 0.06;
-        const simultaneous = Math.max(0, groups-1) * 5;
-        add = Math.round(base + chainBonus + simultaneous);
+        add = Math.round(base + chainBonus);
       }
       score += add; updateHud();
 
@@ -398,8 +342,8 @@
         for(let r=rows-1;r>=0;r--){ if(grid[r][c]!==-1){ grid[wr][c]=grid[r][c]; wr--; } }
         for(let r=wr;r>=0;r--) grid[r][c]=-1;
       }
-      renderAll(); await delay(240);
-
+      renderAll();
+      await delay(240);
       // refill
       for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) if(grid[r][c]===-1){ grid[r][c]=randTileFor(r,c); setCellImage(r,c); }
       await delay(200);
@@ -407,7 +351,7 @@
       const more=findMatches();
       if(more.size>0){ await resolveMatches(more); }
       else {
-        comboStep=0; comboTotal=0;
+        comboStep=0;
         if(mode==='challenge'){
           if(score>=targetScore){ onStageClear(); }
           else if(movesLeft<=0){ onStageFail(); }
@@ -415,83 +359,23 @@
       }
     }
 
-    function countGroupsFromSet(set){
-      const keys=[...set];
-      const coords=keys.map(k=>k.split(',').map(Number));
-      const n=coords.length; if(n===0) return 0;
-      const adj=Array.from({length:n},()=>[]);
-      for(let i=0;i<n;i++){
-        const [r1,c1]=coords[i];
-        for(let j=i+1;j<n;j++){
-          const [r2,c2]=coords[j];
-          if(Math.abs(r1-r2)+Math.abs(c1-c2)===1){ adj[i].push(j); adj[j].push(i); }
-        }
-      }
-      const seen=new Array(n).fill(false); let groups=0;
-      for(let i=0;i<n;i++) if(!seen[i]){
-        groups++; const q=[i]; seen[i]=true;
-        while(q.length){ const v=q.shift(); for(const w of adj[v]) if(!seen[w]){ seen[w]=true; q.push(w); } }
-      }
-      return groups;
-    }
-
-    // ------------ Combo display ------------
-    let comboHideTimer=null;
-    function addCombo(groups){
-      const g=Math.max(1, Number(groups)||1);
-      comboTotal+=g;
-      const show=(comboStep>=2)||(comboStep===1&&g>=2);
-      if(show){
-        const tail=(g>=2)?('×'+g):'';
-        comboEl.textContent='Combo '+comboStep+tail;
-        comboEl.classList.add('show');
-        if(comboHideTimer) clearTimeout(comboHideTimer);
-        const BASE=420, PER=110, MAX=900;
-        let dur=(BASE+Math.max(0,comboStep-1)*PER)*paceFactor();
-        if(dur>MAX) dur=MAX;
-        comboHideTimer=setTimeout(()=>comboEl.classList.remove('show'),dur);
-      }else{
-        comboEl.classList.remove('show');
-        comboEl.textContent='';
-      }
-    }
-
     // ------------ Challenge ------------
-    let currentStage=1;
-    let unlocked=parseInt(localStorage.getItem('mmq_unlocked')||'1',10); if(!(unlocked>=1&&unlocked<=100)) unlocked=1;
-    let savedStage=parseInt(localStorage.getItem('mmq_currentStage')||String(unlocked),10); if(!(savedStage>=1&&savedStage<=unlocked)) savedStage=unlocked;
-    let targetScore=0, movesLeft=0;
+    let currentStage=1; let unlocked=parseInt(localStorage.getItem('mmq_unlocked')||'1',10); if(!(unlocked>=1&&unlocked<=100)) unlocked=1; let savedStage=parseInt(localStorage.getItem('mmq_currentStage')||String(unlocked),10); if(!(savedStage>=1&&savedStage<=unlocked)) savedStage=unlocked;
+    let targetScore=0; let movesLeft=0;
     function stageConfig(n){ const baseTarget=450, grow=50; const baseMoves=20, stepEvery=10, minMoves=15; const moves=Math.max(minMoves, baseMoves - Math.floor((n-1)/stepEvery)); const target=baseTarget + grow*(n-1); return {moves,target}; }
 
-    function openStageSelect(){
-      const max=100; let gridHtml='';
-      for(let i=1;i<=max;i++){
-        const lock=i>unlocked, cleared=i<unlocked;
-        gridHtml+=`<div class="stage ${lock?'lock':''} ${cleared?'clear':''}" data-n="${i}">${i}</div>`;
-      }
-      showOverlay(`
-        <button class="close" id="closeOv">×</button>
-        <h2>Challenge — Stage Select</h2>
-        <div class="muted" style="margin:4px 0 8px">Choose a stage to play. Cleared stages are marked; locked stages unlock as you progress.</div>
-        <div class="stage-grid">${gridHtml}</div>
-        <div style="margin-top:10px"><button class="btn" id="backToStart">Back</button></div>`);
-      document.getElementById('closeOv').onclick=hideOverlay;
-      document.getElementById('backToStart').onclick=()=>{ hideOverlay(); goToStart(); };
-      document.querySelectorAll('.stage').forEach(el=>{
-        el.onclick=()=>{ const n=+el.dataset.n; if(n>unlocked) return; hideOverlay(); startStage(n); };
-      });
-    }
+    function openStageSelect(){ const max=100; let gridHtml=''; for(let i=1;i<=max;i++){ const lock=i>unlocked, cleared=i<unlocked; gridHtml += `<div class="stage ${lock?'lock':''} ${cleared?'clear':''}" data-n="${i}">${i}</div>`; } showOverlay(`
+      <button class="close" id="closeOv">×</button>
+      <h2>Challenge — Stage Select</h2>
+      <div class="muted" style="margin:4px 0 8px">Choose a stage to play. Cleared stages are marked; locked stages unlock as you progress.</div>
+      <div class="stage-grid">${gridHtml}</div>
+      <div style="margin-top:10px"><button class="btn" id="backToStart">Back</button></div>`);
+      document.getElementById('closeOv').onclick=hideOverlay; document.getElementById('backToStart').onclick=()=>{ hideOverlay(); goToStart(); };
+      document.querySelectorAll('.stage').forEach(el=> el.onclick=()=>{ const n=+el.dataset.n; if(n>unlocked) return; hideOverlay(); startStage(n); }); }
 
-    function startStage(n){
-      mode='challenge'; setMode('challenge'); currentStage=n;
-      const cfg=stageConfig(n); targetScore=cfg.target; movesLeft=cfg.moves;
-      startGame(); stageSelBtn.hidden=false; stageInfo.hidden=false; movesWrap.hidden=false;
-      updateHud(); localStorage.setItem('mmq_currentStage', String(currentStage));
-    }
+    function startStage(n){ mode='challenge'; setMode('challenge'); currentStage=n; const cfg=stageConfig(n); targetScore=cfg.target; movesLeft=cfg.moves; startGame(); stageSelBtn.hidden=false; stageInfo.hidden=false; movesWrap.hidden=false; updateHud(); localStorage.setItem('mmq_currentStage', String(currentStage)); }
 
-    function onStageClear(){
-      if(unlocked<currentStage+1){ unlocked=currentStage+1; localStorage.setItem('mmq_unlocked', String(unlocked)); }
-      showOverlay(`
+    function onStageClear(){ if(unlocked<currentStage+1){ unlocked=currentStage+1; localStorage.setItem('mmq_unlocked', String(unlocked)); } showOverlay(`
         <button class="close" id="closeOv">×</button>
         <h2>Stage ${currentStage} — Cleared 🎉</h2>
         <p class="muted">Score ${score} / Target ${targetScore}</p>
@@ -500,14 +384,9 @@
           <button class="btn" id="select">Stage Select</button>
           <button class="btn" id="retry">Retry</button>
         </div>`);
-      document.getElementById('closeOv').onclick=hideOverlay;
-      document.getElementById('next').onclick=()=>{ hideOverlay(); startStage(Math.min(100,currentStage+1)); };
-      document.getElementById('select').onclick=()=>{ openStageSelect(); };
-      document.getElementById('retry').onclick=()=>{ hideOverlay(); startStage(currentStage); };
-    }
+      document.getElementById('closeOv').onclick=hideOverlay; document.getElementById('next').onclick=()=>{ hideOverlay(); startStage(Math.min(100,currentStage+1)); }; document.getElementById('select').onclick=()=>{ openStageSelect(); }; document.getElementById('retry').onclick=()=>{ hideOverlay(); startStage(currentStage); }; }
 
-    function onStageFail(){
-      showOverlay(`
+    function onStageFail(){ showOverlay(`
         <button class="close" id="close">×</button>
         <h2>Stage ${currentStage} — Try again</h2>
         <p class="muted">Score ${score} / Target ${targetScore}</p>
@@ -515,10 +394,7 @@
           <button class="btn" id="retry">Retry</button>
           <button class="btn" id="select">Stage Select</button>
         </div>`);
-      document.getElementById('close').onclick=hideOverlay;
-      document.getElementById('retry').onclick=()=>{ hideOverlay(); startStage(currentStage); };
-      document.getElementById('select').onclick=()=>{ openStageSelect(); };
-    }
+      document.getElementById('close').onclick=hideOverlay; document.getElementById('retry').onclick=()=>{ hideOverlay(); startStage(currentStage); }; document.getElementById('select').onclick=()=>{ openStageSelect(); }; }
 
     // ------------ Overlay helpers ------------
     const overlay=document.getElementById('overlay'); const sheet=document.getElementById('sheet');
@@ -541,17 +417,10 @@
     }
 
     // ------------ Lifecycle ------------
-    function startGame(){
-      startSec.style.display='none';
-      gameSec.style.display='block';
-      initGame();
-      updateAudioButtons();
-      syncVol();
-      resizeBoard(); // 画面に合わせてタイルを調整
-    }
+    function startGame(){ startSec.style.display='none'; gameSec.style.display='block'; initGame(); updateAudioButtons(); syncVol(); resizeBoard(); }
     function goToStart(){ selected=null; busy=false; gameSec.style.display='none'; startSec.style.display='block'; statusEl.textContent=''; }
 
-    function initGame(){ score=0; selected=null; busy=false; comboStep=0; comboTotal=0; createBoardDom(); generateInitialGrid(); renderAll(); }
+    function initGame(){ score=0; selected=null; busy=false; comboStep=0; createBoardDom(); generateInitialGrid(); renderAll(); }
 
     function startGameAuto(m){ if(m==='challenge'){ if(unlocked>1){ showResumeDialog(); } else { startStage(1); } } else { mode='calm'; setMode('calm'); startGame(); } }
 
@@ -601,7 +470,6 @@
       document.documentElement.style.setProperty('--tile', tile + 'px');
     }
     window.addEventListener('resize', resizeBoard);
-    document.addEventListener('pointerdown',()=>{ userInteracted=true });
   })();
   </script>
 
@@ -622,5 +490,6 @@
   </style>
 </body>
 </html>
+
 
 
