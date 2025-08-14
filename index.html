@@ -116,11 +116,9 @@
     .stage.lock{opacity:.4;cursor:not-allowed}
     .stage.clear{border-color:#a7f3d0;background:#ecfdf5}
 
-    /* Affiliate spot (game screen only) */
-.adspot{font-size:.82rem;opacity:.85;margin-left:12px;white-space:nowrap;display:flex;gap:12px;flex-wrap:wrap}
-.adspot a{text-decoration:none;border-bottom:1px dotted currentColor}
-.adspot a + a{margin-left:8px}
-#adDisclosure{font-size:.75rem;opacity:.7;margin-left:12px}
+   /* Affiliate spot (game screen only) */
+    .adspot{font-size:.82rem;opacity:.85;margin-left:12px;white-space:nowrap}
+    .adspot a{text-decoration:none;border-bottom:1px dotted currentColor}
 
     /* Mobile: hide volume slider */
 @media (hover: none) and (pointer: coarse) {
@@ -214,14 +212,10 @@
       <div class="muted">murmur · quiet sweets & drinks match</div>
       <div class="muted" id="status"></div>
 
-<!-- Affiliate spot (game only). Hidden if no valid links. -->
-<div id="adSpot" class="adspot" hidden>
-  <a id="adLink1" href="#" target="_blank" rel="noopener">link 1</a>
-  <a id="adLink2" href="#" target="_blank" rel="noopener">link 2</a>
-  <a id="adLink3" href="#" target="_blank" rel="noopener">link 3</a>
-</div>
-<!-- 開示（ゲーム画面にアフィリンクがある場合のみ表示） -->
-<div id="adDisclosure" hidden>※This page contains affiliate links.</div>
+<!-- Affiliate spot (game only). Put URL & text later; hidden if href is empty or "#". -->
+      <div id="adSpot" class="adspot" hidden>
+        <a id="adLink" href="#" target="_blank" rel="noopener">small affiliate link</a>
+      </div>
     </div>
   </section>
 
@@ -289,54 +283,11 @@ const volWrap = document.getElementById('volWrap');
     _bn?.addEventListener('error',()=>{ _bn.style.display='none'; document.getElementById('brandFallback').hidden=false; });
     _bn?.addEventListener('click',()=> goToStart());
 
-    // ---- Affiliate: populate + auto-hide ----
-const AFF_LINKS = [
-  // ★ここに自分の短縮URL（amzn.to〜）を入れる。空文字 '' だと非表示。
-  { href: 'https://amzn.to/3UYvbNY', text: 'view on Amazon' },
-  { href: 'https://amzn.to/413R81L', text: 'view on Amazon' },
-  { href: 'https://amzn.to/45BGXD4', text: 'view on Amazon' }
-];
-
-function populateAffiliateLinks(){
-  const container = document.getElementById('adSpot');
-  const a1 = document.getElementById('adLink1');
-  const a2 = document.getElementById('adLink2');
-  const a3 = document.getElementById('adLink3');
-  const disc = document.getElementById('adDisclosure');
-  const nodes = [a1,a2,a3];
-
-  let shown = 0;
-  for(let i=0;i<nodes.length;i++){
-    const node = nodes[i];
-    const item = AFF_LINKS[i];
-    const href = (item?.href||'').trim();
-    const label = (item?.text||'').trim();
-
-    if(!href || href === '#'){
-      node.setAttribute('hidden','');
-      node.setAttribute('aria-hidden','true');
-      node.removeAttribute('href');
-      continue;
-    }
-    node.removeAttribute('hidden');
-    node.removeAttribute('aria-hidden');
-    node.setAttribute('href', href);
-    node.textContent = label || 'view on Amazon';
-    shown++;
-  }
-
-  if(shown>0){
-    container.removeAttribute('hidden');
-    // アフィ開示も表示
-    disc?.removeAttribute('hidden');
-  }else{
-    container.setAttribute('hidden','');
-    disc?.setAttribute('hidden','');
-  }
-}
-
-// 既存のDOMContentLoaded等の初期化タイミングに追加
-document.addEventListener('DOMContentLoaded', populateAffiliateLinks);
+// ---- Affiliate: auto-hide if empty ----
+    function updateAdVisibility(){
+      const href=(adLink?.getAttribute('href')||'').trim();
+      if(!href || href==='#'){ adSpot?.setAttribute('hidden',''); }
+      else { adSpot?.removeAttribute('hidden'); }
     }
     updateAdVisibility();
 
