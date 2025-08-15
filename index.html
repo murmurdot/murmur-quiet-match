@@ -117,8 +117,21 @@
     .stage.clear{border-color:#a7f3d0;background:#ecfdf5}
 
    /* Affiliate spot (game screen only) */
-    .adspot{font-size:.82rem;opacity:.85;margin-left:12px;white-space:nowrap}
-    .adspot a{text-decoration:none;border-bottom:1px dotted currentColor}
+    /* Affiliate images — small, neat */
+.adspot{
+  display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+  font-size:.82rem; opacity:.9; margin-left:12px;
+}
+.adspot a{ display:inline-block; text-decoration:none; border-bottom:none; }
+.adspot img{
+  height:44px; width:auto; border:1px solid var(--line);
+  border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,.06);
+  vertical-align:middle;
+}
+/* JS用ダミーリンクは非表示（href検知だけに使う） */
+.visually-hidden{ display:none !important; }
+#adDisclosure{ font-size:.75rem; margin-left:12px; }
+
 
     /* Mobile: hide volume slider */
 @media (hover: none) and (pointer: coarse) {
@@ -212,10 +225,28 @@
       <div class="muted">murmur · quiet sweets & drinks match</div>
       <div class="muted" id="status"></div>
 
-<!-- Affiliate spot (game only). Put URL & text later; hidden if href is empty or "#". -->
-      <div id="adSpot" class="adspot" hidden>
-        <a id="adLink" href="#" target="_blank" rel="noopener">small affiliate link</a>
-      </div>
+<!-- Affiliate spot (game only). Images must be from Amazon SiteStripe -->
+<div id="adSpot" class="adspot" hidden>
+  <!-- JSの可視化用ダミー（hrefが#以外なら今のJSで表示になる）。見た目は非表示 -->
+  <a id="adLink" class="visually-hidden" href="https://amzn.to/3UYvbNY" target="_blank" rel="noopener">affiliate</a>
+
+  <!-- ▼商品1：SiteStripe「画像」の<img ...>タグをこの中にペースト -->
+  <a href="https://amzn.to/3UYvbNY" target="_blank" rel="noopener" aria-label="ceramic dinner set">
+    <img alt="ceramic dinner set" />
+  </a>
+
+  <!-- ▼商品2：同様にSiteStripe画像<img ...>を貼る -->
+  <a href="https://amzn.to/413R81L" target="_blank" rel="noopener" aria-label="double-wall glass">
+    <img alt="double-wall glass" />
+  </a>
+
+  <!-- ▼商品3：同様にSiteStripe画像<img ...>を貼る -->
+  <a href="https://amzn.to/45BGXD4" target="_blank" rel="noopener" aria-label="reed diffuser">
+    <img alt="reed diffuser" />
+  </a>
+</div>
+<div id="adDisclosure" class="muted">※This page contains affiliate links.</div>
+
     </div>
   </section>
 
