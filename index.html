@@ -119,7 +119,6 @@
    /* Affiliate spot (game screen only) */
     .adspot{font-size:.82rem;opacity:.85;margin-left:12px;white-space:nowrap}
     .adspot a{text-decoration:none;border-bottom:1px dotted currentColor}
-    .adspot a + a{margin-left:12px} /* ← 追加：リンク間の余白 */
 
     /* Mobile: hide volume slider */
 @media (hover: none) and (pointer: coarse) {
@@ -213,13 +212,10 @@
       <div class="muted">murmur · quiet sweets & drinks match</div>
       <div class="muted" id="status"></div>
 
-<!-- Affiliate spot (game only). Hidden if all href are "#" or empty. -->
+<!-- Affiliate spot (game only). Put URL & text later; hidden if href is empty or "#". -->
       <div id="adSpot" class="adspot" hidden>
-        <a id="adLink1" href="https://amzn.to/3UYvbNY" target="_blank" rel="noopener">ceramic dinner set</a>
-        <a id="adLink2" href="https://amzn.to/413R81L" target="_blank" rel="noopener">double-wall glass</a>
-        <a id="adLink3" href="https://amzn.to/45BGXD4" target="_blank" rel="noopener">reed diffuser</a>
+        <a id="adLink" href="#" target="_blank" rel="noopener">small affiliate link</a>
       </div>
-      <div id="adDisclosure" class="muted" style="font-size:.75rem;margin-left:12px" hidden>※This page contains affiliate links.</div>
     </div>
   </section>
 
@@ -280,44 +276,18 @@ const volWrap = document.getElementById('volWrap');
   }
 })();
     const adSpot=document.getElementById('adSpot');
+    const adLink=document.getElementById('adLink');
 
     // ---- Header fallback + Home nav ----
     const _bn=document.getElementById('bannerImg');
     _bn?.addEventListener('error',()=>{ _bn.style.display='none'; document.getElementById('brandFallback').hidden=false; });
     _bn?.addEventListener('click',()=> goToStart());
 
-    // ---- Affiliate: auto-hide if empty (3 links対応) ----
+// ---- Affiliate: auto-hide if empty ----
     function updateAdVisibility(){
-      try{
-        const links = [
-          document.getElementById('adLink1'),
-          document.getElementById('adLink2'),
-          document.getElementById('adLink3'),
-        ].filter(Boolean);
-
-        let shown = 0;
-        for(const a of links){
-          const href = (a.getAttribute('href')||'').trim();
-          const ok = href && href !== '#';
-          if(ok){
-            a.removeAttribute('hidden');
-            a.removeAttribute('aria-hidden');
-            shown++;
-          }else{
-            a.setAttribute('hidden','');
-            a.setAttribute('aria-hidden','true');
-          }
-        }
-        if(shown>0){
-          adSpot?.removeAttribute('hidden');
-          document.getElementById('adDisclosure')?.removeAttribute('hidden');
-        }else{
-          adSpot?.setAttribute('hidden','');
-          document.getElementById('adDisclosure')?.setAttribute('hidden','');
-        }
-      }catch(e){
-        console.warn('updateAdVisibility error:', e);
-      }
+      const href=(adLink?.getAttribute('href')||'').trim();
+      if(!href || href==='#'){ adSpot?.setAttribute('hidden',''); }
+      else { adSpot?.removeAttribute('hidden'); }
     }
     updateAdVisibility();
 
@@ -442,7 +412,7 @@ const volWrap = document.getElementById('volWrap');
         while(q.length){
           const [rr,cc]=q.shift();
           for(const [dr,dc] of dirs){
-            const nr=rr+dr,nc=cc; if(!inb(nr,nc)||seen[nr][nc]) continue;
+            const nr=rr+dr,nc=cc+dc; if(!inb(nr,nc)||seen[nr][nc]) continue;
             if(grid[nr][nc]===val){seen[nr][nc]=true; q.push([nr,nc]); comp.push([nr,nc]);}
           }
         }
@@ -660,8 +630,7 @@ const volWrap = document.getElementById('volWrap');
       statusEl.textContent='';
       // Homeへ固定、モードもCalmに初期化
       setView('home'); clearModeStore(); setModeStore('calm'); setModeUI('calm');
-      document.getElementById('adSpot')?.setAttribute('hidden','');
-      document.getElementById('adDisclosure')?.setAttribute('hidden','');
+      adSpot?.setAttribute('hidden','');
     }
 
     function initGame(){
